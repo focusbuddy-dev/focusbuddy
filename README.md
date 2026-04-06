@@ -14,6 +14,14 @@ This repository is currently being prepared with:
 - a development container
 - the initial project overview
 
+## Development Setup
+
+Dev container setup details are documented in [.devcontainer/README.md](.devcontainer/README.md), including:
+
+- SSH-based Git commit signing inside the container
+- `gh` authentication with a fine-grained personal access token
+- verification and troubleshooting steps for local development
+
 ## Goal
 
 FocusBuddy aims to help users:
