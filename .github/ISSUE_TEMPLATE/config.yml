@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Questions and usage help
+    url: https://github.com/focusbuddy-dev/focusbuddy/discussions/categories/q-a
+    about: Ask questions, request clarification, or get help in Discussions.
+  - name: Ideas and early discussion
+    url: https://github.com/focusbuddy-dev/focusbuddy/discussions/categories/ideas
+    about: Share ideas, proposals, or rough concepts before opening an issue.
