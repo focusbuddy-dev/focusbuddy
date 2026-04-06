@@ -25,7 +25,6 @@
 - `issue-agent`: Issue の確認、作成、更新、close、branch/worktree 判断
 - `review-agent`: findings 先行の独立 review
 - `task-manager`: タスク整理、優先順位、計画立案
-- `monetization-agent`: 収益化、価格戦略、市場分析
 - `Explore`: リポジトリ内の事実確認、読み取り専用探索
 
 ## Issue-First Implementation Rule
