@@ -3,16 +3,16 @@
   "private": true,
   "version": "0.0.0",
   "files": [
-    "base.json",
-    "repository.json",
-    "api.json",
-    "web.json"
+    "base",
+    "repository",
+    "api",
+    "web"
   ],
   "exports": {
-    "./base": "./base.json",
-    "./repository": "./repository.json",
-    "./api": "./api.json",
-    "./web": "./web.json"
+    "./base": "./base/oxlint.config.ts",
+    "./repository": "./repository/oxlint.config.ts",
+    "./api": "./api/oxlint.config.ts",
+    "./web": "./web/oxlint.config.ts"
   },
   "scripts": {
     "build": "node ../../scripts/workspace-task.mjs @focusbuddy/config-oxlint build",

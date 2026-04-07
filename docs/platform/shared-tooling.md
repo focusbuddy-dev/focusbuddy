@@ -26,10 +26,11 @@ This document does not define application code, end-to-end test strategy, or CI 
 
 ### `packages/config-oxlint`
 
-- `base.json` defines the shared lint baseline and generated-file ignore rules
-- `repository.json` is the root repository config for scripts and config files in this repo
-- `api.json` extends the base config with a Node runtime
-- `web.json` extends the base config with a browser runtime
+- `base/oxlint.config.ts` defines the shared lint baseline and generated-file ignore rules
+- `repository/oxlint.config.ts` is the root repository config for scripts and config files in this repo
+- `api/oxlint.config.ts` extends the base config with a Node runtime
+- `web/oxlint.config.ts` extends the base config with a browser runtime
+- the oxlint baselines are written in TypeScript because that is one of the reasons this repository chose oxlint over a JSON-only lint configuration path
 
 ### `packages/config-prettier`
 
@@ -67,10 +68,10 @@ Hand-written wrapper code should stay outside generated directories so it still 
 The API and web workspaces now include local config entry files that point to the shared baselines:
 
 - `apps/api/tsconfig.json`
-- `apps/api/.oxlintrc.json`
+- `apps/api/oxlint.config.ts`
 - `apps/api/jest.config.cjs`
 - `apps/web/tsconfig.json`
-- `apps/web/.oxlintrc.json`
+- `apps/web/oxlint.config.ts`
 - `apps/web/jest.config.cjs`
 
 This keeps issue #21 and issue #22 focused on app implementation instead of re-deciding tool defaults.
