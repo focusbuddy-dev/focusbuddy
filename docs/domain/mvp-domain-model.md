@@ -261,6 +261,8 @@ The next step is to convert this model into the first Prisma schema design.
 
 See [mvp-logical-er-review.md](mvp-logical-er-review.md) for the logical ER review completed before schema design.
 
+See [mvp-prisma-schema-design.md](mvp-prisma-schema-design.md) for the first schema design decisions created from that review.
+
 Questions that move to #40:
 
 - exact key strategy
