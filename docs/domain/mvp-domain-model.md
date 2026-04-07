@@ -30,8 +30,8 @@ The main classification used here is:
 | User | entity | Owns targets and sessions, controls visibility, signs in with Firebase | separate model |
 | FocusTarget | entity | Represents what the user works on across multiple sessions | separate model |
 | FocusSession | entity | Represents one focus attempt with timing and visibility | separate model |
-| Stamp | entity | Stores who reacted to which public target summary | separate model |
-| PublicSummary | derived view | Represents the public-facing summary for a target | start as target-driven public view, not a required separate model |
+| Stamp | entity | Stores who reacted to which focus target; it may be rendered in that target's public summary when visible | separate model anchored to FocusTarget |
+| PublicSummary | derived view | Represents the public-facing summary view for a focus target, including target-linked data such as stamps | start as target-driven public view, not a required separate model or stamp attachment point |
 | Resume action | event | Records that a session started from previous work | event-style data, final storage shape decided later |
 | Genre | attribute, later candidate entity | Classifies a target for browsing and filtering | start simple, likely enum or text field |
 | Note | attribute, later candidate entity | Optional free text attached to a focus session | start as session-owned text |
@@ -104,7 +104,7 @@ The first public reaction model.
 Responsibilities:
 
 - stores a helpful reaction
-- links a reacting actor to a public target summary concept
+- links a reacting actor to a focus target that may be shown through a public summary view
 - supports future counting rules and duplicate-prevention rules
 
 Why it is separate:
@@ -129,8 +129,8 @@ At the MVP stage, the source data is:
 
 - target-level publication choice
 - public sessions linked to the target
-- optional public note content attached to those sessions
-- public stamp records linked to that target summary concept
+- optional note content attached to those sessions, but only when that note content is public under the applicable visibility rule
+- public stamp records linked to that target
 
 ## Event
 
