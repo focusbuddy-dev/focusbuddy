@@ -280,18 +280,18 @@ These rules matter, but they are not fully expressible with Prisma schema constr
 
 The first index set should follow expected MVP read patterns.
 
-| Access pattern | Model | First index decision |
-| --- | --- | --- |
-| list a user's targets | `FocusTarget` | `@@index([ownerUserId, updatedAt])` |
-| list public targets that expose a summary | `FocusTarget` | `@@index([publicSummaryEnabled, updatedAt])` |
-| filter a user's public vs private targets | `FocusTarget` | `@@index([ownerUserId, publicSummaryEnabled])` |
-| load session history for a target | `FocusSession` | `@@index([targetId, startedAt])` |
-| rebuild public session timeline for a target | `FocusSession` | `@@index([targetId, visibility, startedAt])` |
-| recompute public summary aggregates that depend on completion time | `FocusSession` | `@@index([targetId, visibility, endedAt])` |
-| derive continuity from valid resume records | `ResumeSource` | `@@index([targetId, isEffective, createdAt])` |
-| look up the previous session chain | `ResumeSource` | `@@index([previousSessionId])` |
-| count effective helpful stamps for a target | `Stamp` | `@@index([targetId, isEffective, stampType])` |
-| link authenticated stamp history back to a user | `Stamp` | `@@index([actorUserId])` |
+| Access pattern                                                     | Model          | First index decision                           |
+| ------------------------------------------------------------------ | -------------- | ---------------------------------------------- |
+| list a user's targets                                              | `FocusTarget`  | `@@index([ownerUserId, updatedAt])`            |
+| list public targets that expose a summary                          | `FocusTarget`  | `@@index([publicSummaryEnabled, updatedAt])`   |
+| filter a user's public vs private targets                          | `FocusTarget`  | `@@index([ownerUserId, publicSummaryEnabled])` |
+| load session history for a target                                  | `FocusSession` | `@@index([targetId, startedAt])`               |
+| rebuild public session timeline for a target                       | `FocusSession` | `@@index([targetId, visibility, startedAt])`   |
+| recompute public summary aggregates that depend on completion time | `FocusSession` | `@@index([targetId, visibility, endedAt])`     |
+| derive continuity from valid resume records                        | `ResumeSource` | `@@index([targetId, isEffective, createdAt])`  |
+| look up the previous session chain                                 | `ResumeSource` | `@@index([previousSessionId])`                 |
+| count effective helpful stamps for a target                        | `Stamp`        | `@@index([targetId, isEffective, stampType])`  |
+| link authenticated stamp history back to a user                    | `Stamp`        | `@@index([actorUserId])`                       |
 
 ## Decisions on earlier open questions
 

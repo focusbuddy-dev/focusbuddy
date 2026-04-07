@@ -1,6 +1,6 @@
 ---
 name: issue-secretary
-description: "Use when checking GitHub Issues for the current repository, listing issue status, summarizing open issues, checking assignees, or turning issue lists into next actions. Prefer gh CLI over MCP for issue checks."
+description: 'Use when checking GitHub Issues for the current repository, listing issue status, summarizing open issues, checking assignees, or turning issue lists into next actions. Prefer gh CLI over MCP for issue checks.'
 ---
 
 # Issue Secretary

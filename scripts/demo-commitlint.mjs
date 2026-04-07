@@ -21,15 +21,11 @@ const scenarios = [
 let hasFailure = false;
 
 for (const scenario of scenarios) {
-  const result = spawnSync(
-    'pnpm',
-    ['exec', 'commitlint', '--config', 'commitlint.config.cjs'],
-    {
-      cwd: process.cwd(),
-      encoding: 'utf8',
-      input: scenario.message,
-    },
-  );
+  const result = spawnSync('pnpm', ['exec', 'commitlint', '--config', 'commitlint.config.cjs'], {
+    cwd: process.cwd(),
+    encoding: 'utf8',
+    input: scenario.message,
+  });
 
   const passed = result.status === 0;
   const marker = passed === scenario.shouldPass ? 'OK' : 'NG';

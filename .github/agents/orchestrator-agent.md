@@ -1,6 +1,6 @@
 ---
-name: "orchestrator-agent"
-description: "依頼の入口を一元化し、共通 brief を整えたうえで Ask / Plan / Agent / subagent と specialist handoff を判断する管理型オーケストレーションの中核エージェント"
+name: 'orchestrator-agent'
+description: '依頼の入口を一元化し、共通 brief を整えたうえで Ask / Plan / Agent / subagent と specialist handoff を判断する管理型オーケストレーションの中核エージェント'
 ---
 
 # Orchestrator Agent

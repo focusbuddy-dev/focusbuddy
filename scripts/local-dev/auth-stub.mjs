@@ -38,13 +38,13 @@ const sampleUser = {
 
 const server = http.createServer((request, response) => {
   if (request.url === '/health') {
-    response.writeHead(200, {'content-type': 'application/json'});
-    response.end(JSON.stringify({ok: true, mode: authMode}));
+    response.writeHead(200, { 'content-type': 'application/json' });
+    response.end(JSON.stringify({ ok: true, mode: authMode }));
     return;
   }
 
   if (request.url === '/session') {
-    response.writeHead(200, {'content-type': 'application/json'});
+    response.writeHead(200, { 'content-type': 'application/json' });
     response.end(
       JSON.stringify({
         mode: authMode,
@@ -55,7 +55,7 @@ const server = http.createServer((request, response) => {
     return;
   }
 
-  response.writeHead(200, {'content-type': 'application/json'});
+  response.writeHead(200, { 'content-type': 'application/json' });
   response.end(
     JSON.stringify({
       service: 'auth',

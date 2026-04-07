@@ -4,10 +4,10 @@ module.exports = {
     {
       rules: {
         'issue-reference-required': (parsed) => {
-          const message = [parsed.header, parsed.body, parsed.footer]
-            .filter(Boolean)
-            .join('\n');
-          const hasIssueReference = /(?:^|\s)(?:#\d+|refs\s+#\d+|fixes\s+#\d+)(?=$|\s)/i.test(message);
+          const message = [parsed.header, parsed.body, parsed.footer].filter(Boolean).join('\n');
+          const hasIssueReference = /(?:^|\s)(?:#\d+|refs\s+#\d+|fixes\s+#\d+)(?=$|\s)/i.test(
+            message,
+          );
 
           return [
             hasIssueReference,

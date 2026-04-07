@@ -20,12 +20,12 @@ const visibleEnv = {
 
 const server = http.createServer((request, response) => {
   if (request.url === '/health') {
-    response.writeHead(200, {'content-type': 'application/json'});
-    response.end(JSON.stringify({ok: true, service: serviceName}));
+    response.writeHead(200, { 'content-type': 'application/json' });
+    response.end(JSON.stringify({ ok: true, service: serviceName }));
     return;
   }
 
-  response.writeHead(200, {'content-type': 'application/json'});
+  response.writeHead(200, { 'content-type': 'application/json' });
   response.end(
     JSON.stringify({
       service: serviceName,

@@ -14,11 +14,7 @@
         "js/ts.tsdk.path": "node_modules/typescript/lib",
         "editor.formatOnSave": true
       },
-      "extensions": [
-        "dbaeumer.vscode-eslint",
-        "esbenp.prettier-vscode",
-        "graphql.vscode-graphql"
-      ]
+      "extensions": ["dbaeumer.vscode-eslint", "esbenp.prettier-vscode", "graphql.vscode-graphql"]
     }
   },
   "postCreateCommand": "bash .devcontainer/post-create.sh",

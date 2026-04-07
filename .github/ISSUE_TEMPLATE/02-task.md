@@ -1,9 +1,9 @@
 ---
 name: Task
 about: A small, concrete piece of work with a clear done condition.
-title: "[Task] "
-labels: "type:chore, priority:medium"
-assignees: ""
+title: '[Task] '
+labels: 'type:chore, priority:medium'
+assignees: ''
 ---
 
 Type: Implementation

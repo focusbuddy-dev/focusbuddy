@@ -1,14 +1,10 @@
-import fs from "node:fs";
-import os from "node:os";
-import path from "node:path";
-import crypto from "node:crypto";
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import crypto from 'node:crypto';
 
 export function getStatePath(cwd) {
-  const digest = crypto
-    .createHash("sha256")
-    .update(cwd)
-    .digest("hex")
-    .slice(0, 12);
+  const digest = crypto.createHash('sha256').update(cwd).digest('hex').slice(0, 12);
 
   return path.join(os.tmpdir(), `copilot-request-guard-${digest}.json`);
 }
@@ -19,14 +15,14 @@ export function safeReadJson(filePath, fallback) {
       return fallback;
     }
 
-    return JSON.parse(fs.readFileSync(filePath, "utf8"));
+    return JSON.parse(fs.readFileSync(filePath, 'utf8'));
   } catch {
     return fallback;
   }
 }
 
 export function safeWriteJson(filePath, value) {
-  fs.writeFileSync(filePath, JSON.stringify(value, null, 2), "utf8");
+  fs.writeFileSync(filePath, JSON.stringify(value, null, 2), 'utf8');
 }
 
 export function collectStringValues(value, result = [], depth = 0) {
@@ -34,7 +30,7 @@ export function collectStringValues(value, result = [], depth = 0) {
     return result;
   }
 
-  if (typeof value === "string") {
+  if (typeof value === 'string') {
     result.push(value);
     return result;
   }
@@ -46,7 +42,7 @@ export function collectStringValues(value, result = [], depth = 0) {
     return result;
   }
 
-  if (typeof value === "object") {
+  if (typeof value === 'object') {
     for (const item of Object.values(value)) {
       collectStringValues(item, result, depth + 1);
     }
@@ -60,24 +56,22 @@ export function buildEventText(event) {
     .map((value) => value.trim())
     .filter(Boolean);
 
-  return values.join("\n").slice(0, 50000);
+  return values.join('\n').slice(0, 50000);
 }
 
 export function normalizeGuardText(text) {
-  return String(text || "")
-    .normalize("NFKC")
-    .replace(/\r\n/g, "\n")
-    .replace(/[\u200B-\u200D\uFEFF]/g, "");
+  return String(text || '')
+    .normalize('NFKC')
+    .replace(/\r\n/g, '\n')
+    .replace(/[\u200B-\u200D\uFEFF]/g, '');
 }
 
 export function buildPromptLikeText(event) {
-  if (!event || typeof event !== "object") {
-    return "";
+  if (!event || typeof event !== 'object') {
+    return '';
   }
 
-  const sanitizedEvent = Object.fromEntries(
-    Object.entries(event).filter(([key]) => key !== "cwd"),
-  );
+  const sanitizedEvent = Object.fromEntries(Object.entries(event).filter(([key]) => key !== 'cwd'));
 
   return normalizeGuardText(buildEventText(sanitizedEvent));
 }
@@ -88,7 +82,7 @@ export function extractIssueNumbers(text) {
   const numbers = new Set();
 
   for (const match of matches) {
-    numbers.add(String(match[1] || ""));
+    numbers.add(String(match[1] || ''));
   }
 
   return [...numbers];

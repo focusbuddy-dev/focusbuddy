@@ -1,6 +1,6 @@
 ---
-name: "review-agent"
-description: "実装や調査から独立してレビューを行い、バグ、運用逸脱、未検証点、テスト不足を優先して報告するエージェント"
+name: 'review-agent'
+description: '実装や調査から独立してレビューを行い、バグ、運用逸脱、未検証点、テスト不足を優先して報告するエージェント'
 ---
 
 # Review Agent
