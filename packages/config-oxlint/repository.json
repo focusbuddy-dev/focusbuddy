@@ -1,0 +1,15 @@
+{
+  "extends": ["./base.json"],
+  "env": {
+    "node": true,
+    "es2024": true
+  },
+  "overrides": [
+    {
+      "files": ["test/**/*.mjs", "**/*.test.mjs"],
+      "env": {
+        "node": true
+      }
+    }
+  ]
+}

@@ -1,7 +1,14 @@
-# Jest Config Package Boundary
+# Jest Config Package
 
-This package is reserved for the shared Jest config baseline.
+This package provides the shared Jest baselines for the FocusBuddy monorepo.
 
-Issue #18 creates the boundary only.
+Available configs:
 
-Real shared config content is expected in issue #19.
+- `base.cjs` for shared defaults
+- `api.cjs` for the Node-based API runtime
+- `web.cjs` for the jsdom-based web runtime
+
+Current consumers:
+
+- `apps/api/jest.config.cjs`
+- `apps/web/jest.config.cjs`

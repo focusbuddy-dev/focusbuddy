@@ -12,6 +12,14 @@ commitlint-setup:
 commitlint-check:
     bash scripts/run-commitlint-checks.sh
 
+# Format the repository with the shared Prettier config.
+format:
+    pnpm format
+
+# Check repository formatting without writing changes.
+format-check:
+    pnpm format:check
+
 # Start the local Docker development stack.
 local-up:
     bash scripts/local-dev/up.sh

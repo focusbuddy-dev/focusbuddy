@@ -2,6 +2,16 @@
   "name": "@focusbuddy/config-typescript",
   "private": true,
   "version": "0.0.0",
+  "files": [
+    "base.json",
+    "api.json",
+    "web.json"
+  ],
+  "exports": {
+    "./base": "./base.json",
+    "./api": "./api.json",
+    "./web": "./web.json"
+  },
   "scripts": {
     "build": "node ../../scripts/workspace-task.mjs @focusbuddy/config-typescript build",
     "dev": "node ../../scripts/workspace-task.mjs @focusbuddy/config-typescript dev",

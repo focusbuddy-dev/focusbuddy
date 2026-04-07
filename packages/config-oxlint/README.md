@@ -1,7 +1,16 @@
-# Oxlint Config Package Boundary
+# Oxlint Config Package
 
-This package is reserved for the shared oxlint config baseline.
+This package provides the shared oxlint baselines for the FocusBuddy monorepo.
 
-Issue #18 creates the boundary only.
+Available configs:
 
-Real shared config content is expected in issue #19.
+- `base.json` for shared lint defaults
+- `repository.json` for the repository root
+- `api.json` for Node-oriented API code
+- `web.json` for browser-oriented web code
+
+Current consumers:
+
+- `.oxlintrc.json` at the repository root
+- `apps/api/.oxlintrc.json`
+- `apps/web/.oxlintrc.json`

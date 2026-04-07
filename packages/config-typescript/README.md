@@ -1,7 +1,14 @@
-# TypeScript Config Package Boundary
+# TypeScript Config Package
 
-This package is reserved for the shared TypeScript config baseline.
+This package provides the shared TypeScript baselines for the FocusBuddy monorepo.
 
-Issue #18 creates the boundary only.
+Available configs:
 
-Real shared config content is expected in issue #19.
+- `base.json` for strict shared defaults
+- `api.json` for Node-oriented API code
+- `web.json` for browser and bundler-oriented web code
+
+Current consumers:
+
+- `apps/api/tsconfig.json`
+- `apps/web/tsconfig.json`

@@ -1,7 +1,7 @@
-# Prettier Config Package Boundary
+# Prettier Config Package
 
-This package is reserved for the shared Prettier config baseline.
+This package provides the shared Prettier baseline for the FocusBuddy monorepo.
 
-Issue #18 creates the boundary only.
+The repository root uses this package through `prettier.config.cjs`.
 
-Real shared config content is expected in issue #19.
+The shared config is the single source of truth for formatting details such as quote style.

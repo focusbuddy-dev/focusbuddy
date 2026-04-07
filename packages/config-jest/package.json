@@ -2,6 +2,16 @@
   "name": "@focusbuddy/config-jest",
   "private": true,
   "version": "0.0.0",
+  "files": [
+    "base.cjs",
+    "api.cjs",
+    "web.cjs"
+  ],
+  "exports": {
+    "./base": "./base.cjs",
+    "./api": "./api.cjs",
+    "./web": "./web.cjs"
+  },
   "scripts": {
     "build": "node ../../scripts/workspace-task.mjs @focusbuddy/config-jest build",
     "dev": "node ../../scripts/workspace-task.mjs @focusbuddy/config-jest dev",

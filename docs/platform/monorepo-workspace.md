@@ -116,7 +116,8 @@ The current workspace package scripts are placeholders so the monorepo structure
 
 ### For #19
 
-- replace the placeholder config packages with real shared toolchain configuration
+- the shared tooling baselines are now documented in `docs/platform/shared-tooling.md`
+- future app work should consume the shared config packages instead of defining one-off local tool settings
 
 ### For #20
 
