@@ -22,6 +22,26 @@ Dev container setup details are documented in [.devcontainer/README.md](.devcont
 - `gh` authentication with a fine-grained personal access token
 - verification and troubleshooting steps for local development
 
+### Commit Message Tooling Demo
+
+This repository includes a small commitlint demo for Issue #14.
+
+Initial setup is wrapped in the Makefile target below. It installs the local tooling, configures the `commit-msg` hook, and runs the commitlint verification steps.
+
+Run this command after cloning the repository:
+
+```bash
+make commitlint-setup
+```
+
+If dependencies are already installed and you only want to rerun the checks, use:
+
+```bash
+make commitlint-check
+```
+
+The current demo accepts issue references such as `#14`, `refs #14`, or `fixes #14` in the commit message.
+
 ## Goal
 
 FocusBuddy aims to help users:

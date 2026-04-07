@@ -140,3 +140,6 @@ vite.config.ts.timestamp-*
 
 # Local Git worktrees created during issue-based workflows
 .worktrees/
+
+# Husky runtime files created during install
+.husky/_
