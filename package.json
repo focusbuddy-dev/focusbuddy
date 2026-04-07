@@ -7,7 +7,7 @@
     "dev": "turbo run dev --parallel",
     "lint": "turbo run lint",
     "prepare": "husky",
-    "test": "turbo run test",
+    "test": "node --test test/*.test.mjs && turbo run test",
     "typecheck": "turbo run typecheck"
   },
   "devDependencies": {
