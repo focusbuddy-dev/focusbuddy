@@ -21,7 +21,7 @@
       ]
     }
   },
-  "postCreateCommand": "node --version && npm --version && corepack --version && command -v pnpm || true && pnpm --version || true && corepack prepare pnpm@10.33.0 --activate && pnpm --version || true",
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
   "postStartCommand": "bash .devcontainer/setup-git-signing.sh",
   "remoteUser": "node"
 }
