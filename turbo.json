@@ -8,6 +8,10 @@
     "dev": {
       "cache": false
     },
+    "generate": {
+      "dependsOn": ["^generate"],
+      "outputs": ["generated/**"]
+    },
     "lint": {
       "outputs": []
     },

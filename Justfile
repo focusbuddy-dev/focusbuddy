@@ -20,6 +20,10 @@ format:
 format-check:
     pnpm format:check
 
+# Generate OpenAPI-driven contract outputs.
+generate:
+    pnpm generate
+
 # Start the local Docker development stack.
 local-up:
     bash scripts/local-dev/up.sh

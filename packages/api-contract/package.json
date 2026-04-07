@@ -2,11 +2,28 @@
   "name": "@focusbuddy/api-contract",
   "private": true,
   "version": "0.0.0",
+  "files": [
+    "README.md",
+    "openapi",
+    "generated"
+  ],
+  "exports": {
+    "./openapi": "./openapi/focusbuddy.openapi.yaml",
+    "./generated/client": "./generated/client.ts",
+    "./generated/types": "./generated/types.ts"
+  },
   "scripts": {
-    "build": "node ../../scripts/workspace-task.mjs @focusbuddy/api-contract build",
-    "dev": "node ../../scripts/workspace-task.mjs @focusbuddy/api-contract dev",
-    "lint": "node ../../scripts/workspace-task.mjs @focusbuddy/api-contract lint",
+    "build": "pnpm generate",
+    "dev": "pnpm generate",
+    "generate": "pnpm generate:types && pnpm generate:client",
+    "generate:client": "openapi-zod-client ./openapi/focusbuddy.openapi.yaml -o ./generated/client.ts --export-schemas -p ../../prettier.config.cjs",
+    "generate:types": "openapi-typescript ./openapi/focusbuddy.openapi.yaml -o ./generated/types.ts",
+    "lint": "oxlint .",
     "test": "node ../../scripts/workspace-task.mjs @focusbuddy/api-contract test",
-    "typecheck": "node ../../scripts/workspace-task.mjs @focusbuddy/api-contract typecheck"
+    "typecheck": "pnpm generate && tsc --project tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@zodios/core": "^10.9.6",
+    "zod": "^3.25.76"
   }
 }
