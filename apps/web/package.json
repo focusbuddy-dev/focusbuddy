@@ -1,0 +1,12 @@
+{
+  "name": "@focusbuddy/web",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "build": "node ../../scripts/workspace-task.mjs @focusbuddy/web build",
+    "dev": "node ../../scripts/workspace-task.mjs @focusbuddy/web dev",
+    "lint": "node ../../scripts/workspace-task.mjs @focusbuddy/web lint",
+    "test": "node ../../scripts/workspace-task.mjs @focusbuddy/web test",
+    "typecheck": "node ../../scripts/workspace-task.mjs @focusbuddy/web typecheck"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "name": "@focusbuddy/config-oxlint",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "build": "node ../../scripts/workspace-task.mjs @focusbuddy/config-oxlint build",
+    "dev": "node ../../scripts/workspace-task.mjs @focusbuddy/config-oxlint dev",
+    "lint": "node ../../scripts/workspace-task.mjs @focusbuddy/config-oxlint lint",
+    "test": "node ../../scripts/workspace-task.mjs @focusbuddy/config-oxlint test",
+    "typecheck": "node ../../scripts/workspace-task.mjs @focusbuddy/config-oxlint typecheck"
+  }
+}

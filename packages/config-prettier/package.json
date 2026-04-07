@@ -1,0 +1,12 @@
+{
+  "name": "@focusbuddy/config-prettier",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "build": "node ../../scripts/workspace-task.mjs @focusbuddy/config-prettier build",
+    "dev": "node ../../scripts/workspace-task.mjs @focusbuddy/config-prettier dev",
+    "lint": "node ../../scripts/workspace-task.mjs @focusbuddy/config-prettier lint",
+    "test": "node ../../scripts/workspace-task.mjs @focusbuddy/config-prettier test",
+    "typecheck": "node ../../scripts/workspace-task.mjs @focusbuddy/config-prettier typecheck"
+  }
+}

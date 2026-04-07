@@ -144,5 +144,8 @@ vite.config.ts.timestamp-*
 # Local Git worktrees created during issue-based workflows
 .worktrees/
 
+# Turborepo local cache
+.turbo/
+
 # Husky runtime files created during install
 .husky/_

@@ -6,7 +6,7 @@ FocusBuddy is a monorepo for a Pomodoro-based focus tracking app with content lo
 
 ## Status
 
-Implementation has not started yet.
+Implementation has not started yet, but the monorepo workspace skeleton is now in place.
 
 This repository is currently being prepared with:
 
@@ -57,6 +57,19 @@ FocusBuddy aims to help users:
 - track focus sessions with a Pomodoro timer
 - record what they worked on
 - understand how long learning content takes over time
+
+## Workspace Layout
+
+The initial Turborepo workspace layout for Issue #18 is documented in [docs/platform/monorepo-workspace.md](docs/platform/monorepo-workspace.md).
+
+The current top-level areas are:
+
+- `apps/api` for the future NestJS API app
+- `apps/web` for the future Next.js web app
+- `apps/mobile` as the reserved mobile app boundary
+- `packages/api-contract` for the future OpenAPI spec and generated contract outputs
+- `packages/config-*` for shared toolchain config packages
+- `packages/logger` for the shared logger facade and runtime adapters
 
 ## Design Notes
 

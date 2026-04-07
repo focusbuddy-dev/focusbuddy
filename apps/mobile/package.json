@@ -1,0 +1,12 @@
+{
+  "name": "@focusbuddy/mobile",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "build": "node ../../scripts/workspace-task.mjs @focusbuddy/mobile build",
+    "dev": "node ../../scripts/workspace-task.mjs @focusbuddy/mobile dev",
+    "lint": "node ../../scripts/workspace-task.mjs @focusbuddy/mobile lint",
+    "test": "node ../../scripts/workspace-task.mjs @focusbuddy/mobile test",
+    "typecheck": "node ../../scripts/workspace-task.mjs @focusbuddy/mobile typecheck"
+  }
+}
