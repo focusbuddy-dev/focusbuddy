@@ -225,11 +225,11 @@ The next step is to define visibility rules using the concepts above.
 
 See [mvp-visibility-rules.md](mvp-visibility-rules.md) for the follow-up design note.
 
-Questions that move to #37:
+The visibility note defines:
 
-- which fields are visible when a session is public
-- whether notes need their own public flag in addition to session visibility
-- how target publication and session visibility interact in the public summary view
+- which session data may appear in public views
+- how note visibility relates to session visibility
+- how target-level public summary enablement interacts with session visibility
 
 ### For #38
 

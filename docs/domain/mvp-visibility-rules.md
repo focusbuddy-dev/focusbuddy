@@ -50,7 +50,7 @@ A private session:
 A public session:
 
 - may appear in public views
-- may appear in a public target summary if the related target is published
+- may appear in a public target summary if the related target has its public summary enabled
 - may contribute note content only when the note itself is visible under the note rules below
 
 ## Note visibility
@@ -100,7 +100,7 @@ When a target has a public summary, the public summary may show:
 - target-level public metadata allowed by later schema and API design
 - public sessions linked to that target
 - public note content from those sessions when note visibility allows it
-- public stamp information linked to that target
+- stamp information linked to that target only when it is visible under the applicable stamp rules
 
 The public summary must not show:
 
