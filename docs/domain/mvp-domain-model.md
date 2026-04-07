@@ -247,11 +247,13 @@ Questions that move to #38:
 
 The next step is to define stamps and summary aggregates.
 
-Questions that move to #39:
+See [mvp-stamp-and-summary-rules.md](mvp-stamp-and-summary-rules.md) for the follow-up design note.
 
-- whether one actor can stamp the same target more than once
-- whether unauthenticated stamp actors are allowed and how they are identified
-- which values in the public summary should be derived live versus cached
+The stamp and summary note defines:
+
+- that helpful stamps are anchored to FocusTarget
+- that the first MVP uses one effective helpful stamp per actor per target
+- that public summary aggregates are derived from visible public sessions and effective helpful stamps
 
 ### For #40
 
@@ -263,7 +265,6 @@ Questions that move to #40:
 - exact nullable and required field design
 - exact index plan
 - exact continuity field and relation design
-- exact visibility field design across targets, sessions, and notes
-- exact continuity field and relation design
 - exact visibility field and relation design across targets, sessions, and notes
+- exact stamp actor and aggregate field design
 - whether public summary needs its own persisted model in the first schema
