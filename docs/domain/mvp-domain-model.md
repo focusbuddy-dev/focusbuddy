@@ -223,6 +223,8 @@ The first schema should avoid premature complexity for:
 
 The next step is to define visibility rules using the concepts above.
 
+See [mvp-visibility-rules.md](mvp-visibility-rules.md) for the follow-up design note.
+
 Questions that move to #37:
 
 - which fields are visible when a session is public
@@ -258,4 +260,5 @@ Questions that move to #40:
 - exact key strategy
 - exact nullable and required field design
 - exact index plan
+- exact visibility field design across targets, sessions, and notes
 - whether public summary needs its own persisted model in the first schema
