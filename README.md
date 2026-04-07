@@ -22,6 +22,8 @@ Dev container setup details are documented in [.devcontainer/README.md](.devcont
 - `gh` authentication with a fine-grained personal access token
 - verification and troubleshooting steps for local development
 
+The Docker-based local development environment is documented in [docs/platform/local-development.md](docs/platform/local-development.md).
+
 ### Commit Message Tooling Demo
 
 This repository includes a small commitlint demo for Issue #14.
@@ -70,6 +72,15 @@ The current top-level areas are:
 - `packages/api-contract` for the future OpenAPI spec and generated contract outputs
 - `packages/config-*` for shared toolchain config packages
 - `packages/logger` for the shared logger facade and runtime adapters
+
+## Local Development Stack
+
+Issue #51 adds a first local Docker development baseline with:
+
+- `compose.local.yaml` for the local stack definition
+- a shared local Node dev image under `docker/local`
+- helper scripts under `scripts/local-dev`
+- a documented local authentication strategy for web and API follow-up work
 
 ## Design Notes
 

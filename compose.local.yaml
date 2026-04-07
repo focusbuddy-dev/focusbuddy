@@ -1,0 +1,112 @@
+services:
+  postgres:
+    image: postgres:16-bookworm
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-focusbuddy}
+      POSTGRES_USER: ${POSTGRES_USER:-focusbuddy}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-focusbuddy}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - focusbuddy-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-focusbuddy} -d ${POSTGRES_DB:-focusbuddy}",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  auth:
+    build:
+      context: .
+      dockerfile: docker/local/node-dev.Dockerfile
+    working_dir: /workspace
+    command: ["node", "scripts/local-dev/auth-stub.mjs"]
+    environment:
+      PORT: 9099
+      FOCUSBUDDY_AUTH_MODE: ${FOCUSBUDDY_AUTH_MODE:-stub}
+    volumes:
+      - .:/workspace
+    ports:
+      - "${AUTH_PORT:-9099}:9099"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:9099/health').then((response)=>{if(!response.ok) process.exit(1)}).catch(()=>process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: .
+      dockerfile: docker/local/node-dev.Dockerfile
+    working_dir: /workspace
+    command: ["node", "scripts/local-dev/placeholder-service.mjs", "api"]
+    environment:
+      PORT: 3001
+      DATABASE_URL: postgres://${POSTGRES_USER:-focusbuddy}:${POSTGRES_PASSWORD:-focusbuddy}@postgres:5432/${POSTGRES_DB:-focusbuddy}
+      FOCUSBUDDY_AUTH_MODE: ${FOCUSBUDDY_AUTH_MODE:-stub}
+      FOCUSBUDDY_AUTH_BASE_URL: http://auth:9099
+    volumes:
+      - .:/workspace
+    ports:
+      - "${API_PORT:-3001}:3001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      auth:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3001/health').then((response)=>{if(!response.ok) process.exit(1)}).catch(()=>process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build:
+      context: .
+      dockerfile: docker/local/node-dev.Dockerfile
+    working_dir: /workspace
+    command: ["node", "scripts/local-dev/placeholder-service.mjs", "web"]
+    environment:
+      PORT: 3000
+      FOCUSBUDDY_API_BASE_URL: http://api:3001
+      FOCUSBUDDY_AUTH_MODE: ${FOCUSBUDDY_AUTH_MODE:-stub}
+      FOCUSBUDDY_AUTH_BASE_URL: http://auth:9099
+    volumes:
+      - .:/workspace
+    ports:
+      - "${WEB_PORT:-3000}:3000"
+    depends_on:
+      api:
+        condition: service_healthy
+      auth:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3000/health').then((response)=>{if(!response.ok) process.exit(1)}).catch(()=>process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  focusbuddy-postgres-data:
