@@ -263,7 +263,7 @@ See [mvp-logical-er-review.md](mvp-logical-er-review.md) for the logical ER revi
 
 See [mvp-prisma-schema-design.md](mvp-prisma-schema-design.md) for the first schema design decisions created from that review.
 
-Questions that move to #40:
+Questions that moved to #40 (historical):
 
 - exact key strategy
 - exact nullable and required field design

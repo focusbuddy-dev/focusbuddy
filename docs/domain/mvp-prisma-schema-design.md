@@ -153,15 +153,15 @@ model Stamp {
   actorType  StampActorType
   actorKey   String
   actorUserId String?
-  stampType  StampType     @default(HELPFUL)
-  isEffective Boolean      @default(true)
-  createdAt  DateTime      @default(now())
-  updatedAt  DateTime      @updatedAt
+  stampType   StampType     @default(HELPFUL)
+  isEffective Boolean       @default(true)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
 
   target    FocusTarget @relation(fields: [targetId], references: [id], onDelete: Cascade)
   actorUser User?       @relation("StampActorUser", fields: [actorUserId], references: [id], onDelete: SetNull)
 
-  @@unique([targetId, actorKey, stampType])
+  @@unique([targetId, actorType, actorKey, stampType])
   @@index([targetId, isEffective, stampType])
   @@index([actorUserId])
 }
@@ -226,14 +226,14 @@ Decision:
 - foreign keys:
   - `targetId -> FocusTarget.id`
   - `actorUserId -> User.id` when the actor is authenticated
-- unique key: `[targetId, actorKey, stampType]`
+- unique key: `[targetId, actorType, actorKey, stampType]`
 - required fields: `targetId`, `actorType`, `actorKey`, `stampType`, `isEffective`
 - nullable fields: `actorUserId`
 
 Decision:
 
 - stamp deduplication happens at the database level by target, actor, and type
-- `actorKey` is the stable deduplication key for both authenticated and anonymous actors
+- `actorType` and `actorKey` together define the deduplication identity for both authenticated and anonymous actors
 - `actorUserId` is used only when the actor is an authenticated user
 
 ## Why `PublicSummary` is not stored first
@@ -263,7 +263,7 @@ The first schema should rely on database constraints for what the database can s
 - each `ResumeSource` must point to exactly one started session and one previous session
 - each started session can have at most one `ResumeSource`
 - each `Stamp` row must belong to one `FocusTarget`
-- each actor can have at most one row per target and stamp type
+- each actor identity can have at most one row per target and stamp type
 
 ### Application-enforced invariants
 
