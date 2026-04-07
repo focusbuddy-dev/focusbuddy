@@ -61,3 +61,4 @@ FocusBuddy aims to help users:
 ## Design Notes
 
 - The first public-safe domain design note is available at [docs/domain/mvp-domain-model.md](docs/domain/mvp-domain-model.md).
+- The follow-up continuity rules note is available at [docs/domain/mvp-continuity-rules.md](docs/domain/mvp-continuity-rules.md).
