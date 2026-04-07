@@ -1,13 +1,19 @@
 {
-  "name": "focusbuddy-tooling",
+  "name": "focusbuddy",
   "private": true,
   "packageManager": "pnpm@10.31.0",
   "scripts": {
-    "prepare": "husky"
+    "build": "turbo run build",
+    "dev": "turbo run dev --parallel",
+    "lint": "turbo run lint",
+    "prepare": "husky",
+    "test": "node --test test/*.test.mjs && turbo run test",
+    "typecheck": "turbo run typecheck"
   },
   "devDependencies": {
     "@commitlint/cli": "^20.5.0",
     "@commitlint/config-conventional": "^20.5.0",
-    "husky": "^9.1.7"
+    "husky": "^9.1.7",
+    "turbo": "^2.9.4"
   }
 }

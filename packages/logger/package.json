@@ -1,0 +1,12 @@
+{
+  "name": "@focusbuddy/logger",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "build": "node ../../scripts/workspace-task.mjs @focusbuddy/logger build",
+    "dev": "node ../../scripts/workspace-task.mjs @focusbuddy/logger dev",
+    "lint": "node ../../scripts/workspace-task.mjs @focusbuddy/logger lint",
+    "test": "node ../../scripts/workspace-task.mjs @focusbuddy/logger test",
+    "typecheck": "node ../../scripts/workspace-task.mjs @focusbuddy/logger typecheck"
+  }
+}

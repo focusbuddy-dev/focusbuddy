@@ -1,0 +1,12 @@
+{
+  "name": "@focusbuddy/api-contract",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "build": "node ../../scripts/workspace-task.mjs @focusbuddy/api-contract build",
+    "dev": "node ../../scripts/workspace-task.mjs @focusbuddy/api-contract dev",
+    "lint": "node ../../scripts/workspace-task.mjs @focusbuddy/api-contract lint",
+    "test": "node ../../scripts/workspace-task.mjs @focusbuddy/api-contract test",
+    "typecheck": "node ../../scripts/workspace-task.mjs @focusbuddy/api-contract typecheck"
+  }
+}
