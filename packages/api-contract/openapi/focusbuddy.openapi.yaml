@@ -17,6 +17,8 @@ tags:
   - name: Sessions
   - name: PublicSummary
   - name: Stamps
+security:
+  - bearerAuth: []
 paths:
   /v1/targets:
     get:
@@ -130,6 +132,7 @@ paths:
       tags: [PublicSummary]
       operationId: getPublicTargetSummary
       summary: Read the derived public summary for a focus target.
+      security: []
       responses:
         '200':
           description: The current public summary state.
@@ -146,6 +149,7 @@ paths:
       tags: [Stamps]
       operationId: upsertHelpfulStamp
       summary: Upsert the effective helpful stamp for the current actor.
+      security: []
       requestBody:
         required: true
         content:
@@ -162,6 +166,12 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Placeholder bearer token scheme for authenticated API endpoints.
   parameters:
     TargetId:
       name: targetId
@@ -246,6 +256,26 @@ components:
         updatedAt:
           type: string
           format: date-time
+    PublicFocusTarget:
+      type: object
+      additionalProperties: false
+      required:
+        - title
+        - sourceType
+      properties:
+        title:
+          type: string
+        sourceType:
+          $ref: '#/components/schemas/TargetSourceType'
+        sourceUrl:
+          type:
+            - string
+            - 'null'
+          format: uri
+        genre:
+          type:
+            - string
+            - 'null'
     CreateFocusTargetInput:
       type: object
       additionalProperties: false
@@ -481,7 +511,7 @@ components:
         - recentPublicSessions
       properties:
         target:
-          $ref: '#/components/schemas/FocusTarget'
+          $ref: '#/components/schemas/PublicFocusTarget'
         publicSessionCount:
           type: integer
           minimum: 0

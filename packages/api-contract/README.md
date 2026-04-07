@@ -16,8 +16,10 @@ This package owns the OpenAPI source of truth for FocusBuddy and the generated c
 
 ## Package exports
 
-- `@focusbuddy/api-contract/openapi` exposes the source OpenAPI document
+- `@focusbuddy/api-contract/openapi-path` exposes a filesystem path for Node-based tooling that needs to read the source OpenAPI document
 - `@focusbuddy/api-contract/generated/types` exposes generated contract types
 - `@focusbuddy/api-contract/generated/client` exposes generated Zod schemas and the typed client scaffold
+
+The generated client scaffold depends on `@zodios/core`, `axios`, and `zod`, and this package declares those runtime dependencies directly so consumers do not need to install them separately.
 
 Generated artifacts stay out of git by default and should be rebuilt locally or in CI through the package scripts.
