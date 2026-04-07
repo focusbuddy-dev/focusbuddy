@@ -1,7 +1,7 @@
 import http from "node:http";
 
 const serviceName = process.argv[2] ?? "service";
-const portValue = process.argv[3] ?? process.env.PORT ?? "3000";
+const portValue = process.env.PORT ?? process.argv[3] ?? "3000";
 const port = Number(portValue);
 
 const visibleEnv = {
@@ -13,12 +13,12 @@ const visibleEnv = {
 
 const server = http.createServer((request, response) => {
   if (request.url === "/health") {
-    response.writeHead(200, { "content-type": "application/json" });
-    response.end(JSON.stringify({ ok: true, service: serviceName }));
+    response.writeHead(200, {"content-type": "application/json"});
+    response.end(JSON.stringify({ok: true, service: serviceName}));
     return;
   }
 
-  response.writeHead(200, { "content-type": "application/json" });
+  response.writeHead(200, {"content-type": "application/json"});
   response.end(
     JSON.stringify({
       service: serviceName,
