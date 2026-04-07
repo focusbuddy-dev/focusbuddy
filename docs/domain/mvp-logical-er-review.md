@@ -38,7 +38,7 @@ erDiagram
     FocusTarget ||--o{ Stamp : receives
     FocusTarget ||--o| PublicSummary : may_expose
     FocusTarget ||--o{ ResumeSource : anchors
-    FocusSession o|--|| ResumeSource : started_session_for
+    FocusSession ||--o| ResumeSource : started_session_for
     FocusSession o|--o{ ResumeSource : previous_session_for
 
     User {
