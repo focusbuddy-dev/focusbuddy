@@ -1,0 +1,10 @@
+coverage/
+dist/
+.next/
+.turbo/
+.worktrees/
+node_modules/
+packages/api-contract/generated/
+**/generated/
+**/__generated__/
+pnpm-lock.yaml

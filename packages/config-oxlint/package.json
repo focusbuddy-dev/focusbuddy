@@ -2,6 +2,18 @@
   "name": "@focusbuddy/config-oxlint",
   "private": true,
   "version": "0.0.0",
+  "files": [
+    "base",
+    "repository",
+    "api",
+    "web"
+  ],
+  "exports": {
+    "./base": "./base/oxlint.config.ts",
+    "./repository": "./repository/oxlint.config.ts",
+    "./api": "./api/oxlint.config.ts",
+    "./web": "./web/oxlint.config.ts"
+  },
   "scripts": {
     "build": "node ../../scripts/workspace-task.mjs @focusbuddy/config-oxlint build",
     "dev": "node ../../scripts/workspace-task.mjs @focusbuddy/config-oxlint dev",

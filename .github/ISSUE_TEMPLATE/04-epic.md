@@ -1,9 +1,9 @@
 ---
 name: Epic
 about: Track a larger goal that groups multiple tasks or follow-up issues.
-title: "[Epic] "
-labels: "enhancement, priority:medium"
-assignees: ""
+title: '[Epic] '
+labels: 'enhancement, priority:medium'
+assignees: ''
 ---
 
 Type: Planning

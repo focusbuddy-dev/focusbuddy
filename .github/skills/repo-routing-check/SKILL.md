@@ -1,6 +1,6 @@
 ---
 name: repo-routing-check
-description: "Use when deciding whether a request should be handled as Ask, Plan, Agent, or subagent, and when choosing between orchestrator-agent, issue-agent, research-agent, task-manager, monetization-agent, review-agent, or Explore."
+description: 'Use when deciding whether a request should be handled as Ask, Plan, Agent, or subagent, and when choosing between orchestrator-agent, issue-agent, research-agent, task-manager, monetization-agent, review-agent, or Explore.'
 ---
 
 # Repo Routing Check

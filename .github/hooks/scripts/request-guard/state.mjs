@@ -1,17 +1,17 @@
-import {detectRoute} from "./policy.mjs";
+import { detectRoute } from './policy.mjs';
 
 export function createDefaultExecutionState() {
   return {
-    route: "Ask",
+    route: 'Ask',
     isActionTask: false,
     valid: true,
-    sourceText: "",
+    sourceText: '',
   };
 }
 
 export function buildExecutionState(prompt) {
   const route = detectRoute(prompt);
-  const isActionTask = route === "Agent";
+  const isActionTask = route === 'Agent';
 
   return {
     route,

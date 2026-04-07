@@ -64,6 +64,8 @@ FocusBuddy aims to help users:
 
 The initial Turborepo workspace layout for Issue #18 is documented in [docs/platform/monorepo-workspace.md](docs/platform/monorepo-workspace.md).
 
+The shared TypeScript, oxlint, Prettier, and Jest baselines for Issue #19 are documented in [docs/platform/shared-tooling.md](docs/platform/shared-tooling.md).
+
 The current top-level areas are:
 
 - `apps/api` for the future NestJS API app
@@ -72,6 +74,22 @@ The current top-level areas are:
 - `packages/api-contract` for the future OpenAPI spec and generated contract outputs
 - `packages/config-*` for shared toolchain config packages
 - `packages/logger` for the shared logger facade and runtime adapters
+
+## Shared Tooling
+
+The repository now exposes common developer commands for formatting, linting, testing, and type checking:
+
+- `pnpm format`
+- `pnpm format:check`
+- `pnpm lint`
+- `pnpm test`
+- `pnpm typecheck`
+
+Formatting is owned by Prettier, including quote style decisions for JavaScript and TypeScript files.
+
+Linting is owned by oxlint.
+
+Generated files are expected to live under `generated` or `__generated__` directories and are excluded from shared formatting and linting by default.
 
 ## Local Development Stack
 

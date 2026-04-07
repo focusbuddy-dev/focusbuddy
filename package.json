@@ -5,7 +5,10 @@
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev --parallel",
-    "lint": "turbo run lint",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "pnpm lint:repo && turbo run lint",
+    "lint:repo": "oxlint .",
     "prepare": "husky",
     "test": "node --test test/*.test.mjs && turbo run test",
     "typecheck": "turbo run typecheck"
@@ -14,6 +17,12 @@
     "@commitlint/cli": "^20.5.0",
     "@commitlint/config-conventional": "^20.5.0",
     "husky": "^9.1.7",
+    "jest": "^30.3.0",
+    "jest-environment-jsdom": "^30.3.0",
+    "oxlint": "^1.59.0",
+    "prettier": "^3.8.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^6.0.2",
     "turbo": "^2.9.4"
   }
 }

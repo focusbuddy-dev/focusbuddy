@@ -1,6 +1,6 @@
 ---
-name: "issue-agent"
-description: "Issue の確認、作成、更新、close、コメント、label 変更、branch/worktree 連携を一元化するエージェント。Issue 系操作の単一入口を担う"
+name: 'issue-agent'
+description: 'Issue の確認、作成、更新、close、コメント、label 変更、branch/worktree 連携を一元化するエージェント。Issue 系操作の単一入口を担う'
 ---
 
 # Issue Agent

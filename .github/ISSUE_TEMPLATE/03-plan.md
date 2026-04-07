@@ -1,9 +1,9 @@
 ---
 name: Plan
 about: Define scope, decisions, and next steps before execution.
-title: "[Plan] "
-labels: "type:chore, priority:medium"
-assignees: ""
+title: '[Plan] '
+labels: 'type:chore, priority:medium'
+assignees: ''
 ---
 
 ## Background

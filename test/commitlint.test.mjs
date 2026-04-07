@@ -10,14 +10,10 @@ const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
 function runCommitlint(message) {
   return new Promise((resolveResult, reject) => {
-    const child = spawn(
-      'pnpm',
-      ['exec', 'commitlint', '--config', 'commitlint.config.cjs'],
-      {
-        cwd: repoRoot,
-        stdio: ['pipe', 'pipe', 'pipe'],
-      },
-    );
+    const child = spawn('pnpm', ['exec', 'commitlint', '--config', 'commitlint.config.cjs'], {
+      cwd: repoRoot,
+      stdio: ['pipe', 'pipe', 'pipe'],
+    });
 
     let stdout = '';
     let stderr = '';

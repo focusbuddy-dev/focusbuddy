@@ -1,9 +1,9 @@
 ---
 name: Bug
 about: Something is broken. Include repro steps and expected behavior.
-title: "[Bug] "
-labels: "type:bug, bug, priority:medium"
-assignees: ""
+title: '[Bug] '
+labels: 'type:bug, bug, priority:medium'
+assignees: ''
 ---
 
 Type: Bug

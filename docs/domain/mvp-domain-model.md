@@ -25,17 +25,17 @@ The main classification used here is:
 - derived view: a concept that is shown to users but can be built from source data
 - event: a recorded action or fact that happens at a point in time
 
-| Candidate | Classification | Why it exists | First schema direction |
-| --- | --- | --- | --- |
-| User | entity | Owns targets and sessions, controls visibility, signs in with Firebase | separate model |
-| FocusTarget | entity | Represents what the user works on across multiple sessions | separate model |
-| FocusSession | entity | Represents one focus attempt with timing and visibility | separate model |
-| Stamp | entity | Stores who reacted to which focus target; it may be rendered in that target's public summary when visible | separate model anchored to FocusTarget |
-| PublicSummary | derived view | Represents the public-facing summary view for a focus target, including target-linked data such as stamps | start as target-driven public view, not a required separate model or stamp attachment point |
-| Resume action | event | Records that a session started from previous work | event-style data, final storage shape decided later |
-| Genre | attribute, later candidate entity | Classifies a target for browsing and filtering | start simple, likely enum or text field |
-| Note | attribute, later candidate entity | Optional free text attached to a focus session | start as session-owned text |
-| Completion flag | attribute | Stores whether the user decided the work was complete | start as session- or target-level attribute |
+| Candidate       | Classification                    | Why it exists                                                                                             | First schema direction                                                                      |
+| --------------- | --------------------------------- | --------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| User            | entity                            | Owns targets and sessions, controls visibility, signs in with Firebase                                    | separate model                                                                              |
+| FocusTarget     | entity                            | Represents what the user works on across multiple sessions                                                | separate model                                                                              |
+| FocusSession    | entity                            | Represents one focus attempt with timing and visibility                                                   | separate model                                                                              |
+| Stamp           | entity                            | Stores who reacted to which focus target; it may be rendered in that target's public summary when visible | separate model anchored to FocusTarget                                                      |
+| PublicSummary   | derived view                      | Represents the public-facing summary view for a focus target, including target-linked data such as stamps | start as target-driven public view, not a required separate model or stamp attachment point |
+| Resume action   | event                             | Records that a session started from previous work                                                         | event-style data, final storage shape decided later                                         |
+| Genre           | attribute, later candidate entity | Classifies a target for browsing and filtering                                                            | start simple, likely enum or text field                                                     |
+| Note            | attribute, later candidate entity | Optional free text attached to a focus session                                                            | start as session-owned text                                                                 |
+| Completion flag | attribute                         | Stores whether the user decided the work was complete                                                     | start as session- or target-level attribute                                                 |
 
 ## Core entities
 

@@ -1,4 +1,4 @@
-import {buildPromptLikeText, normalizeGuardText} from "./shared.mjs";
+import { buildPromptLikeText, normalizeGuardText } from './shared.mjs';
 
 function isIssueOnlyCommand(command) {
   return /\bgh\s+issue\s+(list|view|create|edit|comment)\b/.test(command);
@@ -26,7 +26,7 @@ function isWorktreePreparationCommand(command) {
 }
 
 export function branchMatchesIssue(branch, issueNumbers) {
-  if (!branch || branch === "main") {
+  if (!branch || branch === 'main') {
     return false;
   }
 
@@ -38,11 +38,11 @@ export function branchMatchesIssue(branch, issueNumbers) {
 }
 
 export function shouldBypassIssueWorktreeRequirement(event) {
-  const toolName = normalizeGuardText(event.tool_name || "");
+  const toolName = normalizeGuardText(event.tool_name || '');
   const command = normalizeGuardText(
     [event.command, event.tool_input?.command, buildPromptLikeText(event)]
       .filter(Boolean)
-      .join("\n"),
+      .join('\n'),
   );
 
   if (isIssueManagementTool(toolName)) {
@@ -68,7 +68,7 @@ export function detectExplicitOperation(prompt) {
     return null;
   }
 
-  return String(match[1] || "").toLowerCase();
+  return String(match[1] || '').toLowerCase();
 }
 
 export function isAnswerOnlyResearch(prompt) {
@@ -85,43 +85,38 @@ export function isAnswerOnlyResearch(prompt) {
 }
 
 export function detectRoute(prompt) {
-  const normalized = String(prompt || "");
+  const normalized = String(prompt || '');
   const explicitOperation = detectExplicitOperation(normalized);
 
-  if (explicitOperation === "none") {
-    return "Ask";
+  if (explicitOperation === 'none') {
+    return 'Ask';
   }
 
   if (isAnswerOnlyResearch(normalized)) {
-    return "Ask";
+    return 'Ask';
   }
 
   const hasActionVerb =
     /(作成|生成|更新|編集|修正|追加|追記する|削除|実装|書いて|出力して|作って|更新して|直して|保存(?:して)?|実行して|push|commit|コミット|checkout|PR作成|PRに保存|run|create|update|delete)/i.test(
       normalized,
     );
-  const hasPlanVerb =
-    /(計画|手順|段取り|ステップ|方針|プラン|優先順位|整理して)/i.test(
-      normalized,
-    );
+  const hasPlanVerb = /(計画|手順|段取り|ステップ|方針|プラン|優先順位|整理して)/i.test(normalized);
   const hasResearchVerb =
-    /(調査|確認|比較|整理|説明|要約|まとめ|違い|とは|レビュー|根拠|仕様|制約)/i.test(
-      normalized,
-    );
+    /(調査|確認|比較|整理|説明|要約|まとめ|違い|とは|レビュー|根拠|仕様|制約)/i.test(normalized);
 
   if (hasActionVerb) {
-    return "Agent";
+    return 'Agent';
   }
 
   if (hasPlanVerb) {
-    return "Plan";
+    return 'Plan';
   }
 
   if (hasResearchVerb) {
-    return "Ask";
+    return 'Ask';
   }
 
-  return "Ask";
+  return 'Ask';
 }
 
 export function isExecutionLikeTool(toolName) {
