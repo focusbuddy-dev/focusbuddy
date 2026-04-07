@@ -22,6 +22,7 @@ This document does not define application code, end-to-end test strategy, or CI 
 - `base.json` provides strict TypeScript defaults that are safe for the whole monorepo
 - `api.json` extends the base config with Node-oriented module settings for the future NestJS API
 - `web.json` extends the base config with browser and bundler settings for the future Next.js web app
+- browser-oriented web code should not inherit shared Node globals; if a future web workspace needs Node types for tooling, it should opt in through a separate tooling tsconfig
 
 ### `packages/config-oxlint`
 

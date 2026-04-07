@@ -6,7 +6,7 @@ Available configs:
 
 - `base.json` for strict shared defaults
 - `api.json` for Node-oriented API code
-- `web.json` for browser and bundler-oriented web code
+- `web.json` for browser and bundler-oriented web code without shared Node globals
 
 Current consumers:
 
