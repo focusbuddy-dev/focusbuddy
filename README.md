@@ -57,3 +57,7 @@ FocusBuddy aims to help users:
 - track focus sessions with a Pomodoro timer
 - record what they worked on
 - understand how long learning content takes over time
+
+## Design Notes
+
+- The first public-safe domain design note is available at [docs/domain/mvp-domain-model.md](docs/domain/mvp-domain-model.md).
