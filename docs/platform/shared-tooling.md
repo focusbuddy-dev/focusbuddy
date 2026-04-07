@@ -39,9 +39,11 @@ This document does not define application code, end-to-end test strategy, or CI 
 
 ### `packages/config-jest`
 
-- `base.cjs` defines the shared Jest defaults
-- `api.cjs` sets the API test environment to Node
-- `web.cjs` sets the web test environment to jsdom
+- `base.ts` defines the shared Jest defaults
+- `api.ts` sets the API test environment to Node
+- `web.ts` sets the web test environment to jsdom
+- the repository uses `ts-node` as the Jest config loader for TypeScript-based config files
+- the shared Jest baselines stay directory-agnostic until the real app source trees exist in follow-up issues
 
 ## Repository commands
 
@@ -69,10 +71,10 @@ The API and web workspaces now include local config entry files that point to th
 
 - `apps/api/tsconfig.json`
 - `apps/api/oxlint.config.ts`
-- `apps/api/jest.config.cjs`
+- `apps/api/jest.config.ts`
 - `apps/web/tsconfig.json`
 - `apps/web/oxlint.config.ts`
-- `apps/web/jest.config.cjs`
+- `apps/web/jest.config.ts`
 
 This keeps issue #21 and issue #22 focused on app implementation instead of re-deciding tool defaults.
 

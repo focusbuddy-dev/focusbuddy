@@ -3,14 +3,14 @@
   "private": true,
   "version": "0.0.0",
   "files": [
-    "base.cjs",
-    "api.cjs",
-    "web.cjs"
+    "base.ts",
+    "api.ts",
+    "web.ts"
   ],
   "exports": {
-    "./base": "./base.cjs",
-    "./api": "./api.cjs",
-    "./web": "./web.cjs"
+    "./base": "./base.ts",
+    "./api": "./api.ts",
+    "./web": "./web.ts"
   },
   "scripts": {
     "build": "node ../../scripts/workspace-task.mjs @focusbuddy/config-jest build",

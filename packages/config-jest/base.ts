@@ -1,4 +1,6 @@
-module.exports = {
+import type { Config } from 'jest';
+
+const config: Config = {
   clearMocks: true,
   coveragePathIgnorePatterns: [
     '/node_modules/',
@@ -18,3 +20,5 @@ module.exports = {
     '/__generated__/',
   ],
 };
+
+export default config;
