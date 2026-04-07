@@ -6,8 +6,24 @@ The container configuration handles two separate concerns:
 
 - Git commit signing with SSH keys
 - GitHub CLI authentication for issue and pull request workflows
+- developer task entrypoints with just
 
 These are related, but they do not use the same authentication path.
+
+## just Task Runner
+
+This repository now uses `just` as the main entry point for developer tasks.
+
+The dev container installs a pinned `just` release during `postCreateCommand` by running [.devcontainer/install-just.sh](install-just.sh).
+
+Useful checks inside the container:
+
+```bash
+just --version
+just --list
+```
+
+If you work outside the dev container, install `just` on the host before running repository tasks.
 
 ## What Is Automated
 
