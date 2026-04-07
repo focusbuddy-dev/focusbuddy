@@ -10,7 +10,7 @@ const config: Config = {
     '/generated/',
     '/__generated__/',
   ],
-  moduleFileExtensions: ['js', 'cjs', 'mjs', 'ts', 'tsx', 'json'],
+  moduleFileExtensions: ['js', 'cjs', 'mjs', 'json'],
   testPathIgnorePatterns: [
     '/node_modules/',
     '/dist/',

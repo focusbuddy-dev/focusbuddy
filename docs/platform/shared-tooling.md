@@ -44,6 +44,7 @@ This document does not define application code, end-to-end test strategy, or CI 
 - `web.ts` sets the web test environment to jsdom
 - the repository uses `ts-node` as the Jest config loader for TypeScript-based config files
 - the shared Jest baselines stay directory-agnostic until the real app source trees exist in follow-up issues
+- the shared Jest baselines do not enable TypeScript test execution until a real transform is chosen in follow-up app work
 
 ## Repository commands
 
@@ -84,6 +85,7 @@ This keeps issue #21 and issue #22 focused on app implementation instead of re-d
 
 - wire the real source and test files into the shared TypeScript, Jest, and oxlint configs
 - add app-specific overrides only when the shared baseline is not enough
+- choose a real TypeScript test transform before enabling `ts` or `tsx` test execution in Jest
 
 ### For #24
 

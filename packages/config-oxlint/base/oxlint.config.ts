@@ -12,6 +12,7 @@ export default defineConfig({
     'coverage/**',
     '.next/**',
     '.turbo/**',
+    '.worktrees/**',
     'packages/api-contract/generated/**',
     '**/generated/**',
     '**/__generated__/**',
