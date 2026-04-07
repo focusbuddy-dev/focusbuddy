@@ -26,18 +26,26 @@ Dev container setup details are documented in [.devcontainer/README.md](.devcont
 
 This repository includes a small commitlint demo for Issue #14.
 
-Initial setup is wrapped in the Makefile target below. It installs the local tooling, configures the `commit-msg` hook, and runs the commitlint verification steps.
+Initial setup is wrapped in the Justfile recipe below. It installs the local tooling, configures the `commit-msg` hook, and runs the commitlint verification steps.
+
+Inside the dev container, `just` is installed automatically. If you work outside the dev container, install `just` before running repository tasks.
 
 Run this command after cloning the repository:
 
 ```bash
-make commitlint-setup
+just commitlint-setup
 ```
 
 If dependencies are already installed and you only want to rerun the checks, use:
 
 ```bash
-make commitlint-check
+just commitlint-check
+```
+
+To see the available developer tasks, run:
+
+```bash
+just --list
 ```
 
 The current demo accepts issue references such as `#14`, `refs #14`, or `fixes #14` in the commit message.
