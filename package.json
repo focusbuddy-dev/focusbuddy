@@ -1,0 +1,13 @@
+{
+  "name": "focusbuddy-tooling",
+  "private": true,
+  "packageManager": "pnpm@10.31.0",
+  "scripts": {
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^20.5.0",
+    "@commitlint/config-conventional": "^20.5.0",
+    "husky": "^9.1.7"
+  }
+}
