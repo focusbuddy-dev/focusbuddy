@@ -235,11 +235,13 @@ The visibility note defines:
 
 The next step is to define continuity from resume actions.
 
+See [mvp-continuity-rules.md](mvp-continuity-rules.md) for the follow-up design note.
+
 Questions that move to #38:
 
-- what exact data proves a resume action happened
-- whether correction is modeled as edit, cancellation, or a new compensating record
-- whether continuity is target-based only or also linked to prior sessions directly
+- what exact source data proves a resume action happened
+- how later correction should be represented in persisted data
+- whether resume origin should point to a previous session, a target, or both
 
 ### For #39
 
@@ -260,5 +262,8 @@ Questions that move to #40:
 - exact key strategy
 - exact nullable and required field design
 - exact index plan
+- exact continuity field and relation design
 - exact visibility field design across targets, sessions, and notes
+- exact continuity field and relation design
+- exact visibility field and relation design across targets, sessions, and notes
 - whether public summary needs its own persisted model in the first schema
