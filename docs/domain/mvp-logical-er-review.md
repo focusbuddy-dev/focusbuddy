@@ -13,7 +13,7 @@ This review includes:
 - a logical ER diagram for the MVP model
 - a relationship and ownership checklist
 - a sample scenario walkthrough
-- a mismatch and open-question list for issue #40
+- a mismatch and open questions list for issue #40
 
 This document does not define final field names, final table names, or migration details.
 
@@ -28,68 +28,71 @@ This review is based on the current public-safe design notes:
 
 ## Logical ER diagram
 
+The entity names and attribute labels in this diagram are logical and illustrative only. They do not define final Prisma model names or final schema field names.
+
 ```mermaid
 erDiagram
-    USER ||--o{ FOCUS_TARGET : owns
-    USER ||--o{ FOCUS_SESSION : creates
-    FOCUS_TARGET ||--o{ FOCUS_SESSION : groups
-    FOCUS_TARGET ||--o{ STAMP : receives
-    FOCUS_TARGET ||--o| PUBLIC_SUMMARY_VIEW : may_expose
-    FOCUS_TARGET ||--o{ RESUME_SOURCE : anchors
-    FOCUS_SESSION ||--o| RESUME_SOURCE : may_start_from_resume
+    User ||--o{ FocusTarget : owns
+    User ||--o{ FocusSession : creates
+    FocusTarget ||--o{ FocusSession : groups
+    FocusTarget ||--o{ Stamp : receives
+    FocusTarget ||--o| PublicSummary : may_expose
+    FocusTarget ||--o{ ResumeSource : anchors
+    FocusSession o|--|| ResumeSource : started_session_for
+    FocusSession o|--o{ ResumeSource : previous_session_for
 
-    USER {
-        string firebase_uid
-        string application_user_id
+    User {
+        string authIdentity
+        string userReference
     }
 
-    FOCUS_TARGET {
-        string target_id
-        string owner_user_id
+    FocusTarget {
+        string targetReference
+        string ownerUserReference
         string title
-        string source_type
+        string sourceKind
         string url
         string genre
-        boolean public_summary_enabled
+        boolean publicSummaryEnabled
     }
 
-    FOCUS_SESSION {
-        string session_id
-        string owner_user_id
-        string target_id
+    FocusSession {
+        string sessionReference
+        string ownerUserReference
+        string targetReference
         string visibility
         text note
-        string note_visibility
-        boolean completed_by_user
-        datetime started_at
-        datetime ended_at
-        int duration_seconds
+        string noteVisibility
+        boolean completedByUser
+        datetime startedAt
+        datetime endedAt
+        int durationSeconds
     }
 
-    STAMP {
-        string stamp_id
-        string target_id
-        string actor_key
-        string stamp_type
-        boolean is_effective
-        datetime created_at
+    Stamp {
+        string stampReference
+        string targetReference
+        string actorReference
+        string stampType
+        boolean isEffective
+        datetime createdAt
     }
 
-    RESUME_SOURCE {
-        string resume_source_id
-        string target_id
-        string started_session_id
-        string previous_session_id
-        boolean is_effective
-        datetime created_at
+    ResumeSource {
+        string resumeSourceReference
+        string targetReference
+        string startedSessionReference
+        string previousSessionReference
+        boolean isEffective
+        datetime createdAt
     }
 
-    PUBLIC_SUMMARY_VIEW {
-        string target_id
-        int public_session_count
-        int total_public_duration_seconds
-        int helpful_stamp_count
-        datetime latest_public_session_at
+    PublicSummary {
+        string targetReference
+        int publicSessionCount
+        int totalPublicDurationSeconds
+        int helpfulStampCount
+        datetime latestPublicSessionAt
     }
 ```
 
@@ -97,8 +100,8 @@ erDiagram
 
 The diagram is logical, not physical.
 
-- `PUBLIC_SUMMARY_VIEW` is shown because it is an important public-facing concept, even though it may stay derived instead of becoming a stored table in the first schema
-- `RESUME_SOURCE` is shown as the logical source of continuity, even though issue #40 may model it either as its own table or as fields on `FOCUS_SESSION`
+- `PublicSummary` is shown because it is an important public-facing concept, even though it may stay derived instead of becoming a stored table in the first schema
+- `ResumeSource` is shown as the logical source of continuity, even though issue #40 may model it either as its own table or as fields on `FocusSession`
 - `genre` and `note` are still shown close to their owning records because they are not yet strong candidates for separate models in the first schema
 
 ## Relationship and ownership checklist
@@ -169,7 +172,7 @@ Review result:
 
 Current assumption:
 
-- the helpful stamp is anchored to `FOCUS_TARGET`
+- the helpful stamp is anchored to `FocusTarget`
 - one effective helpful stamp per actor per target is the MVP rule
 
 Review result:
@@ -195,7 +198,7 @@ Model check:
 
 Expected behavior:
 
-- target has `public_summary_enabled`
+- target has public summary enabled
 - only public sessions contribute to public aggregates
 - private sessions stay invisible
 
@@ -224,7 +227,7 @@ Expected behavior:
 
 Model check:
 
-- the current model supports this if `RESUME_SOURCE` remains the source of truth for continuity
+- the current model supports this if `ResumeSource` remains the source of truth for continuity
 
 ### Scenario 5: Resume action was a mistake
 
@@ -257,7 +260,7 @@ The main remaining uncertainties are implementation choices for #40, not domain 
 
 ### 1. Public summary persistence
 
-The current review still supports `PUBLIC_SUMMARY_VIEW` as a derived view.
+The current review still supports `PublicSummary` as a derived view.
 
 Question for #40:
 
@@ -265,11 +268,11 @@ Question for #40:
 
 ### 2. Resume source storage shape
 
-The current review still supports `RESUME_SOURCE` as a logical concept.
+The current review still supports `ResumeSource` as a logical concept.
 
 Question for #40:
 
-- should the first schema store this as its own model or as resume-related fields on `FOCUS_SESSION`?
+- should the first schema store this as its own model or as resume-related fields on `FocusSession`?
 
 ### 3. Stamp actor identity
 
