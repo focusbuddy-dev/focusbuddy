@@ -58,6 +58,28 @@ The signing script does the following:
 
 This avoids pointing Git at a host-only path such as `/Users/...`, which does not exist inside the container.
 
+## Working With Issue Worktrees
+
+This repository uses issue-specific git worktrees under `.worktrees/` for implementation work.
+
+The dev container keeps the in-container path stable by explicitly binding the opened folder to `/workspaces/focusbuddy` while still forwarding the host-side path through `FOCUSBUDDY_WORKSPACE_MOUNT`.
+
+That means an issue worktree such as `.worktrees/issue-102` can be opened and rebuilt directly, while repository scripts inside the container continue to see the workspace at `/workspaces/focusbuddy`.
+
+Recommended flow for validating `.devcontainer` changes from a worktree:
+
+1. open the target issue worktree folder in its own VS Code window
+2. rebuild or reopen the dev container from that worktree window
+3. run the verification commands in this document inside the container
+
+Expected behavior:
+
+- the issue worktree is mounted to `/workspaces/focusbuddy` inside the container
+- `printenv FOCUSBUDDY_WORKSPACE_MOUNT` still reports the host-side worktree path
+- existing repository scripts that assume `/workspaces/focusbuddy` continue to work
+
+Do not validate mount behavior from the main workspace window when the target change is intended for a worktree. Open the worktree itself.
+
 ## Host Requirements
 
 Before opening the repository in the dev container, make sure the host machine already has working SSH access to GitHub.

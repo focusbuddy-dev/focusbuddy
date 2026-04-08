@@ -9,6 +9,7 @@
     "GH_TOKEN": "${localEnv:GH_TOKEN}",
     "FOCUSBUDDY_WORKSPACE_MOUNT": "${localWorkspaceFolder}"
   },
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/focusbuddy,type=bind",
   "workspaceFolder": "/workspaces/focusbuddy",
   "customizations": {
     "vscode": {
