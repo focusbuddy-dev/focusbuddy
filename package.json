@@ -2,6 +2,12 @@
   "name": "focusbuddy",
   "private": true,
   "packageManager": "pnpm@10.31.0",
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "onFail": "error"
+    }
+  },
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev --parallel",

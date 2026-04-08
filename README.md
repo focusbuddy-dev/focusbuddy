@@ -30,6 +30,8 @@ This repository includes a small commitlint demo for Issue #14.
 
 Initial setup is wrapped in the Justfile recipe below. `pnpm` is the only supported package manager for this repository. The setup installs the local tooling from `pnpm-lock.yaml` without changing the lockfile, configures the `commit-msg` hook, and runs the commitlint verification steps.
 
+`npm install` is rejected by the repository configuration on supported npm versions before dependency resolution starts, so setup mistakes fail fast with an explicit package-manager error instead of drifting into npm-specific install behavior.
+
 Inside the dev container, `just` is installed automatically. If you work outside the dev container, install `just` before running repository tasks.
 
 Run this command after cloning the repository:
