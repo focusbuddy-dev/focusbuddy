@@ -35,6 +35,17 @@ command works in this environment, then retry.
 EOF
     return 1
   fi
+
+  if [[ -f /.dockerenv ]] && [[ "${PWD}" == /workspaces/* ]] && [[ -z "${FOCUSBUDDY_WORKSPACE_MOUNT:-}" ]]; then
+    cat >&2 <<'EOF'
+Docker is reachable, but the host workspace path has not been forwarded into this
+dev container session.
+
+Rebuild the dev container so remoteEnv picks up FOCUSBUDDY_WORKSPACE_MOUNT, then
+retry the local Docker helper.
+EOF
+    return 1
+  fi
 }
 
 if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then

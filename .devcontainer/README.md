@@ -64,6 +64,8 @@ Before opening the repository in the dev container, make sure the host machine a
 
 The dev container now uses Docker outside of Docker for repository tasks such as `just local-up`.
 That means Docker must be installed and running on the host machine before the container is rebuilt.
+It also forwards the host workspace path into `FOCUSBUDDY_WORKSPACE_MOUNT` so `docker compose`
+bind mounts target the host filesystem rather than the container-only `/workspaces/...` path.
 
 Recommended checks on the host:
 
@@ -185,6 +187,7 @@ Run these checks inside the container:
 
 ```bash
 printenv GH_TOKEN | wc -c
+printenv FOCUSBUDDY_WORKSPACE_MOUNT
 gh auth status
 docker version
 docker compose version
@@ -195,6 +198,7 @@ git log --show-signature -1
 Expected behavior:
 
 - `printenv GH_TOKEN | wc -c` returns more than `1`
+- `printenv FOCUSBUDDY_WORKSPACE_MOUNT` prints the host machine's repository path
 - `gh auth status` succeeds without running `gh auth login`
 - `docker version` shows Docker client and server information
 - `docker compose version` succeeds
@@ -242,6 +246,18 @@ Recommended recovery steps:
 1. start Docker on the host machine
 2. rebuild or reopen the dev container
 3. rerun `docker version` and `docker compose version` inside the container
+
+### `Mounts denied` mentions `/workspaces/...` during `just local-up`
+
+That means `docker compose` is still trying to bind mount the container path instead of the
+host workspace path.
+
+Recommended recovery steps:
+
+1. make sure `.devcontainer/devcontainer.json` includes `FOCUSBUDDY_WORKSPACE_MOUNT` under `remoteEnv`
+2. rebuild the dev container so the new environment variable is injected
+3. verify `printenv FOCUSBUDDY_WORKSPACE_MOUNT` shows the host repository path
+4. rerun `just local-up`
 
 ### `git commit` fails with a host path under `/Users/...`
 
