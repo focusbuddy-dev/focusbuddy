@@ -12,7 +12,8 @@ This document defines:
 - which layers own prevention, detection, and recovery for the primary accident classes
 - which controls should become mandatory entry points instead of team convention only
 - how route or navigation safety, mutation safety, and background-fetch safety should be separated
-- where promise-aware type-aware lint fits in the larger safety stack
+- where current oxlint TypeScript promise-handling rules fit in the larger safety stack
+- how a later type-aware lint stage should support those helper boundaries if the repo adopts one
 - which follow-up implementation tracks should be split from this design
 
 This document does not define final helper APIs, final lint configuration, or concrete app code.
@@ -67,7 +68,8 @@ This layer blocks obviously unsafe entry points once the approved primitives exi
 It owns:
 
 - import restrictions for approved async and mutation helpers
-- promise-aware lint enforcement after type-aware lint is introduced
+- current oxlint TypeScript promise-handling rules after the approved helper boundaries exist
+- any later type-aware lint stage that the repo may choose to add for deeper async correctness checks
 - discouraging direct low-level router or fetch usage in unsafe contexts
 - preventing drift back to ad hoc feature-local safety logic
 
@@ -152,10 +154,11 @@ The first lint decisions should be:
 
 - once approved helpers exist, feature code should not freely bypass them with direct low-level router or raw fetch usage in sensitive contexts
 - import restrictions should enforce centralized entry points for route-aware async work, mutation submission, auth-aware API access, and telemetry-bearing suppression paths
-- promise-aware type-aware lint belongs in phase 2 after the approved helper boundaries exist
-- promise rules should focus on catching unsafe escapes such as dropped async work or misused async handlers, not on expressing all product safety policy by themselves
+- the repo's current oxlint TypeScript promise-handling rules should be treated as a second-line guard after the approved helper boundaries exist
+- if the repo later adopts a separate type-aware lint stage, that stage should stay in phase 2 and should deepen async correctness checks rather than redefine the safety architecture
+- promise-handling rules should focus on catching unsafe escapes such as dropped async work or misused async handlers, not on expressing all product safety policy by themselves
 
-The first promise-aware candidate rules remain:
+The first current oxlint TypeScript candidate rules remain:
 
 - `typescript/no-floating-promises`
 - `typescript/no-misused-promises`
