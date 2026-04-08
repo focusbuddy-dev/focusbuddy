@@ -1,11 +1,34 @@
-const userAgent = process.env.npm_config_user_agent ?? '';
-const packageManager = userAgent.split(' ')[0]?.split('/')[0] ?? '';
+import { pathToFileURL } from 'node:url';
 
-if (packageManager === 'pnpm') {
-  process.exit(0);
+export function enforcePnpmOnly(userAgent = process.env.npm_config_user_agent ?? '') {
+  const packageManager = userAgent.split(' ')[0]?.split('/')[0] ?? '';
+
+  if (packageManager === 'pnpm') {
+    return {
+      exitCode: 0,
+      errors: [],
+    };
+  }
+
+  return {
+    exitCode: 1,
+    errors: [
+      'This repository supports pnpm only.',
+      'Use just commitlint-setup for the initial setup flow.',
+      'If you need to install dependencies directly, use pnpm install --frozen-lockfile.',
+    ],
+  };
 }
 
-console.error('This repository supports pnpm only.');
-console.error('Use just commitlint-setup for the initial setup flow.');
-console.error('If you need to install dependencies directly, use pnpm install --frozen-lockfile.');
-process.exit(1);
+const isDirectExecution =
+  typeof process.argv[1] === 'string' && import.meta.url === pathToFileURL(process.argv[1]).href;
+
+if (isDirectExecution) {
+  const result = enforcePnpmOnly();
+
+  for (const error of result.errors) {
+    console.error(error);
+  }
+
+  process.exit(result.exitCode);
+}
