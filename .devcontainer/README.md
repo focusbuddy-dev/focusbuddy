@@ -48,6 +48,14 @@ The dev container automates two bootstrap steps:
 - `postCreateCommand` prepares the pinned `pnpm` version from `package.json` and installs `just`
 - `postStartCommand` configures Git SSH signing on container start via [setup-git-signing.sh](setup-git-signing.sh)
 
+It also preinstalls the VS Code extensions used directly by this repository:
+
+- ESLint
+- Prettier
+- GraphQL
+- Prisma
+- Jest
+
 Repository dependency installation is intentionally left out of `postCreateCommand` and stays in the explicit `just commitlint-setup` flow.
 
 The signing script does the following:
