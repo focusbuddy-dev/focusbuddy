@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+source "$(dirname "$0")/require-docker.sh"
+
 service_name="${1:-}"
 
 if [[ -n "$service_name" ]]; then

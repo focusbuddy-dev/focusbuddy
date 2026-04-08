@@ -120,10 +120,11 @@ The helper scripts live under [scripts/local-dev](../../scripts/local-dev).
 Expected local flow:
 
 1. copy [.env.example](../../.env.example) to a local `.env` file if overrides are needed
-2. run `just local-up`
-3. inspect logs with `just local-logs`
-4. connect to PostgreSQL with `just local-psql` when needed
-5. stop the stack with `just local-down`
+2. if you are working inside the dev container, make sure the container was rebuilt with Docker outside of Docker support and that Docker is running on the host machine
+3. run `just local-up`
+4. inspect logs with `just local-logs`
+5. connect to PostgreSQL with `just local-psql` when needed
+6. stop the stack with `just local-down`
 
 ## Relationship to the dev container
 
@@ -133,6 +134,10 @@ The dev container and the local Docker compose stack solve different problems.
 - the local compose stack prepares the app and service runtime topology
 
 They should stay compatible, but they are not the same layer.
+
+When the repository dev container is rebuilt with Docker outside of Docker enabled, Docker commands run inside the dev container use the host machine's Docker engine rather than a separate Docker daemon inside the container.
+
+This means the local compose workflow can be started from inside the dev container, but it still depends on Docker being installed and running on the host machine.
 
 ## Current differences from deployed runtime
 

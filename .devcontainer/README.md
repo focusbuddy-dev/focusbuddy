@@ -62,19 +62,25 @@ This avoids pointing Git at a host-only path such as `/Users/...`, which does no
 
 Before opening the repository in the dev container, make sure the host machine already has working SSH access to GitHub.
 
+The dev container now uses Docker outside of Docker for repository tasks such as `just local-up`.
+That means Docker must be installed and running on the host machine before the container is rebuilt.
+
 Recommended checks on the host:
 
 ```bash
 ssh -T git@github.com
 ssh-add -L
+docker version
 ```
 
 Expected results:
 
 - `ssh -T git@github.com` confirms GitHub SSH authentication works
 - `ssh-add -L` prints at least one public key
+- `docker version` succeeds on the host
 
 If `ssh-add -L` returns no identities, commit signing inside the container will not be configured.
+If `docker version` fails on the host, Docker-based local development commands will not work from inside the dev container.
 
 ## Git Commit Signing
 
@@ -180,6 +186,8 @@ Run these checks inside the container:
 ```bash
 printenv GH_TOKEN | wc -c
 gh auth status
+docker version
+docker compose version
 git config --get user.signingkey
 git log --show-signature -1
 ```
@@ -188,6 +196,8 @@ Expected behavior:
 
 - `printenv GH_TOKEN | wc -c` returns more than `1`
 - `gh auth status` succeeds without running `gh auth login`
+- `docker version` shows Docker client and server information
+- `docker compose version` succeeds
 - `git config --get user.signingkey` returns the container-local key path
 - `git log --show-signature -1` shows the commit signature
 
@@ -209,6 +219,29 @@ Recommended recovery steps:
 On macOS, `launchctl getenv GH_TOKEN` is a useful check.
 
 On Windows PowerShell, use `echo $env:GH_TOKEN`.
+
+### `docker: command not found` from `just local-up`
+
+That usually means the dev container was created without Docker outside of Docker support.
+
+Recommended recovery steps:
+
+1. confirm `.devcontainer/devcontainer.json` includes `ghcr.io/devcontainers/features/docker-outside-of-docker:1`
+2. make sure Docker is installed and running on the host machine
+3. rebuild the dev container
+4. rerun `docker version` and `docker compose version` inside the container
+
+If `docker version` works on the host but not in the container after rebuild, the container likely did not pick up the updated feature configuration.
+
+### `docker info` fails inside the dev container
+
+That means the Docker CLI is present, but the host Docker engine is not reachable from the container.
+
+Recommended recovery steps:
+
+1. start Docker on the host machine
+2. rebuild or reopen the dev container
+3. rerun `docker version` and `docker compose version` inside the container
 
 ### `git commit` fails with a host path under `/Users/...`
 
