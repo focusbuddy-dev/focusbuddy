@@ -1,3 +1,4 @@
+import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 export function enforcePnpmOnly(userAgent = process.env.npm_config_user_agent ?? '') {
@@ -20,8 +21,9 @@ export function enforcePnpmOnly(userAgent = process.env.npm_config_user_agent ??
   };
 }
 
+const executedScriptPath = typeof process.argv[1] === 'string' ? resolve(process.argv[1]) : null;
 const isDirectExecution =
-  typeof process.argv[1] === 'string' && import.meta.url === pathToFileURL(process.argv[1]).href;
+  executedScriptPath !== null && import.meta.url === pathToFileURL(executedScriptPath).href;
 
 if (isDirectExecution) {
   const result = enforcePnpmOnly();

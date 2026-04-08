@@ -7,9 +7,9 @@ import { fileURLToPath } from 'node:url';
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const scriptPath = resolve(repoRoot, 'scripts/enforce-pnpm.mjs');
 
-function runEnforcePnpm(userAgent) {
+function runEnforcePnpm(userAgent, scriptEntryPath = scriptPath) {
   return new Promise((resolveResult, reject) => {
-    const child = spawn(process.execPath, [scriptPath], {
+    const child = spawn(process.execPath, [scriptEntryPath], {
       cwd: repoRoot,
       env: {
         ...process.env,
@@ -64,4 +64,15 @@ test('rejects yarn and empty user agents', async (t) => {
       assert.match(result.stderr, /This repository supports pnpm only\./);
     });
   }
+});
+
+test('rejects npm user agents when executed via the relative preinstall path', async () => {
+  const result = await runEnforcePnpm(
+    'npm/10.9.0 node/v24.14.0 linux x64',
+    'scripts/enforce-pnpm.mjs',
+  );
+
+  assert.equal(result.code, 1, 'expected relative-path execution to reject npm user agent');
+  assert.match(result.stderr, /This repository supports pnpm only\./);
+  assert.match(result.stderr, /Use just commitlint-setup for the initial setup flow\./);
 });
