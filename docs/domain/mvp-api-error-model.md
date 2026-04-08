@@ -281,6 +281,11 @@ components:
           type: string
         retryable:
           type: boolean
+        details:
+          oneOf:
+            - $ref: '#/components/schemas/ValidationErrorDetails'
+            - $ref: '#/components/schemas/ConflictErrorDetails'
+            - $ref: '#/components/schemas/RateLimitErrorDetails'
 
     ValidationErrorDetails:
       type: object
