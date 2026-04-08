@@ -2,7 +2,9 @@
 
 This document captures the output of issue #77.
 
-Its purpose is to define the first layer-by-layer responsibility model for preventing, detecting, and recovering from the web safety concerns identified in issue #76 before feature implementation expands on top of issue #22.
+Its purpose is to define the first layer-by-layer responsibility model for preventing, detecting, and recovering from the web safety concerns identified in the web accident inventory from issue #76 before feature implementation expands on top of issue #22.
+
+It builds on [docs/platform/web-accident-pattern-inventory.md](web-accident-pattern-inventory.md), which defines the accident classes, control posture, and follow-up issue seeds that this responsibility model allocates across layers.
 
 ## Scope
 
