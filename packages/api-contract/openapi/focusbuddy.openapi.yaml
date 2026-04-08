@@ -32,6 +32,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/FocusTargetListResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '429':
+          $ref: '#/components/responses/TooManyRequestsError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
     post:
       tags: [Targets]
       operationId: createFocusTarget
@@ -51,6 +59,16 @@ paths:
                 $ref: '#/components/schemas/FocusTarget'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '429':
+          $ref: '#/components/responses/TooManyRequestsError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
   /v1/targets/{targetId}:
     parameters:
       - $ref: '#/components/parameters/TargetId'
@@ -65,8 +83,16 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/FocusTarget'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
         '404':
           $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequestsError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
     patch:
       tags: [Targets]
       operationId: updateFocusTarget
@@ -86,8 +112,18 @@ paths:
                 $ref: '#/components/schemas/FocusTarget'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
         '404':
           $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '429':
+          $ref: '#/components/responses/TooManyRequestsError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
   /v1/targets/{targetId}/sessions:
     parameters:
       - $ref: '#/components/parameters/TargetId'
@@ -102,8 +138,16 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/FocusSessionListResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
         '404':
           $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequestsError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
     post:
       tags: [Sessions]
       operationId: createFocusSession
@@ -123,8 +167,18 @@ paths:
                 $ref: '#/components/schemas/FocusSession'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
         '404':
           $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '429':
+          $ref: '#/components/responses/TooManyRequestsError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
   /v1/public/targets/{targetId}/summary:
     parameters:
       - $ref: '#/components/parameters/TargetId'
@@ -142,6 +196,12 @@ paths:
                 $ref: '#/components/schemas/PublicTargetSummary'
         '404':
           $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequestsError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
   /v1/public/targets/{targetId}/stamps/helpful:
     parameters:
       - $ref: '#/components/parameters/TargetId'
@@ -163,8 +223,16 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Stamp'
+        '400':
+          $ref: '#/components/responses/BadRequest'
         '404':
           $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequestsError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
 components:
   securitySchemes:
     bearerAuth:
@@ -187,14 +255,239 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/ErrorResponse'
+            $ref: '#/components/schemas/ValidationErrorResponse'
+          examples:
+            invalidPayload:
+              summary: The payload failed contract validation.
+              value:
+                code: VALIDATION_ERROR
+                message: Request validation failed.
+                requestId: req_01HZX8BADREQUEST
+                retryable: false
+                details:
+                  kind: validation
+                  issues:
+                    - field: body.noteVisibility
+                      reason: invalid_enum_value
+                      message: noteVisibility must be PRIVATE or PUBLIC.
+    UnauthorizedError:
+      description: Authentication is required.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/UnauthorizedErrorResponse'
+          examples:
+            missingAuth:
+              summary: The caller must authenticate first.
+              value:
+                code: AUTH_REQUIRED
+                message: Authentication is required.
+                requestId: req_01HZX8UNAUTHORIZED
+                retryable: false
+    ForbiddenError:
+      description: The caller is authenticated but not allowed to perform the action.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ForbiddenErrorResponse'
+          examples:
+            ownerOnlyMutation:
+              summary: The resource is visible, but mutation is forbidden.
+              value:
+                code: ACCESS_DENIED
+                message: You are not allowed to perform this action.
+                requestId: req_01HZX8FORBIDDEN
+                retryable: false
     NotFound:
       description: The requested resource was not found.
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/ErrorResponse'
+            $ref: '#/components/schemas/NotFoundErrorResponse'
+          examples:
+            hiddenOrMissing:
+              summary: The resource does not exist or is not disclosed.
+              value:
+                code: RESOURCE_NOT_FOUND
+                message: The requested resource was not found.
+                requestId: req_01HZX8NOTFOUND
+                retryable: false
+    ConflictError:
+      description: The action conflicts with current resource state or domain rules.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ConflictErrorResponse'
+          examples:
+            summaryPrerequisite:
+              summary: Summary publication prerequisites are not satisfied.
+              value:
+                code: INVALID_STATE_TRANSITION
+                message: The requested action is not allowed from the current state.
+                requestId: req_01HZX8CONFLICT1
+                retryable: false
+                details:
+                  kind: conflict
+                  reason: SUMMARY_PREREQUISITE_NOT_MET
+                  currentState: draft
+            noteVisibilityRule:
+              summary: Note visibility exceeds session visibility.
+              value:
+                code: DOMAIN_RULE_VIOLATION
+                message: The request violates a domain rule.
+                requestId: req_01HZX8CONFLICT2
+                retryable: false
+                details:
+                  kind: conflict
+                  reason: NOTE_VISIBILITY_EXCEEDS_SESSION
+                  currentState: session_private
+    TooManyRequestsError:
+      description: The caller hit a temporary rate limit.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/RateLimitErrorResponse'
+          examples:
+            stampRateLimit:
+              summary: Helpful stamp action is temporarily throttled.
+              value:
+                code: RATE_LIMITED
+                message: Too many requests. Please retry later.
+                requestId: req_01HZX8RATELIMIT
+                retryable: true
+                details:
+                  kind: rate_limit
+                  retryAfterSeconds: 30
+                  scope: stamp
+    ServiceUnavailableError:
+      description: A required upstream dependency is temporarily unavailable.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ServiceUnavailableErrorResponse'
+          examples:
+            authProviderUnavailable:
+              summary: A required dependency is currently unavailable.
+              value:
+                code: UPSTREAM_UNAVAILABLE
+                message: A required service is temporarily unavailable.
+                requestId: req_01HZX8UNAVAILABLE
+                retryable: true
+    InternalServerError:
+      description: An unexpected server failure occurred.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/InternalErrorResponse'
+          examples:
+            unexpectedFailure:
+              summary: Unexpected server-side failure.
+              value:
+                code: INTERNAL_ERROR
+                message: An unexpected error occurred.
+                requestId: req_01HZX8INTERNAL
+                retryable: false
   schemas:
+    ErrorCode:
+      type: string
+      enum:
+        - VALIDATION_ERROR
+        - AUTH_REQUIRED
+        - ACCESS_DENIED
+        - RESOURCE_NOT_FOUND
+        - INVALID_STATE_TRANSITION
+        - DOMAIN_RULE_VIOLATION
+        - DUPLICATE_RESOURCE
+        - RATE_LIMITED
+        - UPSTREAM_UNAVAILABLE
+        - INTERNAL_ERROR
+    ConflictReason:
+      type: string
+      enum:
+        - INVALID_VISIBILITY_TRANSITION
+        - SUMMARY_PREREQUISITE_NOT_MET
+        - NOTE_VISIBILITY_EXCEEDS_SESSION
+        - RESOURCE_ALREADY_EXISTS
+    ErrorResponseBase:
+      type: object
+      additionalProperties: false
+      required:
+        - code
+        - message
+        - requestId
+        - retryable
+      properties:
+        code:
+          $ref: '#/components/schemas/ErrorCode'
+        message:
+          type: string
+          description: Safe human-readable summary intended for direct client use.
+        requestId:
+          type: string
+          description: Correlation ID copied into server logs and support tooling.
+        retryable:
+          type: boolean
+          description: True only when the client may offer immediate retry without first changing auth or input.
+    ValidationIssue:
+      type: object
+      additionalProperties: false
+      required:
+        - field
+        - reason
+        - message
+      properties:
+        field:
+          type: string
+          description: Logical input path such as body.note or query.limit.
+        reason:
+          type: string
+          description: Stable machine-readable validation reason.
+        message:
+          type: string
+          description: Safe field-level message.
+    ValidationErrorDetails:
+      type: object
+      additionalProperties: false
+      required:
+        - kind
+        - issues
+      properties:
+        kind:
+          type: string
+          enum: [validation]
+        issues:
+          type: array
+          items:
+            $ref: '#/components/schemas/ValidationIssue'
+    ConflictErrorDetails:
+      type: object
+      additionalProperties: false
+      required:
+        - kind
+      properties:
+        kind:
+          type: string
+          enum: [conflict]
+        reason:
+          $ref: '#/components/schemas/ConflictReason'
+        currentState:
+          type: string
+          description: Optional public-safe current state label.
+    RateLimitErrorDetails:
+      type: object
+      additionalProperties: false
+      required:
+        - kind
+      properties:
+        kind:
+          type: string
+          enum: [rate_limit]
+        retryAfterSeconds:
+          type: integer
+          minimum: 0
+        scope:
+          type: string
+          description: Optional public-safe rate-limit scope such as stamp or session-create.
     TargetSourceType:
       type: string
       enum: [FREE_FORM, URL]
@@ -548,12 +841,115 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/FocusSession'
+    ValidationErrorResponse:
+      allOf:
+        - $ref: '#/components/schemas/ErrorResponseBase'
+        - type: object
+          properties:
+            code:
+              type: string
+              enum: [VALIDATION_ERROR]
+            retryable:
+              type: boolean
+              enum: [false]
+            details:
+              $ref: '#/components/schemas/ValidationErrorDetails'
+          required:
+            - details
+    UnauthorizedErrorResponse:
+      allOf:
+        - $ref: '#/components/schemas/ErrorResponseBase'
+        - type: object
+          properties:
+            code:
+              type: string
+              enum: [AUTH_REQUIRED]
+            retryable:
+              type: boolean
+              enum: [false]
+    ForbiddenErrorResponse:
+      allOf:
+        - $ref: '#/components/schemas/ErrorResponseBase'
+        - type: object
+          properties:
+            code:
+              type: string
+              enum: [ACCESS_DENIED]
+            retryable:
+              type: boolean
+              enum: [false]
+    NotFoundErrorResponse:
+      allOf:
+        - $ref: '#/components/schemas/ErrorResponseBase'
+        - type: object
+          properties:
+            code:
+              type: string
+              enum: [RESOURCE_NOT_FOUND]
+            retryable:
+              type: boolean
+              enum: [false]
+    ConflictErrorResponse:
+      allOf:
+        - $ref: '#/components/schemas/ErrorResponseBase'
+        - type: object
+          properties:
+            code:
+              type: string
+              enum:
+                - INVALID_STATE_TRANSITION
+                - DOMAIN_RULE_VIOLATION
+                - DUPLICATE_RESOURCE
+            retryable:
+              type: boolean
+              enum: [false]
+            details:
+              $ref: '#/components/schemas/ConflictErrorDetails'
+    RateLimitErrorResponse:
+      allOf:
+        - $ref: '#/components/schemas/ErrorResponseBase'
+        - type: object
+          properties:
+            code:
+              type: string
+              enum: [RATE_LIMITED]
+            retryable:
+              type: boolean
+              enum: [true]
+            details:
+              $ref: '#/components/schemas/RateLimitErrorDetails'
+          required:
+            - details
+    ServiceUnavailableErrorResponse:
+      allOf:
+        - $ref: '#/components/schemas/ErrorResponseBase'
+        - type: object
+          properties:
+            code:
+              type: string
+              enum: [UPSTREAM_UNAVAILABLE]
+            retryable:
+              type: boolean
+              enum: [true]
+    InternalErrorResponse:
+      allOf:
+        - $ref: '#/components/schemas/ErrorResponseBase'
+        - type: object
+          properties:
+            code:
+              type: string
+              enum: [INTERNAL_ERROR]
+            retryable:
+              type: boolean
+              enum: [false]
     ErrorResponse:
-      type: object
-      additionalProperties: false
-      required: [code, message]
-      properties:
-        code:
-          type: string
-        message:
-          type: string
+      description: Backward-compatible generic error shape kept during the transition to typed error responses.
+      oneOf:
+        - $ref: '#/components/schemas/ValidationErrorResponse'
+        - $ref: '#/components/schemas/UnauthorizedErrorResponse'
+        - $ref: '#/components/schemas/ForbiddenErrorResponse'
+        - $ref: '#/components/schemas/NotFoundErrorResponse'
+        - $ref: '#/components/schemas/ConflictErrorResponse'
+        - $ref: '#/components/schemas/RateLimitErrorResponse'
+        - $ref: '#/components/schemas/ServiceUnavailableErrorResponse'
+        - $ref: '#/components/schemas/InternalErrorResponse'
