@@ -28,7 +28,7 @@ The Docker-based local development environment is documented in [docs/platform/l
 
 This repository includes a small commitlint demo for Issue #14.
 
-Initial setup is wrapped in the Justfile recipe below. It installs the local tooling, configures the `commit-msg` hook, and runs the commitlint verification steps.
+Initial setup is wrapped in the Justfile recipe below. `pnpm` is the only supported package manager for this repository. The setup installs the local tooling from `pnpm-lock.yaml` without changing the lockfile, configures the `commit-msg` hook, and runs the commitlint verification steps.
 
 Inside the dev container, `just` is installed automatically. If you work outside the dev container, install `just` before running repository tasks.
 
@@ -37,6 +37,8 @@ Run this command after cloning the repository:
 ```bash
 just commitlint-setup
 ```
+
+If `pnpm-lock.yaml` is out of sync with `package.json`, the setup stops early so the mismatch can be reviewed instead of silently changing installed versions.
 
 If dependencies are already installed and you only want to rerun the checks, use:
 
@@ -83,8 +85,13 @@ The repository now exposes common developer commands for formatting, linting, te
 - `pnpm format`
 - `pnpm format:check`
 - `pnpm lint`
+- `pnpm merge-gate`
 - `pnpm test`
 - `pnpm typecheck`
+
+The initial merge gate runs `generate`, `lint`, `typecheck`, and `test` in that order.
+
+GitHub Actions runs the same gate on pull requests and pushes to `main`. Deploy-only checks stay outside this gate.
 
 Formatting is owned by Prettier, including quote style decisions for JavaScript and TypeScript files.
 
@@ -106,6 +113,7 @@ Issue #51 adds a first local Docker development baseline with:
 ## Design Notes
 
 - The first public-safe domain design note is available at [docs/domain/mvp-domain-model.md](docs/domain/mvp-domain-model.md).
+- The first web safety control responsibility note is available at [docs/platform/web-safety-control-responsibilities.md](docs/platform/web-safety-control-responsibilities.md).
 - The follow-up continuity rules note is available at [docs/domain/mvp-continuity-rules.md](docs/domain/mvp-continuity-rules.md).
 - The logical ER review note is available at [docs/domain/mvp-logical-er-review.md](docs/domain/mvp-logical-er-review.md).
 - The Prisma schema design note is available at [docs/domain/mvp-prisma-schema-design.md](docs/domain/mvp-prisma-schema-design.md).

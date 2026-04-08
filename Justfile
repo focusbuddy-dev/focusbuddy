@@ -5,7 +5,7 @@ default:
 
 # Install local tooling, configure the commit-msg hook, and run the checks.
 commitlint-setup:
-    pnpm install
+    pnpm install --frozen-lockfile
     bash scripts/run-commitlint-checks.sh
 
 # Re-run the commitlint verification, tests, and demo.

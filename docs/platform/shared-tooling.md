@@ -13,7 +13,7 @@ This document defines:
 - the repository-level formatting and lint commands
 - the default handling rule for generated files
 
-This document does not define application code, end-to-end test strategy, or CI workflow wiring.
+This document does not define application code, end-to-end test strategy, or deployed-environment workflow wiring beyond the initial merge gate handoff.
 
 ## Shared config packages
 
@@ -27,7 +27,9 @@ This document does not define application code, end-to-end test strategy, or CI 
 ### `packages/config-oxlint`
 
 - `base/oxlint.config.ts` defines the shared lint baseline and generated-file ignore rules
+- the shared base is strict by default for hand-written code and enforces the repository's `undefined`-first and no-non-null-assertion policy
 - `repository/oxlint.config.ts` is the root repository config for scripts and config files in this repo
+- the repository config carries narrow overrides for script and GitHub helper paths instead of weakening the shared base for all code
 - `api/oxlint.config.ts` extends the base config with a Node runtime
 - `web/oxlint.config.ts` extends the base config with a browser runtime
 - the oxlint baselines are written in TypeScript because that is one of the reasons this repository chose oxlint over a JSON-only lint configuration path
@@ -53,8 +55,22 @@ The repository root now exposes:
 - `pnpm format` to apply Prettier
 - `pnpm format:check` to verify formatting without writing changes
 - `pnpm lint` to run root oxlint checks and then workspace lint tasks
+- `pnpm merge-gate` to run the initial merge validation sequence
 - `pnpm test` to keep the existing root test flow and workspace test flow
 - `pnpm typecheck` to keep the existing workspace typecheck flow
+
+The initial merge gate sequence is:
+
+- `pnpm generate`
+- `pnpm lint`
+- `pnpm typecheck`
+- `pnpm test`
+
+This keeps generated contract outputs available before downstream validation steps run.
+
+The repository now uses GitHub Actions to run the same merge gate on pull requests and pushes to `main`.
+
+Deploy-only checks remain outside this merge gate. Examples include deployed acceptance checks, deploy approval rules, and runtime-only validation in non-local environments.
 
 ## Generated files rule
 
@@ -65,6 +81,8 @@ The shared Prettier and oxlint baselines ignore those directories by default.
 If a future issue needs committed generated files outside those directories, that issue must update the shared tooling config at the same time.
 
 Hand-written wrapper code should stay outside generated directories so it still receives full lint and format checks.
+
+Hand-written application and package code should also prefer `undefined` over `null` unless a boundary or tool-specific path has a documented exception.
 
 ## Runtime-specific usage
 
@@ -89,5 +107,10 @@ This keeps issue #21 and issue #22 focused on app implementation instead of re-d
 
 ### For #24
 
-- run `pnpm format:check` and `pnpm lint` in CI
-- treat formatting drift as a failed check instead of a review comment
+- keep the root command entrypoints aligned with the repository merge gate
+- keep generated outputs available before downstream validation tasks
+
+### For #71
+
+- keep the root merge-gate entrypoint and the GitHub Actions workflow in sync
+- update this document if merge validation adds or removes required checks
