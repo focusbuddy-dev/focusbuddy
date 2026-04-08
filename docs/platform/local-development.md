@@ -26,11 +26,11 @@ The compose file currently starts four services:
 - `api` for the API runtime container
 - `web` for the web runtime container
 
-The current `web` container intentionally runs a placeholder runtime script because issue #22 has not implemented the real application yet.
-
 Issue #21 replaces the API placeholder with the real NestJS runtime while keeping the same local port and environment variable wiring.
 
-This keeps the local orchestration, ports, health checks, and runtime assumptions testable now without pretending that the API or web app already exist.
+Issue #22 creates the real Next.js web baseline under `apps/web`, and issue #106 wires that baseline into the local Docker Compose `web` service.
+
+This keeps the local orchestration, ports, health checks, and runtime assumptions testable while aligning the local stack with the current real API and web baselines.
 
 ## Service roles
 
@@ -56,8 +56,9 @@ This keeps the local orchestration, ports, health checks, and runtime assumption
 ### `web`
 
 - uses the shared local Node development image
+- runs the real Next.js baseline created in issue #22 and wired into local compose by issue #106
 - receives API base URL and auth-related settings through environment variables
-- will later be replaced by the real Next.js runtime in issue #22
+- exposes `/health` so the compose health check can validate that the web runtime is reachable after startup
 
 ## Shared local image
 
@@ -99,12 +100,14 @@ The local compose stack currently expects these categories of values:
 - PostgreSQL database name, user, password, and host port
 - host port mappings for API, web, and auth
 - local auth mode
+- a browser-visible API base URL for the Next.js web runtime
 
 Follow-up implementation issues should continue this rule:
 
 - keep secrets out of tracked files
 - keep tracked examples minimal and local-development-oriented
 - pass runtime values to containers through compose environment settings rather than hidden machine-specific shell state
+- distinguish between container-internal service URLs and browser-visible URLs when wiring frontend runtime variables
 
 ## Developer flow
 
@@ -148,7 +151,7 @@ The first local stack intentionally differs from production in these ways:
 
 - PostgreSQL is local Docker PostgreSQL, not Cloud SQL
 - auth is a local stub for now, not real Firebase Auth or a full emulator setup yet
-- web is still a placeholder runtime service until issue #22 lands
+- web now serves the current Next.js baseline, but feature UI remains intentionally minimal after issue #22
 - there is no Secret Manager or Cloud Run wiring in the local stack
 
 These differences are acceptable for the current stage because the goal is to make the local workflow explicit and reproducible before full app implementation begins.
@@ -160,10 +163,11 @@ These differences are acceptable for the current stage because the goal is to ma
 - extend the real NestJS API baseline with feature modules and real endpoints
 - keep the current `DATABASE_URL` and auth environment pattern where practical
 
-### For #22
+### For #22 and #106
 
-- replace the web placeholder command with the real Next.js app runtime
-- reuse the current API base URL and auth environment pattern where practical
+- issue #22 established the Next.js web baseline only
+- issue #106 connects that baseline to the local Docker Compose `web` runtime
+- follow-up web issues should build on the real local compose runtime rather than reintroducing the placeholder service
 
 ### For #30
 

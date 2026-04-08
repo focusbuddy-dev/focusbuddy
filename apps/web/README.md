@@ -15,8 +15,10 @@ This workspace captures the first Next.js web baseline from issue #22.
 - `pnpm --filter @focusbuddy/web build` builds the contract outputs and runs `next build`
 - `pnpm --filter @focusbuddy/web typecheck` rebuilds the contract outputs and runs the workspace TypeScript check
 - `pnpm --filter @focusbuddy/web test` rebuilds the contract outputs and runs the Jest plus MSW baseline tests
+- `just local-up` runs this baseline through the local Docker Compose workflow after the follow-up runtime integration from issue #106
 
 ## Notes
 
 - this issue establishes the web baseline only; feature UI stays in follow-up work after issue #22
+- issue #22 created the Next.js baseline, while issue #106 wires that baseline into the local Docker Compose `web` service
 - the generated contract outputs remain outside git and are rebuilt locally or in CI through the workspace scripts
