@@ -13,7 +13,7 @@ This document defines:
 - the repository-level formatting and lint commands
 - the default handling rule for generated files
 
-This document does not define application code, end-to-end test strategy, or CI workflow wiring.
+This document does not define application code, end-to-end test strategy, or deployed-environment workflow wiring beyond the initial merge gate handoff.
 
 ## Shared config packages
 
@@ -55,8 +55,22 @@ The repository root now exposes:
 - `pnpm format` to apply Prettier
 - `pnpm format:check` to verify formatting without writing changes
 - `pnpm lint` to run root oxlint checks and then workspace lint tasks
+- `pnpm merge-gate` to run the initial merge validation sequence
 - `pnpm test` to keep the existing root test flow and workspace test flow
 - `pnpm typecheck` to keep the existing workspace typecheck flow
+
+The initial merge gate sequence is:
+
+- `pnpm generate`
+- `pnpm lint`
+- `pnpm typecheck`
+- `pnpm test`
+
+This keeps generated contract outputs available before downstream validation steps run.
+
+The repository now uses GitHub Actions to run the same merge gate on pull requests and pushes to `main`.
+
+Deploy-only checks remain outside this merge gate. Examples include deployed acceptance checks, deploy approval rules, and runtime-only validation in non-local environments.
 
 ## Generated files rule
 
@@ -93,5 +107,10 @@ This keeps issue #21 and issue #22 focused on app implementation instead of re-d
 
 ### For #24
 
-- run `pnpm format:check` and `pnpm lint` in CI
-- treat formatting drift as a failed check instead of a review comment
+- keep the root command entrypoints aligned with the repository merge gate
+- keep generated outputs available before downstream validation tasks
+
+### For #71
+
+- keep the root merge-gate entrypoint and the GitHub Actions workflow in sync
+- update this document if merge validation adds or removes required checks

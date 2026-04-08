@@ -85,8 +85,13 @@ The repository now exposes common developer commands for formatting, linting, te
 - `pnpm format`
 - `pnpm format:check`
 - `pnpm lint`
+- `pnpm merge-gate`
 - `pnpm test`
 - `pnpm typecheck`
+
+The initial merge gate runs `generate`, `lint`, `typecheck`, and `test` in that order.
+
+GitHub Actions runs the same gate on pull requests and pushes to `main`. Deploy-only checks stay outside this gate.
 
 Formatting is owned by Prettier, including quote style decisions for JavaScript and TypeScript files.
 
