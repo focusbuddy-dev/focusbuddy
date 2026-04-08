@@ -114,6 +114,7 @@ Issue #51 adds a first local Docker development baseline with:
 
 ## Design Notes
 
+- The first web error handling policy note is available at [docs/platform/web-error-handling-policy.md](docs/platform/web-error-handling-policy.md).
 - The first public-safe domain design note is available at [docs/domain/mvp-domain-model.md](docs/domain/mvp-domain-model.md).
 - The first web safety control responsibility note is available at [docs/platform/web-safety-control-responsibilities.md](docs/platform/web-safety-control-responsibilities.md).
 - The follow-up continuity rules note is available at [docs/domain/mvp-continuity-rules.md](docs/domain/mvp-continuity-rules.md).
