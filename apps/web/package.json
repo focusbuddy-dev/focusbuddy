@@ -7,7 +7,8 @@
     "contract:build": "pnpm --dir ../.. --filter @focusbuddy/api-contract build",
     "dev": "pnpm contract:build && next dev",
     "dev:compose": "pnpm contract:build && next dev --hostname 0.0.0.0 --port 3000",
-    "lint": "pnpm --dir ../.. exec oxlint apps/web/src apps/web/test",
+    "lint": "pnpm lint:styles && pnpm --dir ../.. exec oxlint apps/web/src apps/web/test",
+    "lint:styles": "pnpm --dir ../.. exec stylelint \"apps/web/src/**/*.css\"",
     "test": "pnpm contract:build && pnpm --dir ../.. exec jest --config apps/web/jest.config.ts --runInBand",
     "typecheck": "pnpm contract:build && pnpm --dir ../.. exec tsc --project apps/web/tsconfig.json --noEmit"
   },

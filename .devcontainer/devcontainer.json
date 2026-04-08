@@ -22,7 +22,8 @@
         "esbenp.prettier-vscode",
         "graphql.vscode-graphql",
         "prisma.prisma",
-        "orta.vscode-jest"
+        "orta.vscode-jest",
+        "stylelint.vscode-stylelint"
       ]
     }
   },
