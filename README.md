@@ -114,6 +114,7 @@ Issue #51 adds a first local Docker development baseline with:
 
 ## Design Notes
 
+- The first shared API and domain error model note is available at [docs/domain/mvp-api-error-model.md](docs/domain/mvp-api-error-model.md).
 - The first web accident pattern inventory is available at [docs/platform/web-accident-pattern-inventory.md](docs/platform/web-accident-pattern-inventory.md).
 - The first public-safe domain design note is available at [docs/domain/mvp-domain-model.md](docs/domain/mvp-domain-model.md).
 - The first web safety control responsibility note is available at [docs/platform/web-safety-control-responsibilities.md](docs/platform/web-safety-control-responsibilities.md).
