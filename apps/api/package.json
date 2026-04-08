@@ -2,11 +2,35 @@
   "name": "@focusbuddy/api",
   "private": true,
   "version": "0.0.0",
+  "main": "dist/main.js",
   "scripts": {
-    "build": "node ../../scripts/workspace-task.mjs @focusbuddy/api build",
-    "dev": "node ../../scripts/workspace-task.mjs @focusbuddy/api dev",
-    "lint": "node ../../scripts/workspace-task.mjs @focusbuddy/api lint",
-    "test": "node ../../scripts/workspace-task.mjs @focusbuddy/api test",
-    "typecheck": "node ../../scripts/workspace-task.mjs @focusbuddy/api typecheck"
+    "build": "pnpm contract:build && pnpm prisma:generate && pnpm --dir ../.. exec tsc --project apps/api/tsconfig.build.json",
+    "contract:build": "pnpm --dir ../.. --filter @focusbuddy/api-contract build",
+    "dev": "pnpm contract:build && pnpm prisma:generate && pnpm --dir ../.. exec ts-node apps/api/src/main.ts",
+    "lint": "pnpm --dir ../.. exec oxlint apps/api/src apps/api/test apps/api/prisma",
+    "prisma:generate": "prisma generate --config prisma.config.ts",
+    "prisma:migrate:dev": "prisma migrate dev --config prisma.config.ts",
+    "prisma:studio": "prisma studio --config prisma.config.ts",
+    "test": "pnpm contract:build && pnpm prisma:generate && pnpm --dir ../.. exec jest --config apps/api/jest.config.ts --runInBand",
+    "typecheck": "pnpm contract:build && pnpm prisma:generate && pnpm --dir ../.. exec tsc --project apps/api/tsconfig.build.json --noEmit"
+  },
+  "dependencies": {
+    "@focusbuddy/api-contract": "workspace:*",
+    "@nestjs/common": "^11.1.18",
+    "@nestjs/core": "^11.1.18",
+    "@nestjs/platform-express": "^11.1.18",
+    "@prisma/adapter-pg": "^7.7.0",
+    "@prisma/client": "^7.7.0",
+    "dotenv": "^17.4.1",
+    "pg": "^8.20.0",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2"
+  },
+  "devDependencies": {
+    "@nestjs/testing": "^11.1.18",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^25.5.2",
+    "prisma": "^7.7.0",
+    "ts-jest": "^29.4.9"
   }
 }
