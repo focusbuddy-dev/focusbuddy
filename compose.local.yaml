@@ -26,7 +26,7 @@ services:
       PORT: 9099
       FOCUSBUDDY_AUTH_MODE: ${FOCUSBUDDY_AUTH_MODE:-stub}
     volumes:
-      - .:/workspace
+      - ${FOCUSBUDDY_WORKSPACE_MOUNT:-.}:/workspace
     ports:
       - '${AUTH_PORT:-9099}:9099'
     healthcheck:
@@ -53,7 +53,7 @@ services:
       FOCUSBUDDY_AUTH_MODE: ${FOCUSBUDDY_AUTH_MODE:-stub}
       FOCUSBUDDY_AUTH_BASE_URL: http://auth:9099
     volumes:
-      - .:/workspace
+      - ${FOCUSBUDDY_WORKSPACE_MOUNT:-.}:/workspace
     ports:
       - '${API_PORT:-3001}:3001'
     depends_on:
@@ -85,7 +85,7 @@ services:
       FOCUSBUDDY_AUTH_MODE: ${FOCUSBUDDY_AUTH_MODE:-stub}
       FOCUSBUDDY_AUTH_BASE_URL: http://auth:9099
     volumes:
-      - .:/workspace
+      - ${FOCUSBUDDY_WORKSPACE_MOUNT:-.}:/workspace
     ports:
       - '${WEB_PORT:-3000}:3000'
     depends_on:

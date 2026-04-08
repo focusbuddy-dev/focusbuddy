@@ -140,6 +140,8 @@ When the repository dev container is rebuilt with Docker outside of Docker enabl
 
 This means the local compose workflow can be started from inside the dev container, but it still depends on Docker being installed and running on the host machine.
 
+The compose file also needs bind mounts to resolve against the host filesystem, not the container-only `/workspaces/...` path. The dev container handles that by forwarding the host repository path through `FOCUSBUDDY_WORKSPACE_MOUNT`, which the compose file uses as the bind mount source when available.
+
 ## Current differences from deployed runtime
 
 The first local stack intentionally differs from production in these ways:
