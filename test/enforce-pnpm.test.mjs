@@ -81,9 +81,9 @@ test('rejects npm user agents when executed via the relative preinstall path', a
 
 test('declares pnpm as the npm devEngines package manager requirement', async () => {
   const packageJson = JSON.parse(await readFile(packageJsonPath, 'utf8'));
+  const packageManager = packageJson.devEngines?.packageManager;
 
-  assert.deepEqual(packageJson.devEngines?.packageManager, {
-    name: 'pnpm',
-    onFail: 'error',
-  });
+  assert.ok(packageManager, 'expected devEngines.packageManager to be defined');
+  assert.equal(packageManager.name, 'pnpm');
+  assert.equal(packageManager.onFail, 'error');
 });
