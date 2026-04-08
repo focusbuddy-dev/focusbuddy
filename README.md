@@ -87,8 +87,13 @@ The repository now exposes common developer commands for formatting, linting, te
 - `pnpm format`
 - `pnpm format:check`
 - `pnpm lint`
+- `pnpm merge-gate`
 - `pnpm test`
 - `pnpm typecheck`
+
+The initial merge gate runs `generate`, `lint`, `typecheck`, and `test` in that order.
+
+GitHub Actions runs the same gate on pull requests and pushes to `main`. Deploy-only checks stay outside this gate.
 
 Formatting is owned by Prettier, including quote style decisions for JavaScript and TypeScript files.
 
@@ -110,6 +115,7 @@ Issue #51 adds a first local Docker development baseline with:
 ## Design Notes
 
 - The first public-safe domain design note is available at [docs/domain/mvp-domain-model.md](docs/domain/mvp-domain-model.md).
+- The first web safety control responsibility note is available at [docs/platform/web-safety-control-responsibilities.md](docs/platform/web-safety-control-responsibilities.md).
 - The follow-up continuity rules note is available at [docs/domain/mvp-continuity-rules.md](docs/domain/mvp-continuity-rules.md).
 - The logical ER review note is available at [docs/domain/mvp-logical-er-review.md](docs/domain/mvp-logical-er-review.md).
 - The Prisma schema design note is available at [docs/domain/mvp-prisma-schema-design.md](docs/domain/mvp-prisma-schema-design.md).
