@@ -10,12 +10,12 @@ const createJestConfig = nextJest({ dir: './apps/web' });
 
 const config: Config = {
   ...sharedConfig,
+  rootDir: '.',
   moduleDirectories: ['node_modules', '<rootDir>/src', '<rootDir>/test'],
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'cjs', 'mjs', 'json'],
-  rootDir: '../../',
-  setupFilesAfterEnv: ['<rootDir>/apps/web/test/setup-tests.ts'],
-  testMatch: ['<rootDir>/apps/web/test/**/*.test.ts?(x)'],
-  transformIgnorePatterns: ['/node_modules/(?!(msw|@mswjs|until-async)/)'],
+  setupFilesAfterEnv: ['<rootDir>/test/setup-tests.ts'],
+  testMatch: ['<rootDir>/test/**/*.test.ts?(x)'],
+  transformIgnorePatterns: ['/node_modules/(?!(msw|@mswjs|@open-draft/until)/)'],
 };
 
 export default createJestConfig(config);

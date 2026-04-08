@@ -42,7 +42,7 @@ export function WebBaselinePage({ apiBaseUrl, previewSummary }: WebBaselinePageP
               navigation, and safety controls can harden the same entry point instead of many ad hoc
               calls.
             </p>
-            <div className="code-chip">{apiBaseUrl}</div>
+            <div className="code-chip">{apiBaseUrl || 'same-origin'}</div>
           </article>
 
           <article className="card">
