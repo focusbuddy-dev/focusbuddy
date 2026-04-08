@@ -147,5 +147,9 @@ vite.config.ts.timestamp-*
 # Turborepo local cache
 .turbo/
 
+# Generated artifacts stay out of git by default.
+**/generated/
+**/__generated__/
+
 # Husky runtime files created during install
 .husky/_

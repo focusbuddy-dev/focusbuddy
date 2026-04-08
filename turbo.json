@@ -8,6 +8,10 @@
     "dev": {
       "cache": false
     },
+    "generate": {
+      "dependsOn": ["^generate"],
+      "outputs": ["generated/**"]
+    },
     "lint": {
       "outputs": []
     },
@@ -16,6 +20,7 @@
       "outputs": []
     },
     "typecheck": {
+      "dependsOn": ["^generate"],
       "outputs": []
     }
   }

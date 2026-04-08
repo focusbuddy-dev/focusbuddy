@@ -1,0 +1,559 @@
+openapi: 3.1.0
+info:
+  title: FocusBuddy API
+  version: 0.1.0
+  summary: First schema-driven contract baseline for the FocusBuddy MVP.
+  description: |
+    This contract is the source of truth for the initial FocusBuddy API surface.
+
+    It models the first target, session, stamp, and public-summary workflows from the MVP domain notes.
+servers:
+  - url: https://api.focusbuddy.example
+    description: Placeholder production server
+  - url: http://localhost:3000
+    description: Placeholder local API server
+tags:
+  - name: Targets
+  - name: Sessions
+  - name: PublicSummary
+  - name: Stamps
+security:
+  - bearerAuth: []
+paths:
+  /v1/targets:
+    get:
+      tags: [Targets]
+      operationId: listFocusTargets
+      summary: List the authenticated user's focus targets.
+      responses:
+        '200':
+          description: Focus targets owned by the current user.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FocusTargetListResponse'
+    post:
+      tags: [Targets]
+      operationId: createFocusTarget
+      summary: Create a new focus target.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateFocusTargetInput'
+      responses:
+        '201':
+          description: The created target.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FocusTarget'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /v1/targets/{targetId}:
+    parameters:
+      - $ref: '#/components/parameters/TargetId'
+    get:
+      tags: [Targets]
+      operationId: getFocusTarget
+      summary: Fetch one focus target.
+      responses:
+        '200':
+          description: The requested focus target.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FocusTarget'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags: [Targets]
+      operationId: updateFocusTarget
+      summary: Update mutable target fields.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateFocusTargetInput'
+      responses:
+        '200':
+          description: The updated target.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FocusTarget'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /v1/targets/{targetId}/sessions:
+    parameters:
+      - $ref: '#/components/parameters/TargetId'
+    get:
+      tags: [Sessions]
+      operationId: listFocusSessions
+      summary: List sessions for a focus target.
+      responses:
+        '200':
+          description: Sessions linked to the target.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FocusSessionListResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      tags: [Sessions]
+      operationId: createFocusSession
+      summary: Create a new focus session for a target.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateFocusSessionInput'
+      responses:
+        '201':
+          description: The created session.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FocusSession'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /v1/public/targets/{targetId}/summary:
+    parameters:
+      - $ref: '#/components/parameters/TargetId'
+    get:
+      tags: [PublicSummary]
+      operationId: getPublicTargetSummary
+      summary: Read the derived public summary for a focus target.
+      security: []
+      responses:
+        '200':
+          description: The current public summary state.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicTargetSummary'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /v1/public/targets/{targetId}/stamps/helpful:
+    parameters:
+      - $ref: '#/components/parameters/TargetId'
+    put:
+      tags: [Stamps]
+      operationId: upsertHelpfulStamp
+      summary: Upsert the effective helpful stamp for the current actor.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpsertHelpfulStampInput'
+      responses:
+        '200':
+          description: The effective helpful stamp after the upsert.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Stamp'
+        '404':
+          $ref: '#/components/responses/NotFound'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Placeholder bearer token scheme for authenticated API endpoints.
+  parameters:
+    TargetId:
+      name: targetId
+      in: path
+      required: true
+      description: Stable identifier of a focus target.
+      schema:
+        type: string
+        minLength: 1
+  responses:
+    BadRequest:
+      description: The request payload did not satisfy the contract.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    NotFound:
+      description: The requested resource was not found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+  schemas:
+    TargetSourceType:
+      type: string
+      enum: [FREE_FORM, URL]
+    SessionVisibility:
+      type: string
+      enum: [PRIVATE, PUBLIC]
+    NoteVisibility:
+      type: string
+      enum: [PRIVATE, PUBLIC]
+    StampType:
+      type: string
+      enum: [HELPFUL]
+    StampActorType:
+      type: string
+      enum: [AUTHENTICATED_USER, ANONYMOUS_VISITOR]
+    UserRef:
+      type: object
+      additionalProperties: false
+      required: [id, firebaseUid]
+      properties:
+        id:
+          type: string
+        firebaseUid:
+          type: string
+    FocusTarget:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - owner
+        - title
+        - sourceType
+        - publicSummaryEnabled
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+        owner:
+          $ref: '#/components/schemas/UserRef'
+        title:
+          type: string
+        sourceType:
+          $ref: '#/components/schemas/TargetSourceType'
+        sourceUrl:
+          type:
+            - string
+            - 'null'
+          format: uri
+        genre:
+          type:
+            - string
+            - 'null'
+        publicSummaryEnabled:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    PublicFocusTarget:
+      type: object
+      additionalProperties: false
+      required:
+        - title
+        - sourceType
+      properties:
+        title:
+          type: string
+        sourceType:
+          $ref: '#/components/schemas/TargetSourceType'
+        sourceUrl:
+          type:
+            - string
+            - 'null'
+          format: uri
+        genre:
+          type:
+            - string
+            - 'null'
+    CreateFocusTargetInput:
+      type: object
+      additionalProperties: false
+      required: [title, sourceType]
+      properties:
+        title:
+          type: string
+          minLength: 1
+        sourceType:
+          $ref: '#/components/schemas/TargetSourceType'
+        sourceUrl:
+          type:
+            - string
+            - 'null'
+          format: uri
+        genre:
+          type:
+            - string
+            - 'null'
+        publicSummaryEnabled:
+          type: boolean
+          default: false
+    UpdateFocusTargetInput:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      properties:
+        title:
+          type: string
+          minLength: 1
+        sourceUrl:
+          type:
+            - string
+            - 'null'
+          format: uri
+        genre:
+          type:
+            - string
+            - 'null'
+        publicSummaryEnabled:
+          type: boolean
+    FocusSession:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - targetId
+        - visibility
+        - completedByUser
+        - startedAt
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+        targetId:
+          type: string
+        visibility:
+          $ref: '#/components/schemas/SessionVisibility'
+        note:
+          type:
+            - string
+            - 'null'
+        noteVisibility:
+          oneOf:
+            - $ref: '#/components/schemas/NoteVisibility'
+            - type: 'null'
+        completedByUser:
+          type: boolean
+        startedAt:
+          type: string
+          format: date-time
+        endedAt:
+          type:
+            - string
+            - 'null'
+          format: date-time
+        durationSeconds:
+          type:
+            - integer
+            - 'null'
+          minimum: 0
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        resumeSource:
+          oneOf:
+            - $ref: '#/components/schemas/ResumeSource'
+            - type: 'null'
+    CreateFocusSessionInput:
+      type: object
+      additionalProperties: false
+      required: [visibility, completedByUser, startedAt]
+      properties:
+        visibility:
+          $ref: '#/components/schemas/SessionVisibility'
+        note:
+          type:
+            - string
+            - 'null'
+        noteVisibility:
+          oneOf:
+            - $ref: '#/components/schemas/NoteVisibility'
+            - type: 'null'
+        completedByUser:
+          type: boolean
+        startedAt:
+          type: string
+          format: date-time
+        endedAt:
+          type:
+            - string
+            - 'null'
+          format: date-time
+        durationSeconds:
+          type:
+            - integer
+            - 'null'
+          minimum: 0
+        resumeFromSessionId:
+          type:
+            - string
+            - 'null'
+    ResumeSource:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - targetId
+        - startedSessionId
+        - previousSessionId
+        - isEffective
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+        targetId:
+          type: string
+        startedSessionId:
+          type: string
+        previousSessionId:
+          type: string
+        isEffective:
+          type: boolean
+        invalidatedAt:
+          type:
+            - string
+            - 'null'
+          format: date-time
+        invalidationNote:
+          type:
+            - string
+            - 'null'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    Stamp:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - targetId
+        - actorType
+        - actorKey
+        - stampType
+        - isEffective
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+        targetId:
+          type: string
+        actorType:
+          $ref: '#/components/schemas/StampActorType'
+        actorKey:
+          type: string
+        actorUserId:
+          type:
+            - string
+            - 'null'
+        stampType:
+          $ref: '#/components/schemas/StampType'
+        isEffective:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    UpsertHelpfulStampInput:
+      type: object
+      additionalProperties: false
+      required: [isEffective]
+      properties:
+        isEffective:
+          type: boolean
+    PublicSessionSummary:
+      type: object
+      additionalProperties: false
+      required: [sessionId, startedAt, durationSeconds, completedByUser]
+      properties:
+        sessionId:
+          type: string
+        startedAt:
+          type: string
+          format: date-time
+        durationSeconds:
+          type: integer
+          minimum: 0
+        completedByUser:
+          type: boolean
+        publicNote:
+          type:
+            - string
+            - 'null'
+    PublicTargetSummary:
+      type: object
+      additionalProperties: false
+      required:
+        - target
+        - publicSessionCount
+        - totalPublicDurationSeconds
+        - helpfulStampCount
+        - recentPublicSessions
+      properties:
+        target:
+          $ref: '#/components/schemas/PublicFocusTarget'
+        publicSessionCount:
+          type: integer
+          minimum: 0
+        totalPublicDurationSeconds:
+          type: integer
+          minimum: 0
+        lastPublicSessionAt:
+          type:
+            - string
+            - 'null'
+          format: date-time
+        helpfulStampCount:
+          type: integer
+          minimum: 0
+        recentPublicSessions:
+          type: array
+          items:
+            $ref: '#/components/schemas/PublicSessionSummary'
+    FocusTargetListResponse:
+      type: object
+      additionalProperties: false
+      required: [targets]
+      properties:
+        targets:
+          type: array
+          items:
+            $ref: '#/components/schemas/FocusTarget'
+    FocusSessionListResponse:
+      type: object
+      additionalProperties: false
+      required: [sessions]
+      properties:
+        sessions:
+          type: array
+          items:
+            $ref: '#/components/schemas/FocusSession'
+    ErrorResponse:
+      type: object
+      additionalProperties: false
+      required: [code, message]
+      properties:
+        code:
+          type: string
+        message:
+          type: string

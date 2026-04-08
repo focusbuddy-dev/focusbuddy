@@ -79,6 +79,7 @@ The current top-level areas are:
 
 The repository now exposes common developer commands for formatting, linting, testing, and type checking:
 
+- `pnpm generate`
 - `pnpm format`
 - `pnpm format:check`
 - `pnpm lint`
@@ -90,6 +91,8 @@ Formatting is owned by Prettier, including quote style decisions for JavaScript 
 Linting is owned by oxlint.
 
 Generated files are expected to live under `generated` or `__generated__` directories and are excluded from shared formatting and linting by default.
+
+The OpenAPI contract package and its generation flow for Issue #20 live in `packages/api-contract`.
 
 ## Local Development Stack
 
