@@ -36,8 +36,10 @@
     "openapi-zod-client": "^1.18.3",
     "oxlint": "^1.59.0",
     "prettier": "^3.8.1",
+    "stylelint": "^17.6.0",
+    "stylelint-config-standard": "^40.0.0",
     "ts-node": "^10.9.2",
-    "typescript": "^6.0.2",
-    "turbo": "^2.9.4"
+    "turbo": "^2.9.4",
+    "typescript": "^6.0.2"
   }
 }

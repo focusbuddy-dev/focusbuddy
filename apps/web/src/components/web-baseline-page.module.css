@@ -1,0 +1,141 @@
+.pageShell {
+  min-height: 100vh;
+  padding: 48px 24px 80px;
+}
+
+.pageGrid {
+  display: grid;
+  gap: 24px;
+  margin: 0 auto;
+  max-width: 1120px;
+}
+
+.hero,
+.card,
+.summaryCard {
+  background: var(--card);
+  backdrop-filter: blur(18px);
+  border: 1px solid var(--line);
+  border-radius: 28px;
+  box-shadow: var(--shadow);
+}
+
+.hero {
+  overflow: hidden;
+  padding: 36px;
+}
+
+.heroLabel {
+  align-items: center;
+  background: var(--accent-soft);
+  border-radius: 999px;
+  color: var(--accent);
+  display: inline-flex;
+  font-size: 0.82rem;
+  font-weight: 700;
+  gap: 8px;
+  letter-spacing: 0.08em;
+  padding: 8px 14px;
+  text-transform: uppercase;
+}
+
+.heroTitle {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(3rem, 7vw, 5.5rem);
+  line-height: 0.92;
+  margin: 18px 0 14px;
+  max-width: 12ch;
+}
+
+.heroDescription {
+  color: var(--muted);
+  font-size: 1.05rem;
+  line-height: 1.7;
+  margin: 0;
+  max-width: 58ch;
+}
+
+.heroMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 22px;
+}
+
+.heroMetaItem {
+  background: rgb(255 255 255 / 70%);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  font-size: 0.92rem;
+  padding: 10px 14px;
+}
+
+.cardGrid {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.card,
+.summaryCard {
+  padding: 24px;
+}
+
+.sectionTitle {
+  font-size: 1.15rem;
+  margin: 0 0 10px;
+}
+
+.bodyText {
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.codeChip {
+  background: #111827;
+  border-radius: 16px;
+  color: #f8fafc;
+  display: inline-flex;
+  font-family: SFMono-Regular, Consolas, monospace;
+  font-size: 0.84rem;
+  margin-top: 16px;
+  padding: 10px 12px;
+  word-break: break-all;
+}
+
+.summaryList {
+  color: var(--muted);
+  line-height: 1.6;
+  padding-left: 20px;
+}
+
+.summaryStats {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  margin: 18px 0;
+}
+
+.statLabel {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.statValue {
+  display: block;
+  font-size: 1.35rem;
+  margin-bottom: 4px;
+}
+
+@media (width <= 640px) {
+  .pageShell {
+    padding-inline: 16px;
+  }
+
+  .hero,
+  .card,
+  .summaryCard {
+    border-radius: 22px;
+    padding: 22px;
+  }
+}

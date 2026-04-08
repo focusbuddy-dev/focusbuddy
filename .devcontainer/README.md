@@ -55,6 +55,7 @@ It also preinstalls the VS Code extensions used directly by this repository:
 - GraphQL
 - Prisma
 - Jest
+- Stylelint
 
 Repository dependency installation is intentionally left out of `postCreateCommand` and stays in the explicit `just commitlint-setup` flow.
 
