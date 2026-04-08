@@ -4,13 +4,13 @@ import { HealthController } from '../src/health/health.controller';
 import { PrismaService } from '../src/prisma/prisma.service';
 
 type PrismaProbe = {
-  $queryRawUnsafe: (query: string) => Promise<unknown>;
+  $queryRaw: (query: TemplateStringsArray) => Promise<unknown>;
 };
 
 describe('HealthController', () => {
   it('returns an OK health payload when the database probe succeeds', async () => {
     const prisma: jest.Mocked<PrismaProbe> = {
-      $queryRawUnsafe: jest.fn().mockResolvedValue(1),
+      $queryRaw: jest.fn().mockResolvedValue(1),
     };
 
     const moduleRef = await Test.createTestingModule({
@@ -29,6 +29,7 @@ describe('HealthController', () => {
       status: 'ok',
       database: 'up',
     });
-    expect(prisma.$queryRawUnsafe).toHaveBeenCalledWith('SELECT 1');
+    expect(prisma.$queryRaw).toHaveBeenCalledTimes(1);
+    expect(prisma.$queryRaw.mock.calls[0]?.[0]).toContain('SELECT 1');
   });
 });

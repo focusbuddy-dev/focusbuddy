@@ -40,6 +40,13 @@ const noteVisibilityMap: Record<PrismaNoteVisibility, ContractNoteVisibility> = 
   PUBLIC: 'PUBLIC',
 };
 
+function withOptionalProperty<K extends string, V>(
+  key: K,
+  value: V | undefined,
+): Partial<Record<K, V>> {
+  return value === undefined ? {} : ({ [key]: value } as Record<K, V>);
+}
+
 export function mapPrismaUserToContractUserRef(user: PrismaUser): ContractUserRef {
   return {
     id: user.id,
@@ -48,13 +55,16 @@ export function mapPrismaUserToContractUserRef(user: PrismaUser): ContractUserRe
 }
 
 export function mapPrismaFocusTargetToContract(target: PrismaFocusTargetRecord): ContractFocusTarget {
+  const sourceUrl = target.sourceUrl ?? undefined;
+  const genre = target.genre ?? undefined;
+
   return {
     id: target.id,
     owner: mapPrismaUserToContractUserRef(target.owner),
     title: target.title,
     sourceType: targetSourceTypeMap[target.sourceType],
-    sourceUrl: target.sourceUrl ?? null,
-    genre: target.genre ?? null,
+    ...withOptionalProperty('sourceUrl', sourceUrl),
+    ...withOptionalProperty('genre', genre),
     publicSummaryEnabled: target.publicSummaryEnabled,
     createdAt: target.createdAt.toISOString(),
     updatedAt: target.updatedAt.toISOString(),
@@ -62,32 +72,43 @@ export function mapPrismaFocusTargetToContract(target: PrismaFocusTargetRecord):
 }
 
 export function mapPrismaResumeSourceToContract(resumeSource: PrismaResumeSource): ContractResumeSource {
+  const invalidatedAt = resumeSource.invalidatedAt?.toISOString() ?? undefined;
+  const invalidationNote = resumeSource.invalidationNote ?? undefined;
+
   return {
     id: resumeSource.id,
     targetId: resumeSource.targetId,
     startedSessionId: resumeSource.startedSessionId,
     previousSessionId: resumeSource.previousSessionId,
     isEffective: resumeSource.isEffective,
-    invalidatedAt: resumeSource.invalidatedAt?.toISOString() ?? null,
-    invalidationNote: resumeSource.invalidationNote ?? null,
+    ...withOptionalProperty('invalidatedAt', invalidatedAt),
+    ...withOptionalProperty('invalidationNote', invalidationNote),
     createdAt: resumeSource.createdAt.toISOString(),
     updatedAt: resumeSource.updatedAt.toISOString(),
   };
 }
 
 export function mapPrismaFocusSessionToContract(session: PrismaFocusSessionRecord): ContractFocusSession {
+  const note = session.note ?? undefined;
+  const noteVisibility = session.noteVisibility ? noteVisibilityMap[session.noteVisibility] : undefined;
+  const endedAt = session.endedAt?.toISOString() ?? undefined;
+  const durationSeconds = session.durationSeconds ?? undefined;
+  const resumeSource = session.startedResume
+    ? mapPrismaResumeSourceToContract(session.startedResume)
+    : undefined;
+
   return {
     id: session.id,
     targetId: session.targetId,
     visibility: sessionVisibilityMap[session.visibility],
-    note: session.note ?? null,
-    noteVisibility: session.noteVisibility ? noteVisibilityMap[session.noteVisibility] : null,
+    ...withOptionalProperty('note', note),
+    ...withOptionalProperty('noteVisibility', noteVisibility),
     completedByUser: session.completedByUser,
     startedAt: session.startedAt.toISOString(),
-    endedAt: session.endedAt?.toISOString() ?? null,
-    durationSeconds: session.durationSeconds ?? null,
+    ...withOptionalProperty('endedAt', endedAt),
+    ...withOptionalProperty('durationSeconds', durationSeconds),
     createdAt: session.createdAt.toISOString(),
     updatedAt: session.updatedAt.toISOString(),
-    resumeSource: session.startedResume ? mapPrismaResumeSourceToContract(session.startedResume) : null,
+    ...withOptionalProperty('resumeSource', resumeSource),
   };
 }

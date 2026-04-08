@@ -13,7 +13,7 @@ export class HealthController {
 
   @Get('health')
   async getHealth(): Promise<HealthResponse> {
-    await this.prisma.$queryRawUnsafe('SELECT 1');
+    await this.prisma.$queryRaw`SELECT 1`;
 
     return {
       status: 'ok',

@@ -57,7 +57,6 @@ describe('contract mappers', () => {
       durationSeconds: 3600,
       createdAt,
       updatedAt,
-      startedResume: null,
     });
 
     expect(contractSession).toEqual({
@@ -72,7 +71,6 @@ describe('contract mappers', () => {
       durationSeconds: 3600,
       createdAt: createdAt.toISOString(),
       updatedAt: updatedAt.toISOString(),
-      resumeSource: null,
     });
   });
 });
