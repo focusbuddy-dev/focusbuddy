@@ -1,8 +1,9 @@
 import { createApiClient } from '@focusbuddy/api-contract/generated/client';
 
 const LOCAL_API_BASE_URL = 'http://localhost:3000';
+const API_BASE_URL_ENV_NAME = 'NEXT_PUBLIC_FOCUSBUDDY_API_BASE_URL';
 
-export function getFocusBuddyApiBaseUrl(): string {
+function resolveFocusBuddyApiBaseUrl(): string | undefined {
   const configuredBaseUrl = process.env.NEXT_PUBLIC_FOCUSBUDDY_API_BASE_URL;
 
   if (configuredBaseUrl) {
@@ -13,7 +14,23 @@ export function getFocusBuddyApiBaseUrl(): string {
     return LOCAL_API_BASE_URL;
   }
 
-  return '';
+  return undefined;
+}
+
+export function getFocusBuddyApiBaseUrl(): string {
+  const baseUrl = resolveFocusBuddyApiBaseUrl();
+
+  if (baseUrl) {
+    return baseUrl;
+  }
+
+  throw new Error(
+    `${API_BASE_URL_ENV_NAME} must be set outside development and test when creating the FocusBuddy API client.`,
+  );
+}
+
+export function getFocusBuddyApiBaseUrlLabel(): string {
+  return resolveFocusBuddyApiBaseUrl() ?? 'same-origin';
 }
 
 export function createFocusBuddyApiClient(baseUrl = getFocusBuddyApiBaseUrl()) {
