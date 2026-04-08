@@ -9,6 +9,7 @@
     "format:check": "prettier --check .",
     "lint": "pnpm lint:repo && turbo run lint",
     "lint:repo": "oxlint .",
+    "preinstall": "node scripts/enforce-pnpm.mjs",
     "prepare": "husky",
     "test": "node --test test/*.test.mjs && turbo run test",
     "typecheck": "turbo run typecheck"

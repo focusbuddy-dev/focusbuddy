@@ -25,11 +25,32 @@ just --list
 
 If you work outside the dev container, install `just` on the host before running repository tasks.
 
+## Package Manager Policy
+
+`pnpm` is the only supported package manager in this repository.
+
+Use this command for the first repository setup inside the dev container:
+
+```bash
+just commitlint-setup
+```
+
+That flow runs `pnpm install --frozen-lockfile` through the Justfile, so dependency installation stays reproducible and explicit.
+
+The dev container intentionally does not install repository dependencies during `postCreateCommand`.
+
+This separation is intentional, not temporary. Dev container startup can already fail for multiple reasons. If dependency installation is added to `postCreateCommand`, the failure surface becomes larger and troubleshooting becomes harder.
+
 ## What Is Automated
 
-The dev container automatically configures Git SSH signing on container start via [setup-git-signing.sh](setup-git-signing.sh).
+The dev container automates two bootstrap steps:
 
-The script does the following:
+- `postCreateCommand` prepares the pinned `pnpm` version from `package.json` and installs `just`
+- `postStartCommand` configures Git SSH signing on container start via [setup-git-signing.sh](setup-git-signing.sh)
+
+Repository dependency installation is intentionally left out of `postCreateCommand` and stays in the explicit `just commitlint-setup` flow.
+
+The signing script does the following:
 
 - reads the first public key exposed by the forwarded `ssh-agent`
 - writes that public key to a container-local file under `~/.ssh`
