@@ -258,6 +258,8 @@ Issue #73 owns the shared error vocabulary and typed error surfaces.
 
 Issue #74 owns the web-specific response policy, such as when to redirect, when to keep context, and when to show inline recovery.
 
+That policy is captured in [docs/platform/web-error-handling-policy.md](web-error-handling-policy.md).
+
 This document sits between them by deciding which web safety controls depend on shared types, which depend on runtime policy, and which must be enforced by helper entry points or tests.
 
 ## Follow-up issue seeds
