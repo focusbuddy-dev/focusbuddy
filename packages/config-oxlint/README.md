@@ -2,6 +2,17 @@
 
 This package provides the shared oxlint baselines for the FocusBuddy monorepo.
 
+The shared base config is strict by default for hand-written application and package code.
+
+Current repository-wide design rules include:
+
+- prefer `undefined` over `null` in hand-written code
+- forbid non-null assertions
+- forbid loose equality around `null`
+- forbid `any` in hand-written TypeScript code covered by the shared baseline
+
+Repository-root script and GitHub helper paths may use narrow overrides when tool-oriented code needs different tradeoffs.
+
 Available configs:
 
 - `base/oxlint.config.ts` for shared lint defaults
