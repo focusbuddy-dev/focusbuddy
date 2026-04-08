@@ -46,7 +46,7 @@ services:
       context: .
       dockerfile: docker/local/node-dev.Dockerfile
     working_dir: /workspace
-    command: ['node', 'scripts/local-dev/placeholder-service.mjs', 'api']
+    command: ['pnpm', '--filter', '@focusbuddy/api', 'dev']
     environment:
       PORT: 3001
       DATABASE_URL: postgres://${POSTGRES_USER:-focusbuddy}:${POSTGRES_PASSWORD:-focusbuddy}@postgres:5432/${POSTGRES_DB:-focusbuddy}
