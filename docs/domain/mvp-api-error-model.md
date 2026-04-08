@@ -39,13 +39,14 @@ The main rule is simple:
 
 The first shared error contract should keep a small stable top-level shape.
 
-Every public error response should strongly consider these fields:
+Every public error response must include these top-level fields:
 
 - `code`
 - `message`
 - `requestId`
 - `retryable`
-- optional `details`
+
+Public error responses may include optional `details` only when there is stable typed data that clients can use safely.
 
 The baseline handling rule for clients is:
 
