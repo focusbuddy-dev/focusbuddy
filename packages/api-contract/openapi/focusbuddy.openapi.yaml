@@ -408,26 +408,6 @@ components:
         - SUMMARY_PREREQUISITE_NOT_MET
         - NOTE_VISIBILITY_EXCEEDS_SESSION
         - RESOURCE_ALREADY_EXISTS
-    ErrorResponseBase:
-      type: object
-      additionalProperties: false
-      required:
-        - code
-        - message
-        - requestId
-        - retryable
-      properties:
-        code:
-          $ref: '#/components/schemas/ErrorCode'
-        message:
-          type: string
-          description: Safe human-readable summary intended for direct client use.
-        requestId:
-          type: string
-          description: Correlation ID copied into server logs and support tooling.
-        retryable:
-          type: boolean
-          description: True only when the client may offer immediate retry without first changing auth or input.
     ValidationIssue:
       type: object
       additionalProperties: false
@@ -842,106 +822,192 @@ components:
           items:
             $ref: '#/components/schemas/FocusSession'
     ValidationErrorResponse:
-      allOf:
-        - $ref: '#/components/schemas/ErrorResponseBase'
-        - type: object
-          properties:
-            code:
-              type: string
-              enum: [VALIDATION_ERROR]
-            retryable:
-              type: boolean
-              enum: [false]
-            details:
-              $ref: '#/components/schemas/ValidationErrorDetails'
-          required:
-            - details
+      type: object
+      additionalProperties: false
+      required:
+        - code
+        - message
+        - requestId
+        - retryable
+        - details
+      properties:
+        code:
+          type: string
+          enum: [VALIDATION_ERROR]
+        message:
+          type: string
+          description: Safe human-readable summary intended for direct client use.
+        requestId:
+          type: string
+          description: Correlation ID copied into server logs and support tooling.
+        retryable:
+          type: boolean
+          enum: [false]
+          description: Validation failures must be corrected before retry.
+        details:
+          $ref: '#/components/schemas/ValidationErrorDetails'
     UnauthorizedErrorResponse:
-      allOf:
-        - $ref: '#/components/schemas/ErrorResponseBase'
-        - type: object
-          properties:
-            code:
-              type: string
-              enum: [AUTH_REQUIRED]
-            retryable:
-              type: boolean
-              enum: [false]
+      type: object
+      additionalProperties: false
+      required:
+        - code
+        - message
+        - requestId
+        - retryable
+      properties:
+        code:
+          type: string
+          enum: [AUTH_REQUIRED]
+        message:
+          type: string
+          description: Safe human-readable summary intended for direct client use.
+        requestId:
+          type: string
+          description: Correlation ID copied into server logs and support tooling.
+        retryable:
+          type: boolean
+          enum: [false]
+          description: Authentication context must change before retry.
     ForbiddenErrorResponse:
-      allOf:
-        - $ref: '#/components/schemas/ErrorResponseBase'
-        - type: object
-          properties:
-            code:
-              type: string
-              enum: [ACCESS_DENIED]
-            retryable:
-              type: boolean
-              enum: [false]
+      type: object
+      additionalProperties: false
+      required:
+        - code
+        - message
+        - requestId
+        - retryable
+      properties:
+        code:
+          type: string
+          enum: [ACCESS_DENIED]
+        message:
+          type: string
+          description: Safe human-readable summary intended for direct client use.
+        requestId:
+          type: string
+          description: Correlation ID copied into server logs and support tooling.
+        retryable:
+          type: boolean
+          enum: [false]
+          description: Permission must change before retry.
     NotFoundErrorResponse:
-      allOf:
-        - $ref: '#/components/schemas/ErrorResponseBase'
-        - type: object
-          properties:
-            code:
-              type: string
-              enum: [RESOURCE_NOT_FOUND]
-            retryable:
-              type: boolean
-              enum: [false]
+      type: object
+      additionalProperties: false
+      required:
+        - code
+        - message
+        - requestId
+        - retryable
+      properties:
+        code:
+          type: string
+          enum: [RESOURCE_NOT_FOUND]
+        message:
+          type: string
+          description: Safe human-readable summary intended for direct client use.
+        requestId:
+          type: string
+          description: Correlation ID copied into server logs and support tooling.
+        retryable:
+          type: boolean
+          enum: [false]
+          description: Missing or hidden resources should not be retried immediately.
     ConflictErrorResponse:
-      allOf:
-        - $ref: '#/components/schemas/ErrorResponseBase'
-        - type: object
-          properties:
-            code:
-              type: string
-              enum:
-                - INVALID_STATE_TRANSITION
-                - DOMAIN_RULE_VIOLATION
-                - DUPLICATE_RESOURCE
-            retryable:
-              type: boolean
-              enum: [false]
-            details:
-              $ref: '#/components/schemas/ConflictErrorDetails'
+      type: object
+      additionalProperties: false
+      required:
+        - code
+        - message
+        - requestId
+        - retryable
+      properties:
+        code:
+          type: string
+          enum:
+            - INVALID_STATE_TRANSITION
+            - DOMAIN_RULE_VIOLATION
+            - DUPLICATE_RESOURCE
+        message:
+          type: string
+          description: Safe human-readable summary intended for direct client use.
+        requestId:
+          type: string
+          description: Correlation ID copied into server logs and support tooling.
+        retryable:
+          type: boolean
+          enum: [false]
+          description: Conflict failures require state or input change before retry.
+        details:
+          $ref: '#/components/schemas/ConflictErrorDetails'
     RateLimitErrorResponse:
-      allOf:
-        - $ref: '#/components/schemas/ErrorResponseBase'
-        - type: object
-          properties:
-            code:
-              type: string
-              enum: [RATE_LIMITED]
-            retryable:
-              type: boolean
-              enum: [true]
-            details:
-              $ref: '#/components/schemas/RateLimitErrorDetails'
-          required:
-            - details
+      type: object
+      additionalProperties: false
+      required:
+        - code
+        - message
+        - requestId
+        - retryable
+        - details
+      properties:
+        code:
+          type: string
+          enum: [RATE_LIMITED]
+        message:
+          type: string
+          description: Safe human-readable summary intended for direct client use.
+        requestId:
+          type: string
+          description: Correlation ID copied into server logs and support tooling.
+        retryable:
+          type: boolean
+          enum: [true]
+          description: Rate-limited requests may be retried after cooldown.
+        details:
+          $ref: '#/components/schemas/RateLimitErrorDetails'
     ServiceUnavailableErrorResponse:
-      allOf:
-        - $ref: '#/components/schemas/ErrorResponseBase'
-        - type: object
-          properties:
-            code:
-              type: string
-              enum: [UPSTREAM_UNAVAILABLE]
-            retryable:
-              type: boolean
-              enum: [true]
+      type: object
+      additionalProperties: false
+      required:
+        - code
+        - message
+        - requestId
+        - retryable
+      properties:
+        code:
+          type: string
+          enum: [UPSTREAM_UNAVAILABLE]
+        message:
+          type: string
+          description: Safe human-readable summary intended for direct client use.
+        requestId:
+          type: string
+          description: Correlation ID copied into server logs and support tooling.
+        retryable:
+          type: boolean
+          enum: [true]
+          description: Temporary dependency failures may be retried.
     InternalErrorResponse:
-      allOf:
-        - $ref: '#/components/schemas/ErrorResponseBase'
-        - type: object
-          properties:
-            code:
-              type: string
-              enum: [INTERNAL_ERROR]
-            retryable:
-              type: boolean
-              enum: [false]
+      type: object
+      additionalProperties: false
+      required:
+        - code
+        - message
+        - requestId
+        - retryable
+      properties:
+        code:
+          type: string
+          enum: [INTERNAL_ERROR]
+        message:
+          type: string
+          description: Safe human-readable summary intended for direct client use.
+        requestId:
+          type: string
+          description: Correlation ID copied into server logs and support tooling.
+        retryable:
+          type: boolean
+          enum: [false]
+          description: Unknown failures should not assume safe immediate retry.
     ErrorResponse:
       description: Backward-compatible generic error shape kept during the transition to typed error responses.
       oneOf:
