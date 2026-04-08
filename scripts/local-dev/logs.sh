@@ -2,6 +2,7 @@
 set -euo pipefail
 
 source "$(dirname "$0")/require-docker.sh"
+require_docker
 
 service_name="${1:-}"
 

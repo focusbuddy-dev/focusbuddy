@@ -2,6 +2,7 @@
 set -euo pipefail
 
 source "$(dirname "$0")/require-docker.sh"
+require_docker
 
 postgres_user="${POSTGRES_USER:-focusbuddy}"
 postgres_db="${POSTGRES_DB:-focusbuddy}"

@@ -120,11 +120,12 @@ The helper scripts live under [scripts/local-dev](../../scripts/local-dev).
 Expected local flow:
 
 1. copy [.env.example](../../.env.example) to a local `.env` file if overrides are needed
-2. if you are working inside the dev container, make sure the container was rebuilt with Docker outside of Docker support and that Docker is running on the host machine
-3. run `just local-up`
-4. inspect logs with `just local-logs`
-5. connect to PostgreSQL with `just local-psql` when needed
-6. stop the stack with `just local-down`
+2. If you are working inside the dev container, rebuild it with Docker outside of Docker support enabled
+3. Make sure Docker is installed and running on the host machine
+4. run `just local-up`
+5. inspect logs with `just local-logs`
+6. connect to PostgreSQL with `just local-psql` when needed
+7. stop the stack with `just local-down`
 
 ## Relationship to the dev container
 
