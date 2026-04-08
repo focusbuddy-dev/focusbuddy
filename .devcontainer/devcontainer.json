@@ -2,10 +2,12 @@
   "name": "focusbuddy",
   "image": "mcr.microsoft.com/devcontainers/typescript-node:24-bookworm",
   "features": {
-    "ghcr.io/devcontainers/features/github-cli:1": {}
+    "ghcr.io/devcontainers/features/github-cli:1": {},
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {}
   },
   "remoteEnv": {
-    "GH_TOKEN": "${localEnv:GH_TOKEN}"
+    "GH_TOKEN": "${localEnv:GH_TOKEN}",
+    "FOCUSBUDDY_WORKSPACE_MOUNT": "${localWorkspaceFolder}"
   },
   "workspaceFolder": "/workspaces/focusbuddy",
   "customizations": {
