@@ -27,7 +27,9 @@ This document does not define application code, end-to-end test strategy, or dep
 ### `packages/config-oxlint`
 
 - `base/oxlint.config.ts` defines the shared lint baseline and generated-file ignore rules
+- the shared base is strict by default for hand-written code and enforces the repository's `undefined`-first and no-non-null-assertion policy
 - `repository/oxlint.config.ts` is the root repository config for scripts and config files in this repo
+- the repository config carries narrow overrides for script and GitHub helper paths instead of weakening the shared base for all code
 - `api/oxlint.config.ts` extends the base config with a Node runtime
 - `web/oxlint.config.ts` extends the base config with a browser runtime
 - the oxlint baselines are written in TypeScript because that is one of the reasons this repository chose oxlint over a JSON-only lint configuration path
@@ -79,6 +81,8 @@ The shared Prettier and oxlint baselines ignore those directories by default.
 If a future issue needs committed generated files outside those directories, that issue must update the shared tooling config at the same time.
 
 Hand-written wrapper code should stay outside generated directories so it still receives full lint and format checks.
+
+Hand-written application and package code should also prefer `undefined` over `null` unless a boundary or tool-specific path has a documented exception.
 
 ## Runtime-specific usage
 
