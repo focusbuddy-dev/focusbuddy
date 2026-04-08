@@ -9,7 +9,7 @@ Current repository-wide design rules include:
 - prefer `undefined` over `null` in hand-written code
 - forbid non-null assertions
 - forbid loose equality around `null`
-- forbid `any` in shared baseline code
+- forbid `any` in hand-written TypeScript code covered by the shared baseline
 
 Repository-root script and GitHub helper paths may use narrow overrides when tool-oriented code needs different tradeoffs.
 
