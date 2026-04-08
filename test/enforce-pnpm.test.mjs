@@ -1,10 +1,12 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { spawn } from 'node:child_process';
+import { readFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const packageJsonPath = resolve(repoRoot, 'package.json');
 const scriptPath = resolve(repoRoot, 'scripts/enforce-pnpm.mjs');
 
 function runEnforcePnpm(userAgent, scriptEntryPath = scriptPath) {
@@ -75,4 +77,13 @@ test('rejects npm user agents when executed via the relative preinstall path', a
   assert.equal(result.code, 1, 'expected relative-path execution to reject npm user agent');
   assert.match(result.stderr, /This repository supports pnpm only\./);
   assert.match(result.stderr, /Use just commitlint-setup for the initial setup flow\./);
+});
+
+test('declares pnpm as the npm devEngines package manager requirement', async () => {
+  const packageJson = JSON.parse(await readFile(packageJsonPath, 'utf8'));
+
+  assert.deepEqual(packageJson.devEngines?.packageManager, {
+    name: 'pnpm',
+    onFail: 'error',
+  });
 });
