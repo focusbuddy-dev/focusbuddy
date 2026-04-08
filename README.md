@@ -28,7 +28,7 @@ The Docker-based local development environment is documented in [docs/platform/l
 
 This repository includes a small commitlint demo for Issue #14.
 
-Initial setup is wrapped in the Justfile recipe below. It installs the local tooling, configures the `commit-msg` hook, and runs the commitlint verification steps.
+Initial setup is wrapped in the Justfile recipe below. `pnpm` is the only supported package manager for this repository. The setup installs the local tooling from `pnpm-lock.yaml` without changing the lockfile, configures the `commit-msg` hook, and runs the commitlint verification steps.
 
 Inside the dev container, `just` is installed automatically. If you work outside the dev container, install `just` before running repository tasks.
 
@@ -37,6 +37,8 @@ Run this command after cloning the repository:
 ```bash
 just commitlint-setup
 ```
+
+If `pnpm-lock.yaml` is out of sync with `package.json`, the setup stops early so the mismatch can be reviewed instead of silently changing installed versions.
 
 If dependencies are already installed and you only want to rerun the checks, use:
 
