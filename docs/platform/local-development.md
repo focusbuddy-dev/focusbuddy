@@ -26,7 +26,9 @@ The compose file currently starts four services:
 - `api` for the API runtime container
 - `web` for the web runtime container
 
-The current `api` and `web` containers intentionally run placeholder runtime scripts because issues #21 and #22 have not implemented the real applications yet.
+The current `web` container intentionally runs a placeholder runtime script because issue #22 has not implemented the real application yet.
+
+Issue #21 replaces the API placeholder with the real NestJS runtime while keeping the same local port and environment variable wiring.
 
 This keeps the local orchestration, ports, health checks, and runtime assumptions testable now without pretending that the API or web app already exist.
 
@@ -48,7 +50,8 @@ This keeps the local orchestration, ports, health checks, and runtime assumption
 
 - uses the shared local Node development image
 - receives `DATABASE_URL`, auth mode, and auth base URL through environment variables
-- will later be replaced by the real NestJS runtime in issue #21
+- now runs the first NestJS API baseline from issue #21
+- exposes `/health` so the compose health check can validate both NestJS startup and PostgreSQL connectivity
 
 ### `web`
 
@@ -137,7 +140,7 @@ The first local stack intentionally differs from production in these ways:
 
 - PostgreSQL is local Docker PostgreSQL, not Cloud SQL
 - auth is a local stub for now, not real Firebase Auth or a full emulator setup yet
-- web and API are placeholder runtime services until their app issues land
+- web is still a placeholder runtime service until issue #22 lands
 - there is no Secret Manager or Cloud Run wiring in the local stack
 
 These differences are acceptable for the current stage because the goal is to make the local workflow explicit and reproducible before full app implementation begins.
@@ -146,8 +149,8 @@ These differences are acceptable for the current stage because the goal is to ma
 
 ### For #21
 
-- replace the API placeholder command with the real NestJS app runtime
-- reuse the current `DATABASE_URL` and auth environment pattern where practical
+- extend the real NestJS API baseline with feature modules and real endpoints
+- keep the current `DATABASE_URL` and auth environment pattern where practical
 
 ### For #22
 
