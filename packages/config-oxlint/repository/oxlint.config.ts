@@ -9,6 +9,12 @@ export default defineConfig({
   },
   overrides: [
     {
+      files: ['.github/**/*.mjs', 'scripts/**/*.mjs'],
+      rules: {
+        'unicorn/no-null': 'off',
+      },
+    },
+    {
       files: ['test/**/*.mjs', '**/*.test.mjs'],
       env: {
         node: true,

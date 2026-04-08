@@ -26,7 +26,7 @@ export function safeWriteJson(filePath, value) {
 }
 
 export function collectStringValues(value, result = [], depth = 0) {
-  if (value == null || depth > 8) {
+  if (value === null || value === undefined || depth > 8) {
     return result;
   }
 
