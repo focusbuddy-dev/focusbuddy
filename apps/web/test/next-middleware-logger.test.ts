@@ -6,6 +6,22 @@ import {
   prepareNextMiddlewareLogger,
 } from '../src/lib/logging/next-middleware-logger'
 
+function createMiddlewareRequest(pathname: string, headers?: Headers): {
+  headers: Headers
+  method: string
+  nextUrl: {
+    pathname: string
+  }
+} {
+  return {
+    headers: headers ?? new Headers(),
+    method: 'GET',
+    nextUrl: {
+      pathname,
+    },
+  }
+}
+
 describe('next middleware logger helper', () => {
   it('reuses incoming correlation ids and binds middleware envelope fields', () => {
     const writes: LogEntry[] = []
@@ -19,14 +35,13 @@ describe('next middleware logger helper', () => {
     })
 
     const prepared = prepareNextMiddlewareLogger(
-      {
-        headers: new Headers({
+      createMiddlewareRequest(
+        '/targets/focus-1',
+        new Headers({
           [focusbuddyRequestIdHeader]: 'req-910',
           [focusbuddyTraceIdHeader]: 'trace-910',
         }),
-        method: 'GET',
-        nextUrl: new URL('https://focusbuddy.example/targets/focus-1'),
-      },
+      ),
       {
         application: 'focusbuddy-web',
         baseLogger,
@@ -71,11 +86,7 @@ describe('next middleware logger helper', () => {
   })
 
   it('creates request and trace ids when they are missing', () => {
-    const prepared = prepareNextMiddlewareLogger({
-      headers: new Headers(),
-      method: 'GET',
-      nextUrl: new URL('https://focusbuddy.example/health'),
-    })
+    const prepared = prepareNextMiddlewareLogger(createMiddlewareRequest('/health'))
 
     expect(prepared.requestId).toHaveLength(36)
     expect(prepared.traceId).toBe(prepared.requestId)

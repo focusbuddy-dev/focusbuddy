@@ -5,7 +5,11 @@ import type { NextRequest } from 'next/server'
 export const focusbuddyRequestIdHeader = 'x-focusbuddy-request-id'
 export const focusbuddyTraceIdHeader = 'x-focusbuddy-trace-id'
 
-type MiddlewareRequestLike = Pick<NextRequest, 'headers' | 'method' | 'nextUrl'>
+type MiddlewareRequestLike = Pick<NextRequest, 'headers' | 'method'> & {
+  nextUrl: {
+    pathname: string
+  }
+}
 
 export type NextMiddlewareLoggerOptions = {
   application?: string
@@ -55,8 +59,8 @@ export function prepareNextMiddlewareLogger(
   return {
     eventLogger: createEventLogger(logger, {
       application: options.application ?? 'focusbuddy-web',
-      environment: options.environment,
       layer: 'middleware',
+      ...(options.environment ? { environment: options.environment } : {}),
     }),
     logger,
     requestHeaders,
