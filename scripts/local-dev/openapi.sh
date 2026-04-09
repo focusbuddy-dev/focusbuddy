@@ -6,4 +6,4 @@ repo_root="$(cd "$(dirname "$0")/../.." && pwd)"
 cd "$repo_root"
 pnpm generate "$@"
 
-bash scripts/local-dev/restart-running-app-services.sh
+bash "$(dirname "$0")/restart-running-app-services.sh" --best-effort

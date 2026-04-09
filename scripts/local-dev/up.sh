@@ -16,5 +16,5 @@ done
 docker compose -f compose.local.yaml up -d --build "$@"
 
 if [[ $# -eq 0 && ${#restart_services[@]} -gt 0 ]]; then
-  bash scripts/local-dev/restart-running-app-services.sh "${restart_services[@]}"
+  bash "$(dirname "$0")/restart-running-app-services.sh" "${restart_services[@]}"
 fi

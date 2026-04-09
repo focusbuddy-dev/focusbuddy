@@ -12,4 +12,4 @@ migration_name="$1"
 cd "$repo_root"
 pnpm --filter @focusbuddy/api prisma:migrate:dev -- --name "$migration_name"
 
-bash scripts/local-dev/restart-running-app-services.sh
+bash "$(dirname "$0")/restart-running-app-services.sh" --best-effort
