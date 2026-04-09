@@ -4,7 +4,7 @@ This document captures the output of issue #92.
 
 Its purpose is to define how FocusBuddy should reason about request failures that happen before normal app code can parse the request, attach the normal request ID, or return the shared JSON error contract.
 
-This document builds on [web-error-handling-policy.md](web-error-handling-policy.md), [web-accident-pattern-inventory.md](web-accident-pattern-inventory.md), [web-safety-control-responsibilities.md](web-safety-control-responsibilities.md), and [mvp-api-error-model.md](../domain/mvp-api-error-model.md).
+This document builds on the web error handling policy, the web accident pattern inventory, [web-safety-control-responsibilities.md](web-safety-control-responsibilities.md), and the MVP API error model.
 
 ## Scope
 
@@ -99,7 +99,7 @@ The first prevention policy should make transport drift explicit instead of trea
 
 - fast local development may use stubs or simplified auth flows, but it must not normalize unlimited cookie or header growth as acceptable
 - parity-oriented validation must include at least one runtime path where realistic header limits are enforced before app code runs
-- if local-fast mode cannot reproduce a transport rejection class, the repository must provide a parity check or CI gate that can
+- if local-fast mode cannot reproduce a transport rejection class, the repository must provide a parity check or CI gate that can reproduce or detect that rejection before app code runs
 
 ## Response behavior policy
 
