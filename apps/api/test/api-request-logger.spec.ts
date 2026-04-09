@@ -35,7 +35,7 @@ function mergeContext(
   return Object.fromEntries(
     Object.entries({
       ...baseContext,
-      ...(nextContext ?? {}),
+      ...nextContext,
     }).filter(([, value]) => value !== undefined),
   )
 }
