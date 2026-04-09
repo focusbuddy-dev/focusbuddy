@@ -26,6 +26,8 @@ The Docker-based local development environment is documented in [docs/platform/l
 
 The supported local execution modes and env contract are documented in [docs/platform/local-execution-modes.md](docs/platform/local-execution-modes.md).
 
+The repository-level local environment drift policy is documented in [docs/platform/local-environment-drift-policy.md](docs/platform/local-environment-drift-policy.md).
+
 For routine full-stack local development, use `just dev`.
 
 For production-oriented local validation with built runtimes and health waits, use `just parity`.
