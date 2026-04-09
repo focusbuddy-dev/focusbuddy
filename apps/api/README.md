@@ -16,10 +16,10 @@ This workspace now contains the first NestJS API baseline for issue #21.
 - Jest uses the shared API baseline plus a local `ts-jest` transform for TypeScript tests
 - Prisma CLI uses `prisma.config.ts`, while runtime access uses the PostgreSQL driver adapter required by Prisma 7
 
-## Local commands
+## Package commands
 
-- `just dev` is the primary full-stack local workflow
-- `pnpm --filter @focusbuddy/api dev` remains available for API-only debugging or narrow auxiliary work
+Runtime startup guidance lives in the repository root documentation for the local execution lanes.
+
 - `pnpm --filter @focusbuddy/api build`
 - `pnpm --filter @focusbuddy/api test`
 - `pnpm --filter @focusbuddy/api prisma:migrate:dev`
