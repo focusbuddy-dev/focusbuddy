@@ -5,8 +5,9 @@ import {
   type EventLogger,
   type Logger,
 } from '@focusbuddy/logger'
-import { createWebRuntimeLogger } from './web-runtime-logger'
 import type { NextRequest } from 'next/server'
+
+import { createWebServerRuntimeLogger } from './web-server-runtime-logger'
 
 export { focusbuddyRequestIdHeader, focusbuddyTraceIdHeader } from '@focusbuddy/logger'
 
@@ -52,7 +53,7 @@ export function prepareNextMiddlewareLogger(
   responseHeaders.set(focusbuddyTraceIdHeader, traceId)
 
   const logger = (options.baseLogger ??
-    createWebRuntimeLogger({
+    createWebServerRuntimeLogger({
       runtime: 'web-middleware',
     })).child({
     requestId,

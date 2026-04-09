@@ -18,4 +18,20 @@ describe('WebBaselinePage', () => {
     expect(screen.getByText('Next.js app router')).toBeInTheDocument();
     expect(screen.getByText('Focus target test-target')).toBeInTheDocument();
   });
+
+  it('renders the optional real logging integration section', () => {
+    const previewSummary: ComponentProps<typeof WebBaselinePage>['previewSummary'] =
+      buildExamplePublicTargetSummary('test-target');
+
+    render(
+      <WebBaselinePage apiBaseUrl="http://localhost:3000" previewSummary={previewSummary}>
+        <div>Client and server logging demo</div>
+      </WebBaselinePage>,
+    );
+
+    expect(
+      screen.getByRole('heading', { name: /real logging integration points/i }),
+    ).toBeInTheDocument();
+    expect(screen.getByText('Client and server logging demo')).toBeInTheDocument();
+  });
 });
