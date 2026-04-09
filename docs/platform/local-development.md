@@ -53,6 +53,7 @@ This keeps the local orchestration, ports, health checks, and runtime assumption
 - uses the shared local Node development image
 - receives `DATABASE_URL`, auth mode, and auth base URL through environment variables
 - now runs the first NestJS API baseline from issue #21
+- restarts through Nest watch mode when local API source files change during `just dev`
 - exposes `/health` so the compose health check can validate both NestJS startup and PostgreSQL connectivity
 
 ### `web`
