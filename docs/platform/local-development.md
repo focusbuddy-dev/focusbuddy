@@ -128,11 +128,14 @@ The repository exposes these local development helpers:
 - `just dev`
 - `just dev-down`
 - `just dev-logs`
+- `just dev-logs-running`
 - `just dev-psql`
 
 The helper scripts live under [scripts/local-dev](../../scripts/local-dev).
 
 Routine full-stack local development should start with the `just dev` entrypoint.
+
+Re-running `just dev` while the stack is already up restarts the development-oriented app services (`auth`, `api`, and `web`) so package manifest or startup script changes are picked up without recycling PostgreSQL.
 
 Low-level host-side commands such as `pnpm dev` and direct app package dev commands remain available as auxiliary escape hatches, but they are not the primary supported full-stack workflow.
 
@@ -143,8 +146,9 @@ Expected local flow:
 3. Make sure Docker is installed and running on the host machine
 4. run `just dev`
 5. inspect logs with `just dev-logs`
-6. connect to PostgreSQL with `just dev-psql` when needed
-7. stop the stack with `just dev-down`
+6. inspect only the currently running service logs with `just dev-logs-running` when you want a narrower follow mode
+7. connect to PostgreSQL with `just dev-psql` when needed
+8. stop the stack with `just dev-down`
 
 This flow is the current `fast compose` lane. It is the default full-stack local workflow for this repository.
 
