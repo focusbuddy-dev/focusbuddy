@@ -12,6 +12,18 @@ commitlint-setup:
 commitlint-check:
     bash scripts/run-commitlint-checks.sh
 
+# Install workspace dependencies and restart running app services.
+install:
+    bash scripts/local-dev/install.sh
+
+# Apply a local Prisma schema migration and restart running app services.
+prisma name:
+    bash scripts/local-dev/prisma.sh {{name}}
+
+# Regenerate OpenAPI contract outputs and restart running app services.
+openapi:
+    bash scripts/local-dev/openapi.sh
+
 # Format the repository with the shared Prettier config.
 format:
     pnpm format
