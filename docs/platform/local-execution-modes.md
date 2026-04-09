@@ -2,22 +2,26 @@
 
 This document captures the output of issue #109.
 
-Its purpose is to define the supported local execution modes for FocusBuddy and explain why host-side direct app startup is not the primary full-stack development path.
+Its purpose is to define the local execution lane policy for FocusBuddy, describe the currently implemented default path, and explain why host-side direct app startup is not the primary full-stack development path.
 
 ## Scope
 
 This document defines:
 
-- the two supported full-stack local execution modes
+- the current full-stack local development path and the planned parity-oriented path
 - the role of host-side direct app startup as an auxiliary path
 - the local env contract at the configuration-category level
 - a short decision guide for choosing a mode
 
 This document does not define detailed runtime implementation changes, final production deployment, or every low-level developer command.
 
-## Supported modes
+## Execution lanes
 
-FocusBuddy currently supports two first-class full-stack local execution modes.
+FocusBuddy distinguishes two full-stack local execution lanes.
+
+Today, `fast compose` is the implemented default lane.
+
+`parity compose` is the planned production-oriented lane that this repository intends to add in follow-up work.
 
 ### `fast compose`
 
@@ -28,10 +32,10 @@ FocusBuddy currently supports two first-class full-stack local execution modes.
 
 ### `parity compose`
 
-- is the production-oriented local validation path
-- also runs through `docker compose`
+- is the planned production-oriented local validation path
+- is expected to run through `docker compose`
 - is intended to run built artifacts with stricter startup assumptions than the fast lane
-- exists to catch drift that should also fail in deployed environments
+- exists to catch drift that should also fail in deployed environments once implemented
 
 ## Auxiliary path
 
@@ -56,11 +60,11 @@ flowchart TD
         FC_API --> FC_AUTH
     end
 
-    subgraph PC[parity compose]
-        PC_WEB[web built runtime]
-        PC_API[api built runtime]
+    subgraph PC[parity compose planned]
+        PC_WEB[planned web built runtime]
+        PC_API[planned api built runtime]
         PC_DB[postgres container]
-        PC_AUTH[auth runtime]
+        PC_AUTH[planned auth runtime]
         PC_WEB --> PC_API
         PC_API --> PC_DB
         PC_WEB --> PC_AUTH
@@ -79,7 +83,7 @@ flowchart TD
     end
 ```
 
-The important difference is not only where the processes run. In the host-side path, the developer must provide supporting services separately, so the repository cannot treat that path as the default full-stack contract.
+The important difference is not only where the processes run. In the host-side path, the developer must provide supporting services separately, so the repository cannot treat that path as the default full-stack contract. The parity lane is shown as planned because the repository does not yet provide a dedicated parity Compose entrypoint.
 
 ## Env contract
 
@@ -96,7 +100,7 @@ The tracked local inputs currently cover categories such as:
 - local auth mode
 - optional bind mount source override for Docker-from-dev-container workflows
 
-These categories should stay aligned across supported modes.
+These categories should stay aligned across the current fast lane and the planned parity lane.
 
 ### Mode-specific derived values
 
@@ -131,7 +135,7 @@ Use `fast compose` when:
 - you are doing day-to-day feature development
 - you need the app and supporting services started together
 
-Use `parity compose` when:
+Use `parity compose` after it is implemented when:
 
 - you want a production-oriented local validation path
 - you need to check startup assumptions that should also hold in deployed environments
