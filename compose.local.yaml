@@ -78,10 +78,11 @@ services:
       context: .
       dockerfile: docker/local/node-dev.Dockerfile
     working_dir: /workspace
-    command: ['node', 'scripts/local-dev/placeholder-service.mjs', 'web']
+    command: ['pnpm', '--filter', '@focusbuddy/web', 'dev:compose']
     environment:
       PORT: 3000
       FOCUSBUDDY_API_BASE_URL: http://api:3001
+      NEXT_PUBLIC_FOCUSBUDDY_API_BASE_URL: http://localhost:${API_PORT:-3001}
       FOCUSBUDDY_AUTH_MODE: ${FOCUSBUDDY_AUTH_MODE:-stub}
       FOCUSBUDDY_AUTH_BASE_URL: http://auth:9099
     volumes:
