@@ -16,6 +16,10 @@ commitlint-check:
 install:
     bash scripts/local-dev/install.sh
 
+# Apply a local Prisma schema migration and restart running app services.
+schema name:
+    bash scripts/local-dev/schema.sh {{name}}
+
 # Format the repository with the shared Prettier config.
 format:
     pnpm format
