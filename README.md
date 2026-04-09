@@ -127,6 +127,7 @@ The default full-stack local entrypoint is `just dev`, which starts the current 
 - The first web accident pattern inventory is available at [docs/platform/web-accident-pattern-inventory.md](docs/platform/web-accident-pattern-inventory.md).
 - The first public-safe domain design note is available at [docs/domain/mvp-domain-model.md](docs/domain/mvp-domain-model.md).
 - The first web safety control responsibility note is available at [docs/platform/web-safety-control-responsibilities.md](docs/platform/web-safety-control-responsibilities.md).
+- The first transport-level request rejection policy note is available at [docs/platform/transport-level-request-rejection-policy.md](docs/platform/transport-level-request-rejection-policy.md).
 - The follow-up continuity rules note is available at [docs/domain/mvp-continuity-rules.md](docs/domain/mvp-continuity-rules.md).
 - The logical ER review note is available at [docs/domain/mvp-logical-er-review.md](docs/domain/mvp-logical-er-review.md).
 - The Prisma schema design note is available at [docs/domain/mvp-prisma-schema-design.md](docs/domain/mvp-prisma-schema-design.md).
