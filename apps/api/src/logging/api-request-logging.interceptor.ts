@@ -64,6 +64,14 @@ export class ApiRequestLoggingInterceptor implements NestInterceptor {
 
     return next.handle().pipe(
       tap(() => {
+        const user = request.user
+          ? {
+              ...(request.user.id ? { userId: request.user.id } : {}),
+              ...(request.user.role ? { userRole: request.user.role } : {}),
+              ...(request.user.workspaceId ? { workspaceId: request.user.workspaceId } : {}),
+            }
+          : undefined;
+
         logApiRequestHandled(
           {
             request: {
@@ -73,15 +81,7 @@ export class ApiRequestLoggingInterceptor implements NestInterceptor {
               route,
               traceId,
             },
-            ...(request.user
-              ? {
-                  user: {
-                    userId: request.user.id,
-                    userRole: request.user.role,
-                    workspaceId: request.user.workspaceId,
-                  },
-                }
-              : {}),
+            ...(user && Object.keys(user).length > 0 ? { user } : {}),
             statusCode: response.statusCode,
           },
           this.baseLogger,
