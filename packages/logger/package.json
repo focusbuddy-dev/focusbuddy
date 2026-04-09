@@ -2,11 +2,39 @@
   "name": "@focusbuddy/logger",
   "private": true,
   "version": "0.0.0",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "README.md",
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./browser": {
+      "types": "./dist/browser.d.ts",
+      "default": "./dist/browser.js"
+    },
+    "./server": {
+      "types": "./dist/server.d.ts",
+      "default": "./dist/server.js"
+    }
+  },
   "scripts": {
-    "build": "node ../../scripts/workspace-task.mjs @focusbuddy/logger build",
-    "dev": "node ../../scripts/workspace-task.mjs @focusbuddy/logger dev",
-    "lint": "node ../../scripts/workspace-task.mjs @focusbuddy/logger lint",
-    "test": "node ../../scripts/workspace-task.mjs @focusbuddy/logger test",
-    "typecheck": "node ../../scripts/workspace-task.mjs @focusbuddy/logger typecheck"
+    "build": "pnpm --dir ../.. exec tsc --project packages/logger/tsconfig.build.json",
+    "dev": "pnpm --dir ../.. exec tsc --project packages/logger/tsconfig.build.json --watch",
+    "lint": "pnpm --dir ../.. exec oxlint packages/logger/src packages/logger/test packages/logger/jest.config.ts",
+    "test": "pnpm --dir ../.. exec jest --config packages/logger/jest.config.ts --runInBand",
+    "typecheck": "pnpm --dir ../.. exec tsc --project packages/logger/tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "pino": "^10.3.1"
+  },
+  "devDependencies": {
+    "@types/jest": "^30.0.0",
+    "@types/node": "^25.5.2",
+    "ts-jest": "^29.4.9"
   }
 }
