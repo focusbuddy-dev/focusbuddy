@@ -1,8 +1,12 @@
+import { existsSync } from 'node:fs';
+import { join, resolve } from 'node:path';
+
 import { config as loadDotenvConfig } from 'dotenv';
 
 const DEFAULT_LOCAL_POSTGRES_HOST = 'localhost';
 const DEFAULT_POSTGRES_PORT = '5432';
 const REQUIRED_TRACKED_POSTGRES_ENV_NAMES = ['POSTGRES_DB', 'POSTGRES_USER', 'POSTGRES_PASSWORD'] as const;
+const WORKSPACE_MARKER_FILE = 'pnpm-workspace.yaml';
 
 function readTrimmedEnv(env: NodeJS.ProcessEnv, name: string): string | undefined {
   const value = env[name]?.trim();
@@ -12,6 +16,40 @@ function readTrimmedEnv(env: NodeJS.ProcessEnv, name: string): string | undefine
 
 function encodeConnectionPart(value: string): string {
   return encodeURIComponent(value);
+}
+
+function findWorkspaceRoot(startDirectory: string): string | undefined {
+  let currentDirectory = resolve(startDirectory);
+
+  while (true) {
+    if (existsSync(join(currentDirectory, WORKSPACE_MARKER_FILE))) {
+      return currentDirectory;
+    }
+
+    const parentDirectory = resolve(currentDirectory, '..');
+
+    if (parentDirectory === currentDirectory) {
+      return undefined;
+    }
+
+    currentDirectory = parentDirectory;
+  }
+}
+
+export function resolveTrackedDotenvPath(currentWorkingDirectory = process.cwd()): string | undefined {
+  const candidateDirectories = [findWorkspaceRoot(currentWorkingDirectory), resolve(currentWorkingDirectory)].filter(
+    (directory, index, directories): directory is string => Boolean(directory) && directories.indexOf(directory) === index,
+  );
+
+  for (const directory of candidateDirectories) {
+    const dotenvPath = join(directory, '.env');
+
+    if (existsSync(dotenvPath)) {
+      return dotenvPath;
+    }
+  }
+
+  return undefined;
 }
 
 export function deriveLocalDatabaseUrlFromTrackedInputs(env: NodeJS.ProcessEnv = process.env): string | undefined {
@@ -49,9 +87,18 @@ export function buildDatabaseUrlRequirementMessage(
   );
 }
 
-export function loadLocalRuntimeEnv(env: NodeJS.ProcessEnv = process.env): void {
+export function loadLocalRuntimeEnv(
+  env: NodeJS.ProcessEnv = process.env,
+  options: { cwd?: string } = {},
+): void {
   if (env === process.env) {
-    loadDotenvConfig();
+    const dotenvPath = resolveTrackedDotenvPath(options.cwd);
+
+    if (dotenvPath) {
+      loadDotenvConfig({ path: dotenvPath });
+    } else {
+      loadDotenvConfig();
+    }
   }
 
   const explicitDatabaseUrl = readTrimmedEnv(env, 'DATABASE_URL');

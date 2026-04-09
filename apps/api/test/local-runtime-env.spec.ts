@@ -1,7 +1,12 @@
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { tmpdir } from 'node:os';
+
 import {
   buildDatabaseUrlRequirementMessage,
   deriveLocalDatabaseUrlFromTrackedInputs,
   loadLocalRuntimeEnv,
+  resolveTrackedDotenvPath,
   resolveLocalRuntimeDatabaseUrl,
 } from '../src/config/local-runtime-env';
 
@@ -46,5 +51,21 @@ describe('local runtime env contract', () => {
     expect(message).toContain('POSTGRES_PORT defaults to 5432 when omitted.');
     expect(message).toContain('Missing tracked local inputs: POSTGRES_DB, POSTGRES_PASSWORD.');
     expect(message).toContain('Compose-based startup should continue to inject DATABASE_URL directly.');
+  });
+
+  it('finds the workspace-root .env from an apps/api working directory', () => {
+    const tempRoot = mkdtempSync(join(tmpdir(), 'focusbuddy-env-'));
+
+    try {
+      const appDirectory = join(tempRoot, 'apps', 'api');
+
+      mkdirSync(appDirectory, { recursive: true });
+      writeFileSync(join(tempRoot, 'pnpm-workspace.yaml'), 'packages:\n  - apps/*\n');
+      writeFileSync(join(tempRoot, '.env'), 'POSTGRES_DB=focusbuddy\n');
+
+      expect(resolveTrackedDotenvPath(appDirectory)).toBe(join(tempRoot, '.env'));
+    } finally {
+      rmSync(tempRoot, { recursive: true, force: true });
+    }
   });
 });

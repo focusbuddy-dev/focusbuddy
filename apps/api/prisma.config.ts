@@ -6,7 +6,7 @@ import {
   resolveLocalRuntimeDatabaseUrl,
 } from './src/config/local-runtime-env';
 
-loadLocalRuntimeEnv();
+loadLocalRuntimeEnv(process.env, { cwd: __dirname });
 
 const databaseUrl = resolveLocalRuntimeDatabaseUrl();
 const fallbackDatabaseUrl = 'postgresql://focusbuddy:focusbuddy@localhost:5432/focusbuddy';
