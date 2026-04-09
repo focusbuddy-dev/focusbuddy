@@ -26,6 +26,7 @@ Today, `fast compose` is the implemented default lane.
 ### `fast compose`
 
 - is the default day-to-day local development path
+- is started through the primary task runner entrypoint `just dev`
 - runs the local stack through `docker compose`
 - uses development-oriented runtimes such as watch mode or dev servers
 - keeps supporting services and application processes in one explicit runtime topology
@@ -132,6 +133,7 @@ Static checks such as lint, typecheck, and similar repository analysis can still
 Use `fast compose` when:
 
 - you want the default local full-stack workflow
+- you want the primary repository entrypoint, `just dev`
 - you are doing day-to-day feature development
 - you need the app and supporting services started together
 

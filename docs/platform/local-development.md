@@ -124,22 +124,32 @@ This keeps the tracked local PostgreSQL inputs as the source of configuration ca
 
 The repository exposes these local development helpers:
 
-- `just local-up`
-- `just local-down`
-- `just local-logs`
-- `just local-psql`
+- primary fast compose entrypoints:
+  - `just dev`
+  - `just dev-down`
+  - `just dev-logs`
+  - `just dev-psql`
+- compatibility aliases:
+  - `just local-up`
+  - `just local-down`
+  - `just local-logs`
+  - `just local-psql`
 
 The helper scripts live under [scripts/local-dev](../../scripts/local-dev).
+
+Routine full-stack local development should start with the `just dev` entrypoint.
+
+Low-level host-side commands such as `pnpm dev` and direct app package dev commands remain available as auxiliary escape hatches, but they are not the primary supported full-stack workflow.
 
 Expected local flow:
 
 1. copy [.env.example](../../.env.example) to a local `.env` file if overrides are needed
 2. If you are working inside the dev container, rebuild it with Docker outside of Docker support enabled
 3. Make sure Docker is installed and running on the host machine
-4. run `just local-up`
-5. inspect logs with `just local-logs`
-6. connect to PostgreSQL with `just local-psql` when needed
-7. stop the stack with `just local-down`
+4. run `just dev`
+5. inspect logs with `just dev-logs`
+6. connect to PostgreSQL with `just dev-psql` when needed
+7. stop the stack with `just dev-down`
 
 This flow is the current `fast compose` lane. It is the default full-stack local workflow for this repository.
 

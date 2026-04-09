@@ -18,7 +18,8 @@ This workspace now contains the first NestJS API baseline for issue #21.
 
 ## Local commands
 
-- `pnpm --filter @focusbuddy/api dev`
+- `just dev` is the primary full-stack local workflow
+- `pnpm --filter @focusbuddy/api dev` remains available for API-only debugging or narrow auxiliary work
 - `pnpm --filter @focusbuddy/api build`
 - `pnpm --filter @focusbuddy/api test`
 - `pnpm --filter @focusbuddy/api prisma:migrate:dev`
