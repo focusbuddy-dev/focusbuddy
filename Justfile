@@ -39,19 +39,3 @@ dev-logs service="":
 # Open a psql shell against the fast compose PostgreSQL container.
 dev-psql:
     bash scripts/local-dev/psql.sh
-
-# Compatibility alias for the fast compose local development path.
-local-up:
-    bash scripts/local-dev/up.sh
-
-# Compatibility alias for stopping the fast compose local development path.
-local-down:
-    bash scripts/local-dev/down.sh
-
-# Compatibility alias for showing fast compose logs.
-local-logs service="":
-    bash scripts/local-dev/logs.sh {{service}}
-
-# Compatibility alias for opening a psql shell against the fast compose PostgreSQL container.
-local-psql:
-    bash scripts/local-dev/psql.sh
