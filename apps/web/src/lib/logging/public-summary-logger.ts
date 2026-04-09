@@ -1,7 +1,21 @@
-import type { Logger, RequestLogContext, UserLogContext } from '@focusbuddy/logger'
+import {
+  createEventLogger,
+  defineEvent,
+  type Logger,
+  type RequestLogContext,
+  type UserLogContext,
+} from '@focusbuddy/logger'
 import { createBrowserLogger } from '@focusbuddy/logger/browser'
 
 const webLogger = createBrowserLogger()
+
+const publicSummaryViewedEvent = defineEvent<{ source: 'landing' | 'search' | 'share-card' }>({
+  logId: 'PUBLIC_SUMMARY_001',
+  level: 'info',
+  category: 'PublicSummary',
+  messageTemplate: 'Public summary viewed - Source: {source}',
+  requiredContext: ['source'],
+})
 
 type PublicSummaryRequestContext = RequestLogContext & {
   route: string
@@ -33,7 +47,10 @@ export function logPublicSummaryViewed(
   { request, source, user }: LogPublicSummaryViewedInput,
   baseLogger: Logger = webLogger,
 ): void {
-  createPublicSummaryLogger(request, user, baseLogger).info('Public summary viewed', {
+  createEventLogger(createPublicSummaryLogger(request, user, baseLogger), {
+    application: 'focusbuddy-web',
+    layer: 'web',
+  }).emit(publicSummaryViewedEvent, {
     source,
   })
 }

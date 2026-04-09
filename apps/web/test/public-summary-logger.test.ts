@@ -42,15 +42,15 @@ describe('public summary logger example', () => {
     expect(writes[0]).toMatchObject({
       level: 'info',
       message: 'Public summary rendered',
+      requestId: 'page-42',
+      requestPath: '/targets/focus-42',
+      userId: 'user-88',
+      sessionId: 'session-1',
       context: {
-        surface: 'web-test',
-        requestId: 'page-42',
-        requestPath: '/targets/focus-42',
         route: 'public-summary',
-        targetId: 'focus-42',
-        userId: 'user-88',
-        sessionId: 'session-1',
         source: 'landing',
+        surface: 'web-test',
+        targetId: 'focus-42',
       },
       timestamp: '2026-04-09T11:00:00.000Z',
     })
@@ -87,16 +87,20 @@ describe('public summary logger example', () => {
     )
 
     expect(writes[0]).toMatchObject({
+      application: 'focusbuddy-web',
+      category: 'PublicSummary',
+      layer: 'web',
       level: 'info',
-      message: 'Public summary viewed',
+      logId: 'PUBLIC_SUMMARY_001',
+      message: 'Public summary viewed - Source: share-card',
+      requestId: 'page-43',
+      requestPath: '/targets/focus-43',
+      userId: 'user-89',
       context: {
-        surface: 'web-test',
-        requestId: 'page-43',
-        requestPath: '/targets/focus-43',
         route: 'public-summary',
-        targetId: 'focus-43',
-        userId: 'user-89',
         source: 'share-card',
+        surface: 'web-test',
+        targetId: 'focus-43',
       },
     })
   })

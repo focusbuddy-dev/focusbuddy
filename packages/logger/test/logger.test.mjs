@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 
 import { createBrowserLogger } from '../dist/browser.js'
-import { createLogger } from '../dist/index.js'
+import { createEventLogger, createLogger, defineEvent } from '../dist/index.js'
 import { createServerLogger } from '../dist/server.js'
 
 test('merges base, request, and user context through one facade', () => {
@@ -35,13 +35,13 @@ test('merges base, request, and user context through one facade', () => {
     {
       level: 'info',
       message: 'Health probe completed',
+      runtime: 'api',
+      requestId: 'req-23',
+      requestMethod: 'GET',
+      requestPath: '/health',
+      userId: 'user-7',
       context: {
-        runtime: 'api',
-        requestId: 'req-23',
-        requestMethod: 'GET',
-        requestPath: '/health',
         feature: 'health',
-        userId: 'user-7',
       },
       timestamp: '2026-04-09T09:00:00.000Z',
     },
@@ -81,8 +81,9 @@ test('routes browser logging through console-safe methods and defaults runtime t
   assert.deepStrictEqual(calls, [
     [
       'warn',
-      '[WARN] Public summary was slow to render',
       {
+        level: 'warn',
+        message: 'Public summary was slow to render',
         runtime: 'web',
         requestId: 'page-5',
         userId: 'user-7',
@@ -126,18 +127,17 @@ test('writes server logs through a pino-compatible adapter and defaults runtime 
     error,
   })
 
-  assert.deepStrictEqual(calls, [
-    [
-      'error',
-      {
-        runtime: 'api',
-        requestId: 'req-99',
-        userId: 'user-3',
-        error,
-      },
-      'API request failed',
-    ],
-  ])
+  assert.equal(calls.length, 1)
+  assert.equal(calls[0][0], 'error')
+  assert.equal(calls[0][2], 'API request failed')
+  assert.deepStrictEqual(calls[0][1], {
+    runtime: 'api',
+    requestId: 'req-99',
+    userId: 'user-3',
+    timestamp: calls[0][1].timestamp,
+    error,
+  })
+  assert.equal(typeof calls[0][1].timestamp, 'string')
 })
 
 test('allows runtime override per factory', () => {
@@ -163,14 +163,66 @@ test('allows runtime override per factory', () => {
 
   logger.info('Worker job started')
 
-  assert.deepStrictEqual(calls, [
-    [
-      'info',
-      {
-        runtime: 'worker',
-        queue: 'summary-jobs',
+  assert.equal(calls.length, 1)
+  assert.equal(calls[0][0], 'info')
+  assert.equal(calls[0][2], 'Worker job started')
+  assert.deepStrictEqual(calls[0][1], {
+    context: {
+      queue: 'summary-jobs',
+    },
+    runtime: 'worker',
+    timestamp: calls[0][1].timestamp,
+  })
+  assert.equal(typeof calls[0][1].timestamp, 'string')
+})
+
+test('emits event schema logs with logId and rendered message templates', () => {
+  const writes = []
+  const event = defineEvent({
+    logId: 'API_REQUEST_001',
+    level: 'info',
+    category: 'Request',
+    messageTemplate: 'API request handled - Status: {statusCode}',
+    requiredContext: ['statusCode'],
+  })
+
+  const eventLogger = createEventLogger(
+    createLogger({
+      adapter: {
+        write(entry) {
+          writes.push(entry)
+        },
       },
-      'Worker job started',
-    ],
+      context: {
+        requestId: 'req-700',
+        traceId: 'trace-700',
+      },
+      now: () => new Date('2026-04-09T09:30:00.000Z'),
+    }),
+    {
+      application: 'focusbuddy-api',
+      layer: 'api',
+    },
+  )
+
+  eventLogger.emit(event, {
+    statusCode: 200,
+  })
+
+  assert.deepStrictEqual(writes, [
+    {
+      application: 'focusbuddy-api',
+      category: 'Request',
+      context: {
+        statusCode: 200,
+      },
+      layer: 'api',
+      level: 'info',
+      logId: 'API_REQUEST_001',
+      message: 'API request handled - Status: 200',
+      requestId: 'req-700',
+      timestamp: '2026-04-09T09:30:00.000Z',
+      traceId: 'trace-700',
+    },
   ])
 })

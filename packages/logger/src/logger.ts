@@ -10,23 +10,39 @@ export type RequestLogContext = {
 
 export type LoggerRuntime = 'api' | 'web' | (string & {})
 
+export type LoggerEnvironment = 'development' | 'test' | 'staging' | 'production' | (string & {})
+
 export type UserLogContext = {
   userId?: string
   userRole?: string
 }
 
-export type LoggerContext = RequestLogContext &
-  UserLogContext & {
+export type SessionLogContext = {
+  sessionId?: string
+}
+
+export type LoggerEnvelopeContext = RequestLogContext &
+  UserLogContext &
+  SessionLogContext & {
+    application?: string
+    category?: string
+    environment?: LoggerEnvironment
+    layer?: string
+    logId?: string
     runtime?: LoggerRuntime
-    [key: string]: unknown
+    traceId?: string
   }
+
+export type LoggerContext = LoggerEnvelopeContext & {
+  [key: string]: unknown
+}
 
 export type FactoryLoggerContext = Omit<LoggerContext, 'runtime'>
 
-export type LogEntry = {
+export type LogEntry = LoggerEnvelopeContext & {
   level: LogLevel
   message: string
-  context: LoggerContext
+  context: Record<string, unknown>
   error?: Error
   timestamp: string
 }
@@ -51,47 +67,101 @@ export type Logger = {
   fatal: (message: string, context?: LoggerContext) => void
 }
 
-function compactContext(context?: LoggerContext): LoggerContext {
-  if (!context) {
-    return {}
+type LoggerState = {
+  context: Record<string, unknown>
+  envelope: LoggerEnvelopeContext
+  error?: Error
+}
+
+const envelopeContextKeys = [
+  'application',
+  'category',
+  'environment',
+  'layer',
+  'logId',
+  'requestId',
+  'requestMethod',
+  'requestPath',
+  'runtime',
+  'sessionId',
+  'traceId',
+  'userId',
+  'userRole',
+] as const
+
+function compactRecord<T extends Record<string, unknown>>(record?: T): T {
+  if (!record) {
+    return {} as T
   }
 
   return Object.fromEntries(
-    Object.entries(context).filter(([, value]) => value !== undefined),
-  ) as LoggerContext
+    Object.entries(record).filter(([, value]) => value !== undefined),
+  ) as T
 }
 
-function mergeContexts(baseContext?: LoggerContext, nextContext?: LoggerContext): LoggerContext {
-  return compactContext({
-    ...compactContext(baseContext),
-    ...compactContext(nextContext),
-  })
+function isEnvelopeContextKey(key: string): key is (typeof envelopeContextKeys)[number] {
+  return (envelopeContextKeys as readonly string[]).includes(key)
 }
 
-function splitError(context: LoggerContext): Pick<LogEntry, 'context' | 'error'> {
-  const { error, ...restContext } = context
+function splitContext(context?: LoggerContext): LoggerState {
+  const compactedContext = compactRecord(context)
+  const envelope: LoggerEnvelopeContext = {}
+  const extraContext: Record<string, unknown> = {}
+  let error: Error | undefined
 
-  if (error instanceof Error) {
-    return {
-      context: compactContext(restContext as LoggerContext),
-      error,
+  for (const [key, value] of Object.entries(compactedContext)) {
+    if (key === 'error' && value instanceof Error) {
+      error = value
+      continue
     }
+
+    if (isEnvelopeContextKey(key)) {
+      ;(envelope as Record<string, unknown>)[key] = value
+      continue
+    }
+
+    extraContext[key] = value
   }
 
   return {
-    context,
+    context: extraContext,
+    envelope,
+    ...(error ? { error } : {}),
   }
 }
 
-export function createLogger({ adapter, context, now = () => new Date() }: CreateLoggerOptions): Logger {
-  const baseContext = compactContext(context)
+function mergeStates(baseState: LoggerState, nextState: LoggerState): LoggerState {
+  const error = nextState.error ?? baseState.error
 
+  return {
+    context: compactRecord({
+      ...baseState.context,
+      ...nextState.context,
+    }),
+    envelope: compactRecord({
+      ...baseState.envelope,
+      ...nextState.envelope,
+    }),
+    ...(error ? { error } : {}),
+  }
+}
+
+function createLoggerFromState({
+  adapter,
+  now,
+  state,
+}: {
+  adapter: LoggerAdapter
+  now: () => Date
+  state: LoggerState
+}): Logger {
   const write = (level: LogLevel, message: string, contextForEntry?: LoggerContext) => {
-    const mergedContext = mergeContexts(baseContext, contextForEntry)
-    const entryShape = splitError(mergedContext)
+    const mergedState = mergeStates(state, splitContext(contextForEntry))
 
     adapter.write({
-      ...entryShape,
+      ...mergedState.envelope,
+      context: mergedState.context,
+      ...(mergedState.error ? { error: mergedState.error } : {}),
       level,
       message,
       timestamp: now().toISOString(),
@@ -100,10 +170,10 @@ export function createLogger({ adapter, context, now = () => new Date() }: Creat
 
   return {
     child(childContext) {
-      return createLogger({
+      return createLoggerFromState({
         adapter,
-        context: mergeContexts(baseContext, childContext),
         now,
+        state: mergeStates(state, splitContext(childContext)),
       })
     },
     trace(message, contextForEntry) {
@@ -125,6 +195,14 @@ export function createLogger({ adapter, context, now = () => new Date() }: Creat
       write('fatal', message, contextForEntry)
     },
   }
+}
+
+export function createLogger({ adapter, context, now = () => new Date() }: CreateLoggerOptions): Logger {
+  return createLoggerFromState({
+    adapter,
+    now,
+    state: splitContext(context),
+  })
 }
 
 export function createNoopLogger(context?: LoggerContext): Logger {

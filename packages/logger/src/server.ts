@@ -52,9 +52,25 @@ export function createServerLogger(options: ServerLoggerOptions = {}): Logger {
     },
     adapter: {
       write(entry) {
-        const payload: Record<string, unknown> = {
-          ...entry.context,
-        }
+        const payload: Record<string, unknown> = Object.fromEntries(
+          Object.entries({
+            application: entry.application,
+            category: entry.category,
+            context: Object.keys(entry.context).length > 0 ? entry.context : undefined,
+            environment: entry.environment,
+            layer: entry.layer,
+            logId: entry.logId,
+            requestId: entry.requestId,
+            requestMethod: entry.requestMethod,
+            requestPath: entry.requestPath,
+            runtime: entry.runtime,
+            sessionId: entry.sessionId,
+            timestamp: entry.timestamp,
+            traceId: entry.traceId,
+            userId: entry.userId,
+            userRole: entry.userRole,
+          }).filter(([, value]) => value !== undefined),
+        )
 
         if (entry.error) {
           payload.error = entry.error

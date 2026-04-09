@@ -32,18 +32,28 @@ const levelToConsoleMethod: Record<LogEntry['level'], keyof BrowserConsole> = {
   fatal: 'error',
 }
 
-function hasContext(context: Record<string, unknown>): boolean {
-  return Object.keys(context).length > 0
-}
-
-function buildMessagePrefix(entry: LogEntry, includeTimestamp: boolean): string {
-  const level = entry.level.toUpperCase()
-
-  if (!includeTimestamp) {
-    return `[${level}] ${entry.message}`
-  }
-
-  return `${entry.timestamp} [${level}] ${entry.message}`
+function buildBrowserPayload(entry: LogEntry, includeTimestamp: boolean): Record<string, unknown> {
+  return Object.fromEntries(
+    Object.entries({
+      application: entry.application,
+      category: entry.category,
+      context: Object.keys(entry.context).length > 0 ? entry.context : undefined,
+      environment: entry.environment,
+      layer: entry.layer,
+      level: entry.level,
+      logId: entry.logId,
+      message: entry.message,
+      requestId: entry.requestId,
+      requestMethod: entry.requestMethod,
+      requestPath: entry.requestPath,
+      runtime: entry.runtime,
+      sessionId: entry.sessionId,
+      timestamp: includeTimestamp ? entry.timestamp : undefined,
+      traceId: entry.traceId,
+      userId: entry.userId,
+      userRole: entry.userRole,
+    }).filter(([, value]) => value !== undefined),
+  )
 }
 
 export function createBrowserLogger(options: BrowserLoggerOptions = {}): Logger {
@@ -58,24 +68,14 @@ export function createBrowserLogger(options: BrowserLoggerOptions = {}): Logger 
     adapter: {
       write(entry) {
         const consoleMethod = targetConsole[levelToConsoleMethod[entry.level]] ?? targetConsole.log
-        const messagePrefix = buildMessagePrefix(entry, includeTimestamp)
-
-        if (entry.error && hasContext(entry.context)) {
-          consoleMethod(messagePrefix, entry.context, entry.error)
-          return
-        }
+        const payload = buildBrowserPayload(entry, includeTimestamp)
 
         if (entry.error) {
-          consoleMethod(messagePrefix, entry.error)
+          consoleMethod(payload, entry.error)
           return
         }
 
-        if (hasContext(entry.context)) {
-          consoleMethod(messagePrefix, entry.context)
-          return
-        }
-
-        consoleMethod(messagePrefix)
+        consoleMethod(payload)
       },
     },
   })
