@@ -24,6 +24,8 @@ Dev container setup details are documented in [.devcontainer/README.md](.devcont
 
 The Docker-based local development environment is documented in [docs/platform/local-development.md](docs/platform/local-development.md).
 
+The supported local execution modes and env contract are documented in [docs/platform/local-execution-modes.md](docs/platform/local-execution-modes.md).
+
 ### Commit Message Tooling Demo
 
 This repository includes a small commitlint demo for Issue #14.

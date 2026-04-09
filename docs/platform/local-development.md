@@ -4,6 +4,8 @@ This document captures the output of issue #51.
 
 Its purpose is to define the first Docker-based local development environment for FocusBuddy.
 
+For the current repository policy on supported local execution modes, see [local-execution-modes.md](./local-execution-modes.md).
+
 ## Scope
 
 This document defines:
@@ -130,6 +132,8 @@ Expected local flow:
 6. connect to PostgreSQL with `just local-psql` when needed
 7. stop the stack with `just local-down`
 
+This flow is the current `fast compose` lane. It is the default full-stack local workflow for this repository.
+
 ## Relationship to the dev container
 
 The dev container and the local Docker compose stack solve different problems.
@@ -155,6 +159,8 @@ The first local stack intentionally differs from production in these ways:
 - there is no Secret Manager or Cloud Run wiring in the local stack
 
 These differences are acceptable for the current stage because the goal is to make the local workflow explicit and reproducible before full app implementation begins.
+
+For the distinction between the default `fast compose` path, the future `parity compose` path, and host-side auxiliary startup, see [local-execution-modes.md](./local-execution-modes.md).
 
 ## Handoff to follow-up issues
 
