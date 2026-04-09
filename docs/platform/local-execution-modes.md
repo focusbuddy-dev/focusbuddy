@@ -23,6 +23,12 @@ Today, `fast compose` is the implemented default lane.
 
 `parity compose` is the planned production-oriented lane that this repository intends to add in follow-up work.
 
+The repository needs both lanes because they optimize for different kinds of confidence.
+
+- `fast compose` exists for routine feature work and fast feedback while still keeping the app and supporting services in one Compose-managed topology
+- `parity compose` is needed because the fast lane can still hide failures behind dev servers, watch mode, or looser startup behavior
+- the host-side path remains auxiliary because it requires separately started supporting services and therefore does not preserve the repository's default full-stack runtime shape
+
 ### `fast compose`
 
 - is the default day-to-day local development path
@@ -46,45 +52,82 @@ Examples include running `pnpm dev` from the repository root or starting `apps/a
 
 This path is not documented as the default full-stack workflow because supporting services such as PostgreSQL and local auth must be provided separately. That changes the runtime shape from the Compose path and makes it easier to hide environment drift.
 
-## Execution mode diagram
+## Lane comparison
+
+| Lane | Primary purpose | Runtime shape | Why it is not enough by itself |
+| --- | --- | --- | --- |
+| `fast compose` | day-to-day implementation speed | Compose-managed stack with development runtimes | can hide failures that only appear with built artifacts or stricter startup assumptions |
+| `parity compose` | production-oriented local validation | planned Compose-managed stack with built artifacts and stricter startup | too heavy for routine editing and not yet implemented |
+| host-side direct startup | narrow debugging escape hatch | app processes started directly, with PostgreSQL and auth provided separately | diverges from the repository's default full-stack topology |
+
+## Execution lane diagram
 
 ```mermaid
-flowchart TD
-    subgraph FC[fast compose]
-        FC_WEB[web dev server]
-        FC_API[api dev runtime]
-        FC_DB[postgres container]
-        FC_AUTH[auth stub container]
+flowchart TB
+    subgraph FC[fast compose: implemented default lane]
+        FC_ENTRY[just dev]
+        FC_WEB[web dev server container]
+        FC_API[api dev runtime container]
+        FC_DB[(postgres container)]
+        FC_AUTH[(auth stub container)]
+        FC_ENTRY --> FC_WEB
+        FC_ENTRY --> FC_API
+        FC_ENTRY --> FC_DB
+        FC_ENTRY --> FC_AUTH
         FC_WEB --> FC_API
         FC_API --> FC_DB
         FC_WEB --> FC_AUTH
         FC_API --> FC_AUTH
+        FC_NOTE[fast feedback for feature work, but still uses dev-oriented runtimes]
     end
 
-    subgraph PC[parity compose planned]
-        PC_WEB[planned web built runtime]
-        PC_API[planned api built runtime]
-        PC_DB[postgres container]
-        PC_AUTH[planned auth runtime]
+    FC --> GAP
+
+    GAP[Need a second compose lane because dev servers and watch mode can hide failures that only appear with built artifacts or stricter startup]
+
+    GAP --> PC
+
+    subgraph PC[parity compose: planned validation lane]
+        PC_ENTRY[planned parity compose entrypoint]
+        PC_WEB[planned web built runtime container]
+        PC_API[planned api built runtime container]
+        PC_DB[(postgres container)]
+        PC_AUTH[(planned auth runtime)]
+        PC_ENTRY --> PC_WEB
+        PC_ENTRY --> PC_API
+        PC_ENTRY --> PC_DB
+        PC_ENTRY --> PC_AUTH
         PC_WEB --> PC_API
         PC_API --> PC_DB
         PC_WEB --> PC_AUTH
         PC_API --> PC_AUTH
+        PC_NOTE[production-oriented validation for startup, artifact, and runtime-shape failures]
     end
 
-    subgraph HS[host-side direct app startup]
-        HS_WEB[web or root pnpm dev]
-        HS_API[api process]
-        HS_DB[separately provided postgres]
-        HS_AUTH[separately provided auth]
-        HS_WEB --> HS_API
+    PC --> HS
+
+    subgraph HS[host-side direct startup: auxiliary path only]
+        HS_ENTRY[pnpm dev or per-app dev command]
+        HS_WEB[host web process]
+        HS_API[host api process]
+        HS_DB[(separately started postgres container or service)]
+        HS_AUTH[(separately started auth process or container)]
+        HS_ENTRY --> HS_WEB
+        HS_ENTRY --> HS_API
         HS_API --> HS_DB
         HS_WEB --> HS_AUTH
         HS_API --> HS_AUTH
+        HS_NOTE[the developer must add supporting services separately, so this path is not the default full-stack contract]
     end
 ```
 
-The important difference is not only where the processes run. In the host-side path, the developer must provide supporting services separately, so the repository cannot treat that path as the default full-stack contract. The parity lane is shown as planned because the repository does not yet provide a dedicated parity Compose entrypoint.
+The important difference is not only where the processes run.
+
+- in `fast compose`, supporting services and application runtimes come up together in one Compose-managed lane
+- in `parity compose`, the repository can validate failures that the fast lane may miss because of dev-oriented runtime behavior
+- in the host-side path, PostgreSQL and auth must be started separately, which is why the repository does not treat that path as the default full-stack contract
+
+The parity lane is shown as planned because the repository does not yet provide a dedicated parity Compose entrypoint.
 
 ## Env contract
 

@@ -124,16 +124,10 @@ This keeps the tracked local PostgreSQL inputs as the source of configuration ca
 
 The repository exposes these local development helpers:
 
-- primary fast compose entrypoints:
-  - `just dev`
-  - `just dev-down`
-  - `just dev-logs`
-  - `just dev-psql`
-- compatibility aliases:
-  - `just local-up`
-  - `just local-down`
-  - `just local-logs`
-  - `just local-psql`
+- `just dev`
+- `just dev-down`
+- `just dev-logs`
+- `just dev-psql`
 
 The helper scripts live under [scripts/local-dev](../../scripts/local-dev).
 
