@@ -36,6 +36,10 @@ dev-down:
 dev-logs service="":
     bash scripts/local-dev/logs.sh {{service}}
 
+# Show logs from only the currently running fast compose services.
+dev-logs-running:
+    bash scripts/local-dev/logs-running.sh
+
 # Open a psql shell against the fast compose PostgreSQL container.
 dev-psql:
     bash scripts/local-dev/psql.sh
