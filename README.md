@@ -28,6 +28,8 @@ The supported local execution modes and env contract are documented in [docs/pla
 
 For routine full-stack local development, use `just dev`.
 
+For production-oriented local validation with built runtimes and health waits, use `just parity`.
+
 Low-level host-side commands such as `pnpm dev` remain available for narrow debugging, but they are not the primary documented full-stack workflow.
 
 ### Commit Message Tooling Demo

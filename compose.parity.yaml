@@ -1,0 +1,10 @@
+services:
+  api:
+    command: ['pnpm', '--filter', '@focusbuddy/api', 'parity']
+    environment:
+      NODE_ENV: production
+
+  web:
+    command: ['pnpm', '--filter', '@focusbuddy/web', 'parity']
+    environment:
+      NODE_ENV: production

@@ -129,8 +129,11 @@ The repository exposes these local development helpers:
 - `just openapi`
 - `just prisma <migration-name>`
 - `just dev`
+- `just parity`
 - `just dev-down`
+- `just parity-down`
 - `just dev-logs`
+- `just parity-logs`
 - `just dev-logs-running`
 - `just dev-psql`
 
@@ -164,6 +167,35 @@ Expected local flow:
 
 This flow is the current `fast compose` lane. It is the default full-stack local workflow for this repository.
 
+## Parity compose flow
+
+The repository also exposes a `parity compose` lane for production-oriented local validation.
+
+- start it with `just parity`
+- inspect it with `just parity-logs`
+- stop it with `just parity-down`
+
+The first parity implementation is intentionally narrow.
+
+- it still uses the Compose-managed local PostgreSQL and local auth stub topology
+- it replaces development runtimes with built-runtime commands for API and web
+- it waits for Compose health checks before reporting success
+
+The initial must-match checks in this lane are:
+
+- API must boot from built output instead of a watch runner
+- web must boot from `next build` plus `next start` instead of `next dev`
+- API must still start against the explicit Compose `DATABASE_URL` that targets the `postgres` service hostname
+- auth, api, and web must all become healthy under the stricter startup path before the lane is considered ready
+
+Because parity compose reuses the same published local ports as the fast lane, switch lanes explicitly.
+
+1. stop fast compose with `just dev-down`
+2. start parity compose with `just parity`
+3. inspect logs with `just parity-logs`
+4. stop parity compose with `just parity-down`
+5. return to the default lane with `just dev` when you are done validating
+
 ## Relationship to the dev container
 
 The dev container and the local Docker compose stack solve different problems.
@@ -190,7 +222,7 @@ The first local stack intentionally differs from production in these ways:
 
 These differences are acceptable for the current stage because the goal is to make the local workflow explicit and reproducible before full app implementation begins.
 
-For the distinction between the default `fast compose` path, the future `parity compose` path, and host-side auxiliary startup, see [local-execution-modes.md](./local-execution-modes.md).
+For the distinction between the default `fast compose` path, the implemented `parity compose` path, and host-side auxiliary startup, see [local-execution-modes.md](./local-execution-modes.md).
 
 ## Handoff to follow-up issues
 

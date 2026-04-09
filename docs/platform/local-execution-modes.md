@@ -8,7 +8,7 @@ Its purpose is to define the local execution lane policy for FocusBuddy, describ
 
 This document defines:
 
-- the current full-stack local development path and the planned parity-oriented path
+- the current full-stack local development path and the implemented parity-oriented path
 - the role of host-side direct app startup as an auxiliary path
 - the local env contract at the configuration-category level
 - a short decision guide for choosing a mode
@@ -21,7 +21,7 @@ FocusBuddy distinguishes two full-stack local execution lanes.
 
 Today, `fast compose` is the implemented default lane.
 
-`parity compose` is the planned production-oriented lane that this repository intends to add in follow-up work.
+`parity compose` is the implemented production-oriented lane for local runtime validation.
 
 The repository needs both lanes because they optimize for different kinds of confidence.
 
@@ -39,10 +39,11 @@ The repository needs both lanes because they optimize for different kinds of con
 
 ### `parity compose`
 
-- is the planned production-oriented local validation path
-- is expected to run through `docker compose`
-- is intended to run built artifacts with stricter startup assumptions than the fast lane
-- exists to catch drift that should also fail in deployed environments once implemented
+- is the production-oriented local validation path
+- is started through `just parity`
+- runs through `docker compose` with the parity overlay
+- runs built artifacts with stricter startup assumptions than the fast lane
+- exists to catch drift that should also fail in deployed environments
 
 ## Auxiliary path
 
@@ -57,7 +58,7 @@ This path is not documented as the default full-stack workflow because supportin
 | Lane | Primary purpose | Runtime shape | Why it is not enough by itself |
 | --- | --- | --- | --- |
 | `fast compose` | day-to-day implementation speed | Compose-managed stack with development runtimes | can hide failures that only appear with built artifacts or stricter startup assumptions |
-| `parity compose` | production-oriented local validation | planned Compose-managed stack with built artifacts and stricter startup | too heavy for routine editing and not yet implemented |
+| `parity compose` | production-oriented local validation | Compose-managed stack with built runtimes and stricter startup | too heavy for routine editing and therefore not the default lane |
 | host-side direct startup | narrow debugging escape hatch | web and api started from the dev container, with PostgreSQL and auth started separately | diverges from the repository's default full-stack topology |
 
 ## Execution lane diagram
@@ -87,12 +88,12 @@ flowchart TB
 
     GAP --> PC
 
-    subgraph PC[parity compose: planned validation lane]
-        PC_ENTRY[planned parity compose entrypoint]
-        PC_WEB[planned web built runtime container]
-        PC_API[planned api built runtime container]
+    subgraph PC[parity compose: implemented validation lane]
+        PC_ENTRY[just parity]
+        PC_WEB[web built runtime container]
+        PC_API[api built runtime container]
         PC_DB[(postgres container)]
-        PC_AUTH[(planned auth runtime)]
+        PC_AUTH[(auth stub container)]
         PC_ENTRY --> PC_WEB
         PC_ENTRY --> PC_API
         PC_ENTRY --> PC_DB
@@ -129,7 +130,18 @@ The important difference is not only where the processes run.
 - in `parity compose`, the repository can validate failures that the fast lane may miss because of dev-oriented runtime behavior
 - in the host-side path, web and api may run directly from the dev container, but PostgreSQL must still be started as another container and auth must still be started separately, which is why the repository does not treat that path as the default full-stack contract
 
-The parity lane is shown as planned because the repository does not yet provide a dedicated parity Compose entrypoint.
+The parity lane now has a dedicated Compose entrypoint and exists specifically to validate runtime behavior that the fast lane can hide.
+
+## Initial parity checks
+
+The first parity implementation keeps the lane narrow and focuses on must-match runtime checks that are immediately useful.
+
+- API starts from built output through `node dist/main.js` instead of the watch-oriented Nest development runner
+- web starts from `next build` plus `next start` instead of `next dev`
+- the Compose-managed `DATABASE_URL` path remains explicit and must still reach PostgreSQL through the `postgres` service hostname
+- Compose waits for auth, api, and web health checks before the lane reports success
+
+This is intentionally narrower than a full production clone, but it already exercises built artifacts and stricter startup behavior that the fast lane does not enforce.
 
 ## Env contract
 
@@ -146,7 +158,7 @@ The tracked local inputs currently cover categories such as:
 - local auth mode
 - optional bind mount source override for Docker-from-dev-container workflows
 
-These categories should stay aligned across the current fast lane and the planned parity lane.
+These categories should stay aligned across the current fast lane and the parity lane.
 
 ### Mode-specific derived values
 
@@ -182,9 +194,10 @@ Use `fast compose` when:
 - you are doing day-to-day feature development
 - you need the app and supporting services started together
 
-Use `parity compose` after it is implemented when:
+Use `parity compose` when:
 
 - you want a production-oriented local validation path
+- you want the parity entrypoint, `just parity`
 - you need to check startup assumptions that should also hold in deployed environments
 - you want to catch drift hidden by development servers or looser startup behavior
 

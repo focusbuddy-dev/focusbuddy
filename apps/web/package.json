@@ -9,6 +9,7 @@
     "dev:compose": "pnpm contract:build && next dev --hostname 0.0.0.0 --port 3000",
     "lint": "pnpm lint:styles && pnpm --dir ../.. exec oxlint apps/web/src apps/web/test",
     "lint:styles": "pnpm --dir ../.. exec stylelint \"apps/web/src/**/*.css\"",
+    "parity": "pnpm build && next start --hostname 0.0.0.0 --port 3000",
     "test": "pnpm contract:build && pnpm --dir ../.. exec jest --config apps/web/jest.config.ts --runInBand",
     "typecheck": "pnpm contract:build && pnpm --dir ../.. exec tsc --project apps/web/tsconfig.json --noEmit"
   },

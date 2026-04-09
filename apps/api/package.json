@@ -8,6 +8,7 @@
     "contract:build": "pnpm --dir ../.. --filter @focusbuddy/api-contract build",
     "dev": "pnpm contract:build && pnpm prisma:generate && pnpm exec nest start --watch",
     "lint": "pnpm --dir ../.. exec oxlint apps/api/src apps/api/test apps/api/prisma",
+    "parity": "pnpm build && node dist/main.js",
     "prisma:generate": "prisma generate --config prisma.config.ts",
     "prisma:migrate:dev": "prisma migrate dev --config prisma.config.ts",
     "prisma:studio": "prisma studio --config prisma.config.ts",
