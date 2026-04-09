@@ -134,6 +134,8 @@ The helper scripts live under [scripts/local-dev](../../scripts/local-dev).
 
 Routine full-stack local development should start with the `just dev` entrypoint.
 
+Re-running `just dev` while the stack is already up restarts the development-oriented app services (`auth`, `api`, and `web`) so package manifest or startup script changes are picked up without recycling PostgreSQL.
+
 Low-level host-side commands such as `pnpm dev` and direct app package dev commands remain available as auxiliary escape hatches, but they are not the primary supported full-stack workflow.
 
 Expected local flow:
