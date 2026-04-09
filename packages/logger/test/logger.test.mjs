@@ -48,7 +48,7 @@ test('merges base, request, and user context through one facade', () => {
   ])
 })
 
-test('routes browser logging through console-safe methods', () => {
+test('routes browser logging through console-safe methods and defaults runtime to web', () => {
   const calls = []
   const browserConsole = {
     debug(...args) {
@@ -70,9 +70,6 @@ test('routes browser logging through console-safe methods', () => {
 
   const logger = createBrowserLogger({
     console: browserConsole,
-    context: {
-      runtime: 'web',
-    },
     includeTimestamp: false,
   })
 
@@ -94,7 +91,7 @@ test('routes browser logging through console-safe methods', () => {
   ])
 })
 
-test('writes server logs through a pino-compatible adapter', () => {
+test('writes server logs through a pino-compatible adapter and defaults runtime to api', () => {
   const calls = []
   const serverSink = {
     trace(bindings, message) {
@@ -118,9 +115,6 @@ test('writes server logs through a pino-compatible adapter', () => {
   }
 
   const logger = createServerLogger({
-    context: {
-      runtime: 'api',
-    },
     logger: serverSink,
   })
 
@@ -142,6 +136,41 @@ test('writes server logs through a pino-compatible adapter', () => {
         error,
       },
       'API request failed',
+    ],
+  ])
+})
+
+test('allows runtime override per factory', () => {
+  const calls = []
+  const serverSink = {
+    trace() {},
+    debug() {},
+    info(bindings, message) {
+      calls.push(['info', bindings, message])
+    },
+    warn() {},
+    error() {},
+    fatal() {},
+  }
+
+  const logger = createServerLogger({
+    logger: serverSink,
+    runtime: 'worker',
+    context: {
+      queue: 'summary-jobs',
+    },
+  })
+
+  logger.info('Worker job started')
+
+  assert.deepStrictEqual(calls, [
+    [
+      'info',
+      {
+        runtime: 'worker',
+        queue: 'summary-jobs',
+      },
+      'Worker job started',
     ],
   ])
 })

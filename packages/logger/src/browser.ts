@@ -1,4 +1,10 @@
-import { createLogger, type LogEntry, type Logger, type LoggerContext } from './logger.js'
+import {
+  createLogger,
+  type FactoryLoggerContext,
+  type LogEntry,
+  type Logger,
+  type LoggerRuntime,
+} from './logger.js'
 
 export type BrowserConsole = {
   debug: (...args: unknown[]) => void
@@ -10,9 +16,12 @@ export type BrowserConsole = {
 
 export type BrowserLoggerOptions = {
   console?: BrowserConsole
-  context?: LoggerContext
+  context?: FactoryLoggerContext
   includeTimestamp?: boolean
+  runtime?: LoggerRuntime
 }
+
+const DEFAULT_BROWSER_RUNTIME: LoggerRuntime = 'web'
 
 const levelToConsoleMethod: Record<LogEntry['level'], keyof BrowserConsole> = {
   trace: 'debug',
@@ -23,7 +32,7 @@ const levelToConsoleMethod: Record<LogEntry['level'], keyof BrowserConsole> = {
   fatal: 'error',
 }
 
-function hasContext(context: LoggerContext): boolean {
+function hasContext(context: Record<string, unknown>): boolean {
   return Object.keys(context).length > 0
 }
 
@@ -42,7 +51,10 @@ export function createBrowserLogger(options: BrowserLoggerOptions = {}): Logger 
   const includeTimestamp = options.includeTimestamp ?? true
 
   return createLogger({
-    context: options.context,
+    context: {
+      runtime: options.runtime ?? DEFAULT_BROWSER_RUNTIME,
+      ...options.context,
+    },
     adapter: {
       write(entry) {
         const consoleMethod = targetConsole[levelToConsoleMethod[entry.level]] ?? targetConsole.log

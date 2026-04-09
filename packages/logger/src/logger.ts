@@ -8,6 +8,8 @@ export type RequestLogContext = {
   requestPath?: string
 }
 
+export type LoggerRuntime = 'api' | 'web' | (string & {})
+
 export type UserLogContext = {
   userId?: string
   userRole?: string
@@ -15,8 +17,11 @@ export type UserLogContext = {
 
 export type LoggerContext = RequestLogContext &
   UserLogContext & {
+    runtime?: LoggerRuntime
     [key: string]: unknown
   }
+
+export type FactoryLoggerContext = Omit<LoggerContext, 'runtime'>
 
 export type LogEntry = {
   level: LogLevel

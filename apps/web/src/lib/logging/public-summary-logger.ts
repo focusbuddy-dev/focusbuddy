@@ -1,11 +1,7 @@
 import type { Logger, RequestLogContext, UserLogContext } from '@focusbuddy/logger'
 import { createBrowserLogger } from '@focusbuddy/logger/browser'
 
-const webLogger = createBrowserLogger({
-  context: {
-    runtime: 'web',
-  },
-})
+const webLogger = createBrowserLogger()
 
 type PublicSummaryRequestContext = RequestLogContext & {
   route: string

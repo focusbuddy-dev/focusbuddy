@@ -1,13 +1,22 @@
 import pino, { type LevelWithSilent, type Logger as PinoLogger, type LoggerOptions } from 'pino'
 
-import { createLogger, type LogEntry, type Logger, type LoggerContext } from './logger.js'
+import {
+  createLogger,
+  type FactoryLoggerContext,
+  type LogEntry,
+  type Logger,
+  type LoggerRuntime,
+} from './logger.js'
 
 export type ServerLoggerOptions = {
-  context?: LoggerContext
+  context?: FactoryLoggerContext
   level?: LevelWithSilent
   logger?: PinoLogger
   pinoOptions?: LoggerOptions
+  runtime?: LoggerRuntime
 }
+
+const DEFAULT_SERVER_RUNTIME: LoggerRuntime = 'api'
 
 type PinoWrite = (bindings: Record<string, unknown>, message: string) => void
 
@@ -37,7 +46,10 @@ export function createServerLogger(options: ServerLoggerOptions = {}): Logger {
     })
 
   return createLogger({
-    context: options.context,
+    context: {
+      runtime: options.runtime ?? DEFAULT_SERVER_RUNTIME,
+      ...options.context,
+    },
     adapter: {
       write(entry) {
         const payload: Record<string, unknown> = {

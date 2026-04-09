@@ -1,11 +1,7 @@
 import type { Logger, RequestLogContext, UserLogContext } from '@focusbuddy/logger'
 import { createServerLogger } from '@focusbuddy/logger/server'
 
-const apiLogger = createServerLogger({
-  context: {
-    runtime: 'api',
-  },
-})
+const apiLogger = createServerLogger()
 
 type ApiRequestContext = RequestLogContext & {
   route: string
