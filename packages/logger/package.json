@@ -25,16 +25,20 @@
   "scripts": {
     "build": "pnpm --dir ../.. exec tsc --project packages/logger/tsconfig.build.json",
     "dev": "pnpm --dir ../.. exec tsc --project packages/logger/tsconfig.build.json --watch",
-    "lint": "pnpm --dir ../.. exec oxlint packages/logger/src packages/logger/test packages/logger/jest.config.ts",
-    "test": "pnpm --dir ../.. exec jest --config packages/logger/jest.config.ts --runInBand",
+    "lint": "pnpm --dir ../.. exec oxlint packages/logger/src packages/logger/test",
+    "test": "pnpm build && node --test ./test/logger.test.mjs",
     "typecheck": "pnpm --dir ../.. exec tsc --project packages/logger/tsconfig.json --noEmit"
   },
-  "dependencies": {
+  "peerDependencies": {
     "pino": "^10.3.1"
   },
+  "peerDependenciesMeta": {
+    "pino": {
+      "optional": true
+    }
+  },
   "devDependencies": {
-    "@types/jest": "^30.0.0",
     "@types/node": "^25.5.2",
-    "ts-jest": "^29.4.9"
+    "pino": "^10.3.1"
   }
 }
