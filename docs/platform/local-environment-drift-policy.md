@@ -63,7 +63,7 @@ Parity-oriented validation should preserve or explicitly verify the following ca
 ### Failure and readiness behavior
 
 - timeout and retry behavior that changes failure surfaces
-- startup readiness and health-check criteria
+- startup readiness and health check criteria
 - integration error surfaces that differ between stubs, emulators, and deployed services
 
 ## Tolerated differences in the fast lane
