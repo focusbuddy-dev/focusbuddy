@@ -14,26 +14,55 @@ The correlation model should be defined outside this package. The logger accepts
 
 Runtime defaults belong to the runtime-specific factories. `createServerLogger()` defaults to `api`, `createBrowserLogger()` defaults to `web`, and callers only need to override that when a different runtime label is actually needed.
 
+Recommended application usage is wrapper-first. App code should normally receive a request-scoped logger or page-scoped logger and write event-specific fields only.
+
+The `child()` API is a low-level primitive for building those scoped loggers. It exists so framework adapters and app-local wrappers can bind stable context once, but regular handlers and components should not call it directly throughout the codebase.
+
 ## API Example
 
 ```ts
-import { createServerLogger } from '@focusbuddy/logger/server'
+import { createApiRequestLogger } from './logging/api-request-logger'
 
-const logger = createServerLogger()
+const requestLogger = createApiRequestLogger(
+  {
+    requestId: 'req-42',
+    requestMethod: 'GET',
+    requestPath: '/health',
+    route: 'health.read',
+  },
+  {
+    userId: 'user-7',
+  },
+)
 
-logger
-  .child({ requestId: 'req-42', requestMethod: 'GET', requestPath: '/health', userId: 'user-7' })
-  .info('API request handled', { statusCode: 200 })
+requestLogger.info('API request handled', { statusCode: 200 })
 ```
 
 ## Web Example
 
 ```ts
-import { createBrowserLogger } from '@focusbuddy/logger/browser'
+import { createPublicSummaryLogger } from './logging/public-summary-logger'
 
-const logger = createBrowserLogger()
+const pageLogger = createPublicSummaryLogger(
+  {
+    requestId: 'page-1',
+    requestPath: '/targets/alpha',
+    route: 'public-summary.view',
+    targetId: 'alpha',
+  },
+  {
+    userId: 'user-7',
+    sessionId: 'session-9',
+  },
+)
 
-logger
-  .child({ requestId: 'page-1', requestPath: '/targets/alpha', userId: 'user-7' })
-  .info('Public summary viewed', { source: 'share-card' })
+pageLogger.info('Public summary viewed', { source: 'share-card' })
 ```
+
+## Integration Direction
+
+This package should be evaluated together with automatic correlation propagation, not as a raw logging primitive used directly everywhere.
+
+- API: create the request correlation context at ingress, then expose a request-scoped logger from a Nest interceptor or an AsyncLocalStorage-backed logging boundary.
+- Web: create the page or session correlation context at navigation or bootstrap boundaries, then expose a page-scoped logger from app context rather than asking each component to pass `requestId` manually.
+- Application code: log business events with event-specific fields only. Stable request, user, route, and session context should already be bound before the log call happens.
