@@ -2,7 +2,9 @@
 
 This document captures the output of issue #77.
 
-Its purpose is to define the first layer-by-layer responsibility model for preventing, detecting, and recovering from the web safety concerns identified in issue #76 before feature implementation expands on top of issue #22.
+Its purpose is to define the first layer-by-layer responsibility model for preventing, detecting, and recovering from the web safety concerns identified in the web accident inventory from issue #76 before feature implementation expands on top of issue #22.
+
+It builds on [docs/platform/web-accident-pattern-inventory.md](web-accident-pattern-inventory.md), which defines the accident classes, control posture, and follow-up issue seeds that this responsibility model allocates across layers.
 
 ## Scope
 
@@ -255,6 +257,8 @@ This layer should not be allowed to re-enable dangerous actions or override a mu
 Issue #73 owns the shared error vocabulary and typed error surfaces.
 
 Issue #74 owns the web-specific response policy, such as when to redirect, when to keep context, and when to show inline recovery.
+
+That policy is captured in [docs/platform/web-error-handling-policy.md](web-error-handling-policy.md).
 
 This document sits between them by deciding which web safety controls depend on shared types, which depend on runtime policy, and which must be enforced by helper entry points or tests.
 

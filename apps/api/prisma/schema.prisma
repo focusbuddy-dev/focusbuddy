@@ -1,0 +1,122 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum TargetSourceType {
+  FREE_FORM
+  URL
+}
+
+enum SessionVisibility {
+  PRIVATE
+  PUBLIC
+}
+
+enum NoteVisibility {
+  PRIVATE
+  PUBLIC
+}
+
+enum StampType {
+  HELPFUL
+}
+
+enum StampActorType {
+  AUTHENTICATED_USER
+  ANONYMOUS_VISITOR
+}
+
+model User {
+  id          String   @id @default(cuid())
+  firebaseUid String   @unique
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  targets     FocusTarget[]
+  actorStamps Stamp[]       @relation("StampActorUser")
+}
+
+model FocusTarget {
+  id                   String           @id @default(cuid())
+  ownerUserId          String
+  title                String
+  sourceType           TargetSourceType
+  sourceUrl            String?
+  genre                String?
+  publicSummaryEnabled Boolean          @default(false)
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+
+  owner         User           @relation(fields: [ownerUserId], references: [id], onDelete: Cascade)
+  sessions      FocusSession[]
+  resumeSources ResumeSource[]
+  stamps        Stamp[]
+
+  @@index([ownerUserId, updatedAt])
+  @@index([ownerUserId, publicSummaryEnabled])
+  @@index([publicSummaryEnabled, updatedAt])
+}
+
+model FocusSession {
+  id              String            @id @default(cuid())
+  targetId        String
+  visibility      SessionVisibility @default(PRIVATE)
+  note            String?           @db.Text
+  noteVisibility  NoteVisibility?
+  completedByUser Boolean           @default(false)
+  startedAt       DateTime
+  endedAt         DateTime?
+  durationSeconds Int?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  target           FocusTarget    @relation(fields: [targetId], references: [id], onDelete: Cascade)
+  startedResume    ResumeSource?  @relation("StartedSession")
+  previousForStart ResumeSource[] @relation("PreviousSession")
+
+  @@index([targetId, startedAt])
+  @@index([targetId, visibility, startedAt])
+  @@index([targetId, visibility, endedAt])
+}
+
+model ResumeSource {
+  id                String   @id @default(cuid())
+  targetId          String
+  startedSessionId  String   @unique
+  previousSessionId String
+  isEffective       Boolean  @default(true)
+  invalidatedAt     DateTime?
+  invalidationNote  String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  target          FocusTarget  @relation(fields: [targetId], references: [id], onDelete: Cascade)
+  startedSession  FocusSession @relation("StartedSession", fields: [startedSessionId], references: [id], onDelete: Cascade)
+  previousSession FocusSession @relation("PreviousSession", fields: [previousSessionId], references: [id], onDelete: Restrict)
+
+  @@index([targetId, isEffective, createdAt])
+  @@index([previousSessionId])
+}
+
+model Stamp {
+  id          String        @id @default(cuid())
+  targetId    String
+  actorType   StampActorType
+  actorKey    String
+  actorUserId String?
+  stampType   StampType     @default(HELPFUL)
+  isEffective Boolean       @default(true)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  target    FocusTarget @relation(fields: [targetId], references: [id], onDelete: Cascade)
+  actorUser User?       @relation("StampActorUser", fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  @@unique([targetId, actorType, actorKey, stampType])
+  @@index([targetId, isEffective, stampType])
+  @@index([actorUserId])
+}

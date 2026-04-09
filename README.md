@@ -24,11 +24,15 @@ Dev container setup details are documented in [.devcontainer/README.md](.devcont
 
 The Docker-based local development environment is documented in [docs/platform/local-development.md](docs/platform/local-development.md).
 
+The supported local execution modes and env contract are documented in [docs/platform/local-execution-modes.md](docs/platform/local-execution-modes.md).
+
 ### Commit Message Tooling Demo
 
 This repository includes a small commitlint demo for Issue #14.
 
 Initial setup is wrapped in the Justfile recipe below. `pnpm` is the only supported package manager for this repository. The setup installs the local tooling from `pnpm-lock.yaml` without changing the lockfile, configures the `commit-msg` hook, and runs the commitlint verification steps.
+
+`npm install` is rejected by the repository configuration on supported npm versions before dependency resolution starts, so setup mistakes fail fast with an explicit package-manager error instead of drifting into npm-specific install behavior.
 
 Inside the dev container, `just` is installed automatically. If you work outside the dev container, install `just` before running repository tasks.
 
@@ -112,6 +116,9 @@ Issue #51 adds a first local Docker development baseline with:
 
 ## Design Notes
 
+- The first web error handling policy note is available at [docs/platform/web-error-handling-policy.md](docs/platform/web-error-handling-policy.md).
+- The first shared API and domain error model note is available at [docs/domain/mvp-api-error-model.md](docs/domain/mvp-api-error-model.md).
+- The first web accident pattern inventory is available at [docs/platform/web-accident-pattern-inventory.md](docs/platform/web-accident-pattern-inventory.md).
 - The first public-safe domain design note is available at [docs/domain/mvp-domain-model.md](docs/domain/mvp-domain-model.md).
 - The first web safety control responsibility note is available at [docs/platform/web-safety-control-responsibilities.md](docs/platform/web-safety-control-responsibilities.md).
 - The first transport-level request rejection policy note is available at [docs/platform/transport-level-request-rejection-policy.md](docs/platform/transport-level-request-rejection-policy.md).

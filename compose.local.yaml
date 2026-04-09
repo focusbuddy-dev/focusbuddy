@@ -26,7 +26,7 @@ services:
       PORT: 9099
       FOCUSBUDDY_AUTH_MODE: ${FOCUSBUDDY_AUTH_MODE:-stub}
     volumes:
-      - .:/workspace
+      - ${FOCUSBUDDY_WORKSPACE_MOUNT:-.}:/workspace
     ports:
       - '${AUTH_PORT:-9099}:9099'
     healthcheck:
@@ -46,14 +46,14 @@ services:
       context: .
       dockerfile: docker/local/node-dev.Dockerfile
     working_dir: /workspace
-    command: ['node', 'scripts/local-dev/placeholder-service.mjs', 'api']
+    command: ['pnpm', '--filter', '@focusbuddy/api', 'dev']
     environment:
       PORT: 3001
       DATABASE_URL: postgres://${POSTGRES_USER:-focusbuddy}:${POSTGRES_PASSWORD:-focusbuddy}@postgres:5432/${POSTGRES_DB:-focusbuddy}
       FOCUSBUDDY_AUTH_MODE: ${FOCUSBUDDY_AUTH_MODE:-stub}
       FOCUSBUDDY_AUTH_BASE_URL: http://auth:9099
     volumes:
-      - .:/workspace
+      - ${FOCUSBUDDY_WORKSPACE_MOUNT:-.}:/workspace
     ports:
       - '${API_PORT:-3001}:3001'
     depends_on:
@@ -78,14 +78,15 @@ services:
       context: .
       dockerfile: docker/local/node-dev.Dockerfile
     working_dir: /workspace
-    command: ['node', 'scripts/local-dev/placeholder-service.mjs', 'web']
+    command: ['pnpm', '--filter', '@focusbuddy/web', 'dev:compose']
     environment:
       PORT: 3000
       FOCUSBUDDY_API_BASE_URL: http://api:3001
+      NEXT_PUBLIC_FOCUSBUDDY_API_BASE_URL: http://localhost:${API_PORT:-3001}
       FOCUSBUDDY_AUTH_MODE: ${FOCUSBUDDY_AUTH_MODE:-stub}
       FOCUSBUDDY_AUTH_BASE_URL: http://auth:9099
     volumes:
-      - .:/workspace
+      - ${FOCUSBUDDY_WORKSPACE_MOUNT:-.}:/workspace
     ports:
       - '${WEB_PORT:-3000}:3000'
     depends_on:

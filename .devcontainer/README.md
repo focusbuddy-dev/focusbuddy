@@ -48,6 +48,15 @@ The dev container automates two bootstrap steps:
 - `postCreateCommand` prepares the pinned `pnpm` version from `package.json` and installs `just`
 - `postStartCommand` configures Git SSH signing on container start via [setup-git-signing.sh](setup-git-signing.sh)
 
+It also preinstalls the VS Code extensions used directly by this repository:
+
+- ESLint
+- Prettier
+- GraphQL
+- Prisma
+- Jest
+- Stylelint
+
 Repository dependency installation is intentionally left out of `postCreateCommand` and stays in the explicit `just commitlint-setup` flow.
 
 The signing script does the following:
@@ -58,23 +67,53 @@ The signing script does the following:
 
 This avoids pointing Git at a host-only path such as `/Users/...`, which does not exist inside the container.
 
+## Working With Issue Worktrees
+
+This repository uses issue-specific git worktrees under `.worktrees/` for implementation work.
+
+The dev container keeps the in-container path stable by explicitly binding the opened folder to `/workspaces/focusbuddy` while still forwarding the host-side path through `FOCUSBUDDY_WORKSPACE_MOUNT`.
+
+That means an issue worktree such as `.worktrees/issue-102` can be opened and rebuilt directly, while repository scripts inside the container continue to see the workspace at `/workspaces/focusbuddy`.
+
+Recommended flow for validating `.devcontainer` changes from a worktree:
+
+1. open the target issue worktree folder in its own VS Code window
+2. rebuild or reopen the dev container from that worktree window
+3. run the verification commands in this document inside the container
+
+Expected behavior:
+
+- the issue worktree is mounted to `/workspaces/focusbuddy` inside the container
+- `printenv FOCUSBUDDY_WORKSPACE_MOUNT` still reports the host-side worktree path
+- existing repository scripts that assume `/workspaces/focusbuddy` continue to work
+
+Do not validate mount behavior from the main workspace window when the target change is intended for a worktree. Open the worktree itself.
+
 ## Host Requirements
 
 Before opening the repository in the dev container, make sure the host machine already has working SSH access to GitHub.
+
+The dev container now uses Docker outside of Docker for repository tasks such as `just local-up`.
+That means Docker must be installed and running on the host machine before the container is rebuilt.
+It also forwards the host workspace path into `FOCUSBUDDY_WORKSPACE_MOUNT` so `docker compose`
+bind mounts target the host filesystem rather than the container-only `/workspaces/...` path.
 
 Recommended checks on the host:
 
 ```bash
 ssh -T git@github.com
 ssh-add -L
+docker version
 ```
 
 Expected results:
 
 - `ssh -T git@github.com` confirms GitHub SSH authentication works
 - `ssh-add -L` prints at least one public key
+- `docker version` succeeds on the host
 
 If `ssh-add -L` returns no identities, commit signing inside the container will not be configured.
+If `docker version` fails on the host, Docker-based local development commands will not work from inside the dev container.
 
 ## Git Commit Signing
 
@@ -179,7 +218,10 @@ Run these checks inside the container:
 
 ```bash
 printenv GH_TOKEN | wc -c
+printenv FOCUSBUDDY_WORKSPACE_MOUNT
 gh auth status
+docker version
+docker compose version
 git config --get user.signingkey
 git log --show-signature -1
 ```
@@ -187,7 +229,10 @@ git log --show-signature -1
 Expected behavior:
 
 - `printenv GH_TOKEN | wc -c` returns more than `1`
+- `printenv FOCUSBUDDY_WORKSPACE_MOUNT` prints the host machine's repository path
 - `gh auth status` succeeds without running `gh auth login`
+- `docker version` shows Docker client and server information
+- `docker compose version` succeeds
 - `git config --get user.signingkey` returns the container-local key path
 - `git log --show-signature -1` shows the commit signature
 
@@ -209,6 +254,41 @@ Recommended recovery steps:
 On macOS, `launchctl getenv GH_TOKEN` is a useful check.
 
 On Windows PowerShell, use `echo $env:GH_TOKEN`.
+
+### `docker: command not found` from `just local-up`
+
+That usually means the dev container was created without Docker outside of Docker support.
+
+Recommended recovery steps:
+
+1. confirm `.devcontainer/devcontainer.json` includes `ghcr.io/devcontainers/features/docker-outside-of-docker:1`
+2. make sure Docker is installed and running on the host machine
+3. rebuild the dev container
+4. rerun `docker version` and `docker compose version` inside the container
+
+If `docker version` works on the host but not in the container after rebuild, the container likely did not pick up the updated feature configuration.
+
+### `docker info` fails inside the dev container
+
+That means the Docker CLI is present, but the host Docker engine is not reachable from the container.
+
+Recommended recovery steps:
+
+1. start Docker on the host machine
+2. rebuild or reopen the dev container
+3. rerun `docker version` and `docker compose version` inside the container
+
+### `Mounts denied` mentions `/workspaces/...` during `just local-up`
+
+That means `docker compose` is still trying to bind mount the container path instead of the
+host workspace path.
+
+Recommended recovery steps:
+
+1. make sure `.devcontainer/devcontainer.json` includes `FOCUSBUDDY_WORKSPACE_MOUNT` under `remoteEnv`
+2. rebuild the dev container so the new environment variable is injected
+3. verify `printenv FOCUSBUDDY_WORKSPACE_MOUNT` shows the host repository path
+4. rerun `just local-up`
 
 ### `git commit` fails with a host path under `/Users/...`
 

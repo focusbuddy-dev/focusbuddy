@@ -2,11 +2,14 @@
   "name": "focusbuddy",
   "image": "mcr.microsoft.com/devcontainers/typescript-node:24-bookworm",
   "features": {
-    "ghcr.io/devcontainers/features/github-cli:1": {}
+    "ghcr.io/devcontainers/features/github-cli:1": {},
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {}
   },
   "remoteEnv": {
-    "GH_TOKEN": "${localEnv:GH_TOKEN}"
+    "GH_TOKEN": "${localEnv:GH_TOKEN}",
+    "FOCUSBUDDY_WORKSPACE_MOUNT": "${localWorkspaceFolder}"
   },
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/focusbuddy,type=bind",
   "workspaceFolder": "/workspaces/focusbuddy",
   "customizations": {
     "vscode": {
@@ -14,7 +17,14 @@
         "js/ts.tsdk.path": "node_modules/typescript/lib",
         "editor.formatOnSave": true
       },
-      "extensions": ["dbaeumer.vscode-eslint", "esbenp.prettier-vscode", "graphql.vscode-graphql"]
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "graphql.vscode-graphql",
+        "prisma.prisma",
+        "orta.vscode-jest",
+        "stylelint.vscode-stylelint"
+      ]
     }
   },
   "postCreateCommand": "bash .devcontainer/post-create.sh",

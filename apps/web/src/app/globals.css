@@ -1,0 +1,32 @@
+:root {
+  --canvas: #f4efe6;
+  --ink: #14213d;
+  --muted: #56627a;
+  --card: rgb(255 255 255 / 78%);
+  --line: rgb(20 33 61 / 12%);
+  --accent: #ff6b35;
+  --accent-soft: rgb(255 107 53 / 16%);
+  --shadow: 0 24px 80px rgb(20 33 61 / 14%);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background:
+    radial-gradient(circle at top left, rgb(255 107 53 / 22%), transparent 34%),
+    radial-gradient(circle at bottom right, rgb(20 33 61 / 16%), transparent 30%),
+    var(--canvas);
+}
+
+body {
+  color: var(--ink);
+  font-family: 'Avenir Next', 'Segoe UI', sans-serif;
+  margin: 0;
+  min-height: 100vh;
+}
+
+a {
+  color: inherit;
+}

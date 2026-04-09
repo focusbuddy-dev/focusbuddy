@@ -4,6 +4,8 @@ This document captures the output of issue #51.
 
 Its purpose is to define the first Docker-based local development environment for FocusBuddy.
 
+For the current repository policy on supported local execution modes, see [local-execution-modes.md](./local-execution-modes.md).
+
 ## Scope
 
 This document defines:
@@ -26,9 +28,11 @@ The compose file currently starts four services:
 - `api` for the API runtime container
 - `web` for the web runtime container
 
-The current `api` and `web` containers intentionally run placeholder runtime scripts because issues #21 and #22 have not implemented the real applications yet.
+Issue #21 replaces the API placeholder with the real NestJS runtime while keeping the same local port and environment variable wiring.
 
-This keeps the local orchestration, ports, health checks, and runtime assumptions testable now without pretending that the API or web app already exist.
+Issue #22 creates the real Next.js web baseline under `apps/web`, and issue #106 wires that baseline into the local Docker Compose `web` service.
+
+This keeps the local orchestration, ports, health checks, and runtime assumptions testable while aligning the local stack with the current real API and web baselines.
 
 ## Service roles
 
@@ -48,13 +52,15 @@ This keeps the local orchestration, ports, health checks, and runtime assumption
 
 - uses the shared local Node development image
 - receives `DATABASE_URL`, auth mode, and auth base URL through environment variables
-- will later be replaced by the real NestJS runtime in issue #21
+- now runs the first NestJS API baseline from issue #21
+- exposes `/health` so the compose health check can validate both NestJS startup and PostgreSQL connectivity
 
 ### `web`
 
 - uses the shared local Node development image
+- runs the real Next.js baseline created in issue #22 and wired into local compose by issue #106
 - receives API base URL and auth-related settings through environment variables
-- will later be replaced by the real Next.js runtime in issue #22
+- exposes `/health` so the compose health check can validate that the web runtime is reachable after startup
 
 ## Shared local image
 
@@ -96,12 +102,14 @@ The local compose stack currently expects these categories of values:
 - PostgreSQL database name, user, password, and host port
 - host port mappings for API, web, and auth
 - local auth mode
+- a browser-visible API base URL for the Next.js web runtime
 
 Follow-up implementation issues should continue this rule:
 
 - keep secrets out of tracked files
 - keep tracked examples minimal and local-development-oriented
 - pass runtime values to containers through compose environment settings rather than hidden machine-specific shell state
+- distinguish between container-internal service URLs and browser-visible URLs when wiring frontend runtime variables
 
 ## Developer flow
 
@@ -117,10 +125,14 @@ The helper scripts live under [scripts/local-dev](../../scripts/local-dev).
 Expected local flow:
 
 1. copy [.env.example](../../.env.example) to a local `.env` file if overrides are needed
-2. run `just local-up`
-3. inspect logs with `just local-logs`
-4. connect to PostgreSQL with `just local-psql` when needed
-5. stop the stack with `just local-down`
+2. If you are working inside the dev container, rebuild it with Docker outside of Docker support enabled
+3. Make sure Docker is installed and running on the host machine
+4. run `just local-up`
+5. inspect logs with `just local-logs`
+6. connect to PostgreSQL with `just local-psql` when needed
+7. stop the stack with `just local-down`
+
+This flow is the current `fast compose` lane. It is the default full-stack local workflow for this repository.
 
 ## Relationship to the dev container
 
@@ -131,28 +143,37 @@ The dev container and the local Docker compose stack solve different problems.
 
 They should stay compatible, but they are not the same layer.
 
+When the repository dev container is rebuilt with Docker outside of Docker enabled, Docker commands run inside the dev container use the host machine's Docker engine rather than a separate Docker daemon inside the container.
+
+This means the local compose workflow can be started from inside the dev container, but it still depends on Docker being installed and running on the host machine.
+
+The compose file also needs bind mounts to resolve against the host filesystem, not the container-only `/workspaces/...` path. The dev container handles that by forwarding the host repository path through `FOCUSBUDDY_WORKSPACE_MOUNT`, which the compose file uses as the bind mount source when available.
+
 ## Current differences from deployed runtime
 
 The first local stack intentionally differs from production in these ways:
 
 - PostgreSQL is local Docker PostgreSQL, not Cloud SQL
 - auth is a local stub for now, not real Firebase Auth or a full emulator setup yet
-- web and API are placeholder runtime services until their app issues land
+- web now serves the current Next.js baseline, but feature UI remains intentionally minimal after issue #22
 - there is no Secret Manager or Cloud Run wiring in the local stack
 
 These differences are acceptable for the current stage because the goal is to make the local workflow explicit and reproducible before full app implementation begins.
+
+For the distinction between the default `fast compose` path, the future `parity compose` path, and host-side auxiliary startup, see [local-execution-modes.md](./local-execution-modes.md).
 
 ## Handoff to follow-up issues
 
 ### For #21
 
-- replace the API placeholder command with the real NestJS app runtime
-- reuse the current `DATABASE_URL` and auth environment pattern where practical
+- extend the real NestJS API baseline with feature modules and real endpoints
+- keep the current `DATABASE_URL` and auth environment pattern where practical
 
-### For #22
+### For #22 and #106
 
-- replace the web placeholder command with the real Next.js app runtime
-- reuse the current API base URL and auth environment pattern where practical
+- issue #22 established the Next.js web baseline only
+- issue #106 connects that baseline to the local Docker Compose `web` runtime
+- follow-up web issues should build on the real local compose runtime rather than reintroducing the placeholder service
 
 ### For #30
 
