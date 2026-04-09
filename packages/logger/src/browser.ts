@@ -1,4 +1,4 @@
-import { createLogger, type LogEntry, type Logger, type LoggerContext } from './logger'
+import { createLogger, type LogEntry, type Logger, type LoggerContext } from './logger.js'
 
 export type BrowserConsole = {
   debug: (...args: unknown[]) => void

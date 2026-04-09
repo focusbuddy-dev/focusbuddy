@@ -1,6 +1,6 @@
 import pino, { type LevelWithSilent, type Logger as PinoLogger, type LoggerOptions } from 'pino'
 
-import { createLogger, type LogEntry, type Logger, type LoggerContext } from './logger'
+import { createLogger, type LogEntry, type Logger, type LoggerContext } from './logger.js'
 
 export type ServerLoggerOptions = {
   context?: LoggerContext

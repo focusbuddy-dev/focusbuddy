@@ -1,25 +1,70 @@
-import { createLogger, type LogEntry } from '@focusbuddy/logger'
+jest.mock('@focusbuddy/logger/server', () => {
+  const noOpLogger = {
+    child() {
+      return noOpLogger
+    },
+    info() {},
+  }
+
+  return {
+    createServerLogger: () => noOpLogger,
+  }
+})
 
 import {
   createApiRequestLogger,
   logApiRequestHandled,
 } from '../src/logging/api-request-logger.example'
 
+type RecordedEntry = {
+  level: 'info'
+  message: string
+  context: Record<string, unknown>
+  timestamp?: string
+}
+
+type TestLogger = {
+  child: (context?: Record<string, unknown>) => TestLogger
+  info: (message: string, context?: Record<string, unknown>) => void
+}
+
+function mergeContext(
+  baseContext: Record<string, unknown>,
+  nextContext?: Record<string, unknown>,
+): Record<string, unknown> {
+  return Object.fromEntries(
+    Object.entries({
+      ...baseContext,
+      ...(nextContext ?? {}),
+    }).filter(([, value]) => value !== undefined),
+  )
+}
+
+function createTestLogger(
+  writes: RecordedEntry[],
+  baseContext: Record<string, unknown> = {},
+  timestamp?: string,
+): TestLogger {
+  return {
+    child(context) {
+      return createTestLogger(writes, mergeContext(baseContext, context), timestamp)
+    },
+    info(message, context) {
+      writes.push({
+        level: 'info',
+        message,
+        context: mergeContext(baseContext, context),
+        ...(timestamp ? { timestamp } : {}),
+      })
+    },
+  }
+}
+
 describe('api request logger example', () => {
   it('carries request and user context into one shared facade', () => {
-    const writes: LogEntry[] = []
+    const writes: RecordedEntry[] = []
 
-    const baseLogger = createLogger({
-      adapter: {
-        write(entry) {
-          writes.push(entry)
-        },
-      },
-      context: {
-        service: 'api-test',
-      },
-      now: () => new Date('2026-04-09T10:30:00.000Z'),
-    })
+    const baseLogger = createTestLogger(writes, { service: 'api-test' }, '2026-04-09T10:30:00.000Z')
 
     const requestLogger = createApiRequestLogger(
       {
@@ -57,18 +102,9 @@ describe('api request logger example', () => {
   })
 
   it('logs handled requests with the shared facade shape', () => {
-    const writes: LogEntry[] = []
+    const writes: RecordedEntry[] = []
 
-    const baseLogger = createLogger({
-      adapter: {
-        write(entry) {
-          writes.push(entry)
-        },
-      },
-      context: {
-        service: 'api-test',
-      },
-    })
+    const baseLogger = createTestLogger(writes, { service: 'api-test' })
 
     logApiRequestHandled(
       {
