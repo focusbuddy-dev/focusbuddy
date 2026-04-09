@@ -19,6 +19,7 @@ const apiRequestHandledEvent = defineEvent<{ statusCode: number }>({
 
 type ApiRequestContext = RequestLogContext & {
   route: string
+  traceId?: string
 }
 
 type ApiUserContext = UserLogContext & {

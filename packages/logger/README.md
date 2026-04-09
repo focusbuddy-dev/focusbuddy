@@ -18,6 +18,11 @@ The logging stack is intentionally split so API and Web follow the same shape.
 - App-local wrappers: bind stable request or page context once, then emit named events
 - Framework boundaries: middleware, interceptor, AsyncLocalStorage, or page context propagate correlation fields
 
+The current repository now uses those boundaries directly.
+
+- API runtime integration: [apps/api/src/logging/api-request-logging.interceptor.ts](apps/api/src/logging/api-request-logging.interceptor.ts)
+- Web runtime integration: [apps/web/src/middleware.ts](apps/web/src/middleware.ts)
+
 The important alignment point is that API and Web now differ only at the sink boundary.
 
 - API sink: `pino` owned by the API app
@@ -149,6 +154,13 @@ Next.js middleware should create and propagate correlation fields before page co
 - Use `prepareNextMiddlewareLogger()` from [apps/web/src/lib/logging/next-middleware-logger.ts](apps/web/src/lib/logging/next-middleware-logger.ts) to reuse or mint `requestId` and `traceId`.
 - Forward the generated headers through the request and response boundaries.
 - Build a middleware-scoped event logger with `application: 'focusbuddy-web'` and `layer: 'middleware'`.
+
+## Current Integration
+
+To prove the design is usable in the current codebase, logging is wired into the actual runtime entry points.
+
+- API: [apps/api/src/main.ts](apps/api/src/main.ts) registers [apps/api/src/logging/api-request-logging.interceptor.ts](apps/api/src/logging/api-request-logging.interceptor.ts), which binds correlation headers and emits `API_REQUEST_001` for real HTTP requests.
+- Web: [apps/web/src/middleware.ts](apps/web/src/middleware.ts) uses [apps/web/src/lib/logging/next-middleware-logger.ts](apps/web/src/lib/logging/next-middleware-logger.ts) to propagate correlation headers and emit `WEB_MIDDLEWARE_001` for real Next.js middleware execution.
 
 This package should therefore be evaluated together with automatic correlation propagation, not as a raw logging primitive used directly everywhere.
 

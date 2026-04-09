@@ -1,9 +1,14 @@
-import { createEventLogger, type EventLogger, type Logger } from '@focusbuddy/logger'
+import {
+  createEventLogger,
+  focusbuddyRequestIdHeader,
+  focusbuddyTraceIdHeader,
+  type EventLogger,
+  type Logger,
+} from '@focusbuddy/logger'
 import { createWebRuntimeLogger } from './web-runtime-logger'
 import type { NextRequest } from 'next/server'
 
-export const focusbuddyRequestIdHeader = 'x-focusbuddy-request-id'
-export const focusbuddyTraceIdHeader = 'x-focusbuddy-trace-id'
+export { focusbuddyRequestIdHeader, focusbuddyTraceIdHeader } from '@focusbuddy/logger'
 
 type MiddlewareRequestLike = Pick<NextRequest, 'headers' | 'method'> & {
   nextUrl: {
