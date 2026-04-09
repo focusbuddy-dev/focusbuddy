@@ -6,7 +6,7 @@
   "scripts": {
     "build": "pnpm contract:build && pnpm prisma:generate && pnpm --dir ../.. exec tsc --project apps/api/tsconfig.build.json",
     "contract:build": "pnpm --dir ../.. --filter @focusbuddy/api-contract build",
-    "dev": "pnpm contract:build && pnpm prisma:generate && pnpm --dir ../.. exec ts-node apps/api/src/main.ts",
+    "dev": "pnpm contract:build && pnpm prisma:generate && pnpm exec nest start --watch",
     "lint": "pnpm --dir ../.. exec oxlint apps/api/src apps/api/test apps/api/prisma",
     "prisma:generate": "prisma generate --config prisma.config.ts",
     "prisma:migrate:dev": "prisma migrate dev --config prisma.config.ts",
@@ -27,6 +27,7 @@
     "rxjs": "^7.8.2"
   },
   "devDependencies": {
+    "@nestjs/cli": "^11.0.18",
     "@nestjs/testing": "^11.1.18",
     "@types/jest": "^30.0.0",
     "@types/node": "^25.5.2",
