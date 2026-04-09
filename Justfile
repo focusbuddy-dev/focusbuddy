@@ -20,6 +20,10 @@ install:
 schema name:
     bash scripts/local-dev/schema.sh {{name}}
 
+# Regenerate OpenAPI contract outputs and restart running app services.
+contract:
+    bash scripts/local-dev/contract.sh
+
 # Format the repository with the shared Prettier config.
 format:
     pnpm format
