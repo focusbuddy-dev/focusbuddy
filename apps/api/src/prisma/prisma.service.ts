@@ -2,12 +2,12 @@ import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '@prisma/client';
 
-function createPrismaClientOptions(): ConstructorParameters<typeof PrismaClient>[0] {
-  const connectionString = process.env.DATABASE_URL;
+import { getRequiredDatabaseUrl, loadLocalRuntimeEnv } from '../config/local-runtime-env';
 
-  if (!connectionString) {
-    throw new Error('DATABASE_URL is required to initialize PrismaClient.');
-  }
+function createPrismaClientOptions(): ConstructorParameters<typeof PrismaClient>[0] {
+  loadLocalRuntimeEnv();
+
+  const connectionString = getRequiredDatabaseUrl('API runtime');
 
   return {
     adapter: new PrismaPg({ connectionString }),

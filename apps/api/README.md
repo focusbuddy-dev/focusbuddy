@@ -5,7 +5,7 @@ This workspace now contains the first NestJS API baseline for issue #21.
 ## Current responsibilities
 
 - bootstrap the NestJS runtime on the local API port
-- connect Prisma to PostgreSQL through `DATABASE_URL`
+- connect Prisma to PostgreSQL through the local startup contract, using explicit `DATABASE_URL` or deriving it from tracked local PostgreSQL inputs for host-side startup
 - keep Prisma models separate from generated API contract models through explicit mapper functions
 - expose a `/health` endpoint for local runtime and compose health checks
 
