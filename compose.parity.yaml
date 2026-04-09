@@ -1,0 +1,16 @@
+services:
+  api:
+    command: ['pnpm', '--filter', '@focusbuddy/api', 'parity']
+    environment:
+      NODE_ENV: production
+    healthcheck:
+      start_period: 60s
+      retries: 12
+
+  web:
+    command: ['pnpm', '--filter', '@focusbuddy/web', 'parity']
+    environment:
+      NODE_ENV: production
+    healthcheck:
+      start_period: 60s
+      retries: 12

@@ -40,13 +40,25 @@ generate:
 dev:
     bash scripts/local-dev/up.sh
 
+# Start the parity compose validation path with built runtimes and health waits.
+parity:
+    bash scripts/local-dev/parity-up.sh
+
 # Stop the default fast compose local development path.
 dev-down:
     bash scripts/local-dev/down.sh
 
+# Stop the parity compose validation path.
+parity-down:
+    bash scripts/local-dev/parity-down.sh
+
 # Show logs from the default fast compose local development path.
 dev-logs service="":
     bash scripts/local-dev/logs.sh {{service}}
+
+# Show logs from the parity compose validation path.
+parity-logs service="":
+    bash scripts/local-dev/parity-logs.sh {{service}}
 
 # Show logs from only the currently running fast compose services.
 dev-logs-running:
