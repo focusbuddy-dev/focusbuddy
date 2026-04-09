@@ -26,7 +26,7 @@ jest.mock('@focusbuddy/logger', () => {
   }
 })
 
-jest.mock('@focusbuddy/logger/server', () => {
+jest.mock('../src/logging/api-runtime-logger', () => {
   const noOpLogger = {
     child() {
       return noOpLogger
@@ -35,7 +35,7 @@ jest.mock('@focusbuddy/logger/server', () => {
   }
 
   return {
-    createServerLogger: () => noOpLogger,
+    apiRuntimeLogger: noOpLogger,
   }
 })
 

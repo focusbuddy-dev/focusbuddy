@@ -5,9 +5,9 @@ import {
   type RequestLogContext,
   type UserLogContext,
 } from '@focusbuddy/logger'
-import { createServerLogger } from '@focusbuddy/logger/server'
+import { apiRuntimeLogger } from './api-runtime-logger'
 
-const apiLogger = createServerLogger()
+const apiLogger = apiRuntimeLogger
 
 const apiRequestHandledEvent = defineEvent<{ statusCode: number }>({
   logId: 'API_REQUEST_001',

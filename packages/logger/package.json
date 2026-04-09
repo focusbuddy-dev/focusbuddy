@@ -33,16 +33,7 @@
     "test": "pnpm build && node --test ./test/logger.test.mjs",
     "typecheck": "pnpm --dir ../.. exec tsc --project packages/logger/tsconfig.json --noEmit"
   },
-  "peerDependencies": {
-    "pino": "^10.3.1"
-  },
-  "peerDependenciesMeta": {
-    "pino": {
-      "optional": true
-    }
-  },
   "devDependencies": {
-    "@types/node": "^25.5.2",
-    "pino": "^10.3.1"
+    "@types/node": "^25.5.2"
   }
 }

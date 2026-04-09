@@ -1,5 +1,3 @@
-import pino, { type LevelWithSilent, type Logger as PinoLogger, type LoggerOptions } from 'pino'
-
 import {
   createLogger,
   type FactoryLoggerContext,
@@ -8,19 +6,26 @@ import {
   type LoggerRuntime,
 } from './logger.js'
 
+export type ServerLogWriter = {
+  trace: (bindings: Record<string, unknown>, message: string) => void
+  debug: (bindings: Record<string, unknown>, message: string) => void
+  info: (bindings: Record<string, unknown>, message: string) => void
+  warn: (bindings: Record<string, unknown>, message: string) => void
+  error: (bindings: Record<string, unknown>, message: string) => void
+  fatal: (bindings: Record<string, unknown>, message: string) => void
+}
+
 export type ServerLoggerOptions = {
   context?: FactoryLoggerContext
-  level?: LevelWithSilent
-  logger?: PinoLogger
-  pinoOptions?: LoggerOptions
+  logger: ServerLogWriter
   runtime?: LoggerRuntime
 }
 
 const DEFAULT_SERVER_RUNTIME: LoggerRuntime = 'api'
 
-type PinoWrite = (bindings: Record<string, unknown>, message: string) => void
+type ServerWrite = (bindings: Record<string, unknown>, message: string) => void
 
-function resolvePinoWrite(target: PinoLogger, level: LogEntry['level']): PinoWrite {
+function resolveServerWrite(target: ServerLogWriter, level: LogEntry['level']): ServerWrite {
   switch (level) {
     case 'trace':
       return target.trace.bind(target)
@@ -37,14 +42,7 @@ function resolvePinoWrite(target: PinoLogger, level: LogEntry['level']): PinoWri
   }
 }
 
-export function createServerLogger(options: ServerLoggerOptions = {}): Logger {
-  const targetLogger =
-    options.logger ??
-    pino({
-      ...options.pinoOptions,
-      level: options.level ?? options.pinoOptions?.level ?? 'info',
-    })
-
+export function createServerLogger(options: ServerLoggerOptions): Logger {
   return createLogger({
     context: {
       runtime: options.runtime ?? DEFAULT_SERVER_RUNTIME,
@@ -76,7 +74,7 @@ export function createServerLogger(options: ServerLoggerOptions = {}): Logger {
           payload.error = entry.error
         }
 
-        resolvePinoWrite(targetLogger, entry.level)(payload, entry.message)
+        resolveServerWrite(options.logger, entry.level)(payload, entry.message)
       },
     },
   })

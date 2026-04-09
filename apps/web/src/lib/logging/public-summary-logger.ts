@@ -5,9 +5,9 @@ import {
   type RequestLogContext,
   type UserLogContext,
 } from '@focusbuddy/logger'
-import { createBrowserLogger } from '@focusbuddy/logger/browser'
+import { webRuntimeLogger } from './web-runtime-logger'
 
-const webLogger = createBrowserLogger()
+const webLogger = webRuntimeLogger
 
 const publicSummaryViewedEvent = defineEvent<{ source: 'landing' | 'search' | 'share-card' }>({
   logId: 'PUBLIC_SUMMARY_001',
