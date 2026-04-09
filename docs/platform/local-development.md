@@ -111,6 +111,15 @@ Follow-up implementation issues should continue this rule:
 - pass runtime values to containers through compose environment settings rather than hidden machine-specific shell state
 - distinguish between container-internal service URLs and browser-visible URLs when wiring frontend runtime variables
 
+For API local startup, the runtime contract is:
+
+- load `.env` before local runtime validation
+- honor an explicit `DATABASE_URL` when one is already provided
+- derive a localhost PostgreSQL connection string from tracked `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, and optional `POSTGRES_PORT` when `DATABASE_URL` is absent
+- fail fast with an actionable startup error when neither an explicit nor a derivable local database connection is available
+
+This keeps the tracked local PostgreSQL inputs as the source of configuration categories while still allowing Compose and host-side auxiliary startup to resolve different final runtime addresses.
+
 ## Developer flow
 
 The repository exposes these local development helpers:
