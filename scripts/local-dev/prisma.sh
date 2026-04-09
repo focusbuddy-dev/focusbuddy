@@ -2,7 +2,7 @@
 set -euo pipefail
 
 if [[ $# -ne 1 ]]; then
-  echo "Usage: just schema <migration-name>"
+  echo "Usage: just prisma <migration-name>"
   exit 1
 fi
 

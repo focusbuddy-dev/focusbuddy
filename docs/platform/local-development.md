@@ -126,8 +126,8 @@ This keeps the tracked local PostgreSQL inputs as the source of configuration ca
 The repository exposes these local development helpers:
 
 - `just install`
-- `just contract`
-- `just schema <migration-name>`
+- `just openapi`
+- `just prisma <migration-name>`
 - `just dev`
 - `just dev-down`
 - `just dev-logs`
@@ -142,9 +142,9 @@ Re-running `just dev` while the stack is already up restarts the development-ori
 
 When you need to update workspace dependencies, run `just install`. It executes `pnpm install` from the repository root and then restarts the currently running app services so dependency and startup changes are picked up without restarting PostgreSQL.
 
-When you change the OpenAPI shape or any generated client-visible contract, run `just contract`. It executes `pnpm generate` from the repository root and then restarts the currently running app services so the regenerated contract outputs are picked up without restarting PostgreSQL.
+When you change the OpenAPI shape or any generated client-visible contract, run `just openapi`. It executes `pnpm generate` from the repository root and then restarts the currently running app services so the regenerated contract outputs are picked up without restarting PostgreSQL.
 
-When you change the Prisma schema, run `just schema <migration-name>`. It applies the API migration, regenerates the Prisma client through the existing package script, and then restarts the currently running app services so the updated schema contract is picked up without restarting PostgreSQL.
+When you change the Prisma schema, run `just prisma <migration-name>`. It applies the API migration, regenerates the Prisma client through the existing package script, and then restarts the currently running app services so the updated schema contract is picked up without restarting PostgreSQL.
 
 Low-level host-side commands such as `pnpm dev` and direct app package dev commands remain available as auxiliary escape hatches, but they are not the primary supported full-stack workflow.
 
@@ -155,8 +155,8 @@ Expected local flow:
 3. Make sure Docker is installed and running on the host machine
 4. run `just dev`
 5. run `just install` whenever a local dependency change should also refresh the running app services
-6. run `just contract` whenever an OpenAPI or generated contract change should also refresh the running app services
-7. run `just schema <migration-name>` whenever a Prisma schema change should also refresh the running app services
+6. run `just openapi` whenever an OpenAPI or generated contract change should also refresh the running app services
+7. run `just prisma <migration-name>` whenever a Prisma schema change should also refresh the running app services
 8. inspect logs with `just dev-logs`
 9. inspect only the currently running service logs with `just dev-logs-running` when you want a narrower follow mode
 10. connect to PostgreSQL with `just dev-psql` when needed

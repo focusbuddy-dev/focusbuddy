@@ -17,12 +17,12 @@ install:
     bash scripts/local-dev/install.sh
 
 # Apply a local Prisma schema migration and restart running app services.
-schema name:
-    bash scripts/local-dev/schema.sh {{name}}
+prisma name:
+    bash scripts/local-dev/prisma.sh {{name}}
 
 # Regenerate OpenAPI contract outputs and restart running app services.
-contract:
-    bash scripts/local-dev/contract.sh
+openapi:
+    bash scripts/local-dev/openapi.sh
 
 # Format the repository with the shared Prettier config.
 format:
