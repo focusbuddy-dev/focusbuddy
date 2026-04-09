@@ -12,6 +12,10 @@ commitlint-setup:
 commitlint-check:
     bash scripts/run-commitlint-checks.sh
 
+# Install workspace dependencies and restart running app services.
+install:
+    bash scripts/local-dev/install.sh
+
 # Format the repository with the shared Prettier config.
 format:
     pnpm format
