@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react';
+
 import type { components as ApiComponents } from '@focusbuddy/api-contract/generated/types';
 
 import styles from './web-baseline-page.module.css';
@@ -6,10 +8,11 @@ type PublicTargetSummary = ApiComponents['schemas']['PublicTargetSummary'];
 
 type WebBaselinePageProps = {
   apiBaseUrl: string;
+  children?: ReactNode;
   previewSummary: PublicTargetSummary;
 };
 
-export function WebBaselinePage({ apiBaseUrl, previewSummary }: WebBaselinePageProps) {
+export function WebBaselinePage({ apiBaseUrl, children, previewSummary }: WebBaselinePageProps) {
   return (
     <main className={styles.pageShell}>
       <div className={styles.pageGrid}>
@@ -86,6 +89,15 @@ export function WebBaselinePage({ apiBaseUrl, previewSummary }: WebBaselinePageP
             <li>{previewSummary.lastPublicSessionAt ?? 'No public session date yet.'}</li>
           </ul>
         </section>
+
+        {children ? (
+          <section className={styles.card} aria-labelledby="logging-demo-title">
+            <h2 className={styles.sectionTitle} id="logging-demo-title">
+              Real logging integration points
+            </h2>
+            {children}
+          </section>
+        ) : undefined}
       </div>
     </main>
   );

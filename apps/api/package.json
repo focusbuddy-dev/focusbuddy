@@ -4,19 +4,21 @@
   "version": "0.0.0",
   "main": "dist/main.js",
   "scripts": {
-    "build": "pnpm contract:build && pnpm prisma:generate && pnpm --dir ../.. exec tsc --project apps/api/tsconfig.build.json",
+    "build": "pnpm contract:build && pnpm logger:build && pnpm prisma:generate && pnpm --dir ../.. exec tsc --project apps/api/tsconfig.build.json",
     "contract:build": "pnpm --dir ../.. --filter @focusbuddy/api-contract build",
-    "dev": "pnpm contract:build && pnpm prisma:generate && pnpm exec nest start --watch",
+    "dev": "pnpm contract:build && pnpm logger:build && pnpm prisma:generate && pnpm exec nest start --watch",
+    "logger:build": "pnpm --dir ../.. --filter @focusbuddy/logger build",
     "lint": "pnpm --dir ../.. exec oxlint apps/api/src apps/api/test apps/api/prisma",
     "parity": "pnpm build && node dist/main.js",
     "prisma:generate": "prisma generate --config prisma.config.ts",
     "prisma:migrate:dev": "prisma migrate dev --config prisma.config.ts",
     "prisma:studio": "prisma studio --config prisma.config.ts",
-    "test": "pnpm contract:build && pnpm prisma:generate && pnpm --dir ../.. exec jest --config apps/api/jest.config.ts --runInBand",
-    "typecheck": "pnpm contract:build && pnpm prisma:generate && pnpm --dir ../.. exec tsc --project apps/api/tsconfig.build.json --noEmit"
+    "test": "pnpm contract:build && pnpm logger:build && pnpm prisma:generate && pnpm --dir ../.. exec jest --config apps/api/jest.config.ts --runInBand",
+    "typecheck": "pnpm contract:build && pnpm logger:build && pnpm prisma:generate && pnpm --dir ../.. exec tsc --project apps/api/tsconfig.build.json --noEmit"
   },
   "dependencies": {
     "@focusbuddy/api-contract": "workspace:*",
+    "@focusbuddy/logger": "workspace:*",
     "@nestjs/common": "^11.1.18",
     "@nestjs/core": "^11.1.18",
     "@nestjs/platform-express": "^11.1.18",
@@ -24,6 +26,7 @@
     "@prisma/client": "^7.7.0",
     "dotenv": "^17.4.1",
     "pg": "^8.20.0",
+    "pino": "^10.3.1",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2"
   },

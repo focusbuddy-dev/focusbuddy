@@ -3,18 +3,20 @@
   "private": true,
   "version": "0.0.0",
   "scripts": {
-    "build": "pnpm contract:build && next build",
+    "build": "pnpm contract:build && pnpm logger:build && next build",
     "contract:build": "pnpm --dir ../.. --filter @focusbuddy/api-contract build",
-    "dev": "pnpm contract:build && next dev",
-    "dev:compose": "pnpm contract:build && next dev --hostname 0.0.0.0 --port 3000",
+    "dev": "pnpm contract:build && pnpm logger:build && next dev",
+    "dev:compose": "pnpm contract:build && pnpm logger:build && next dev --hostname 0.0.0.0 --port 3000",
+    "logger:build": "pnpm --dir ../.. --filter @focusbuddy/logger build",
     "lint": "pnpm lint:styles && pnpm --dir ../.. exec oxlint apps/web/src apps/web/test",
     "lint:styles": "pnpm --dir ../.. exec stylelint \"apps/web/src/**/*.css\"",
     "parity": "pnpm build && next start --hostname 0.0.0.0 --port 3000",
-    "test": "pnpm contract:build && pnpm --dir ../.. exec jest --config apps/web/jest.config.ts --runInBand",
-    "typecheck": "pnpm contract:build && pnpm --dir ../.. exec tsc --project apps/web/tsconfig.json --noEmit"
+    "test": "pnpm contract:build && pnpm logger:build && pnpm --dir ../.. exec jest --config apps/web/jest.config.ts --runInBand",
+    "typecheck": "pnpm contract:build && pnpm logger:build && pnpm --dir ../.. exec tsc --project apps/web/tsconfig.json --noEmit"
   },
   "dependencies": {
     "@focusbuddy/api-contract": "workspace:*",
+    "@focusbuddy/logger": "workspace:*",
     "next": "^16.2.2",
     "react": "^19.2.4",
     "react-dom": "^19.2.4"
