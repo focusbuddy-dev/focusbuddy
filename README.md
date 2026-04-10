@@ -125,6 +125,7 @@ The default full-stack local entrypoint is `just dev`, which starts the current 
 ## Design Notes
 
 - The first web error handling policy note is available at [docs/platform/web-error-handling-policy.md](docs/platform/web-error-handling-policy.md).
+- The first logging and audit boundary note is available at [docs/platform/logging-and-audit-boundaries.md](docs/platform/logging-and-audit-boundaries.md).
 - The first shared API and domain error model note is available at [docs/domain/mvp-api-error-model.md](docs/domain/mvp-api-error-model.md).
 - The first web accident pattern inventory is available at [docs/platform/web-accident-pattern-inventory.md](docs/platform/web-accident-pattern-inventory.md).
 - The first public-safe domain design note is available at [docs/domain/mvp-domain-model.md](docs/domain/mvp-domain-model.md).
