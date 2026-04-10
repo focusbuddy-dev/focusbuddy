@@ -2,8 +2,8 @@ import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 import test from 'node:test'
 
-import { createApiClient } from '../dist/generated/client.js'
-import * as generatedTypes from '../dist/generated/types.js'
+import { createApiClient } from '@focusbuddy/api-contract/generated/client'
+import * as generatedTypes from '@focusbuddy/api-contract/generated/types'
 
 test('exports the built ESM client contract', () => {
   assert.equal(typeof createApiClient, 'function')
