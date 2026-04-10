@@ -19,10 +19,9 @@
     }
   },
   "scripts": {
-    "build": "pnpm build:clean && pnpm generate && pnpm build:artifacts && pnpm build:postprocess",
+    "build": "pnpm build:clean && pnpm generate && pnpm build:artifacts",
     "build:artifacts": "pnpm --dir ../.. exec tsc --project packages/api-contract/tsconfig.build.json",
     "build:clean": "rm -rf ./dist",
-    "build:postprocess": "node ./scripts/fix-generated-import-specifiers.mjs",
     "clean:generated": "rm -rf ./generated && mkdir -p ./generated",
     "dev": "pnpm generate",
     "generate": "pnpm clean:generated && pnpm generate:types && pnpm generate:client",
