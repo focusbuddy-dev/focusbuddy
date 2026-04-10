@@ -136,6 +136,11 @@ The current workspace package scripts are placeholders so the monorepo structure
 
 - replace the placeholder logger package with the shared logger facade and runtime-specific adapters
 
+### For #120
+
+- follow `docs/platform/esm-migration-strategy.md` before converting additional workspace packages to explicit ESM
+- keep package migration work separate from application runtime module-strategy changes unless a later issue explicitly combines them
+
 ### For #51
 
 - add the Docker-based local development environment on top of this workspace layout

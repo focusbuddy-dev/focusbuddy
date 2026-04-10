@@ -105,6 +105,8 @@ The initial merge gate runs `generate`, `lint`, `typecheck`, and `test` in that 
 
 GitHub Actions runs the same gate on pull requests and pushes to `main`. Deploy-only checks stay outside this gate.
 
+The repository-wide package ESM migration strategy for future workspace package conversions is documented in [docs/platform/esm-migration-strategy.md](docs/platform/esm-migration-strategy.md).
+
 Formatting is owned by Prettier, including quote style decisions for JavaScript and TypeScript files.
 
 Linting is owned by oxlint.

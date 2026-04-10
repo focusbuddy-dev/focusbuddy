@@ -74,6 +74,8 @@ The repository now uses GitHub Actions to run the same merge gate on pull reques
 
 Deploy-only checks remain outside this merge gate. Examples include deployed acceptance checks, deploy approval rules, and runtime-only validation in non-local environments.
 
+The repository-wide package ESM migration strategy is documented in `docs/platform/esm-migration-strategy.md` and must be consulted before converting additional workspace packages to explicit ESM.
+
 ## Generated files rule
 
 Generated outputs should live under a `generated` or `__generated__` directory whenever possible.
