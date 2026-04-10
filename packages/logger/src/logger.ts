@@ -37,7 +37,9 @@ export type LoggerContext = LoggerEnvelopeContext & {
   [key: string]: unknown
 }
 
-export type FactoryLoggerContext = Omit<LoggerContext, 'runtime'>
+export type FactoryLoggerContext = Omit<LoggerContext, 'runtime'> & {
+  runtime?: never
+}
 
 export type LogEntry = LoggerEnvelopeContext & {
   level: LogLevel

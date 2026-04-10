@@ -62,8 +62,8 @@ export function createBrowserLogger(options: BrowserLoggerOptions = {}): Logger 
 
   return createLogger({
     context: {
-      runtime: options.runtime ?? DEFAULT_BROWSER_RUNTIME,
       ...options.context,
+      runtime: options.runtime ?? DEFAULT_BROWSER_RUNTIME,
     },
     adapter: {
       write(entry) {

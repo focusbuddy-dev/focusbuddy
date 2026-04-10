@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "main": "./dist/index.js",
+  "main": "./dist/cjs/index.js",
   "types": "./dist/index.d.ts",
   "files": [
     "README.md",
@@ -13,21 +13,27 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
+      "require": "./dist/cjs/index.js",
       "default": "./dist/index.js"
     },
     "./browser": {
       "types": "./dist/browser.d.ts",
       "import": "./dist/browser.js",
+      "require": "./dist/cjs/browser.js",
       "default": "./dist/browser.js"
     },
     "./server": {
       "types": "./dist/server.d.ts",
       "import": "./dist/server.js",
+      "require": "./dist/cjs/server.js",
       "default": "./dist/server.js"
     }
   },
   "scripts": {
-    "build": "pnpm --dir ../.. exec tsc --project packages/logger/tsconfig.build.json",
+    "build": "pnpm build:clean && pnpm build:esm && pnpm build:cjs && node ./scripts/write-cjs-package-json.mjs",
+    "build:clean": "rm -rf ./dist",
+    "build:cjs": "pnpm --dir ../.. exec tsc --project packages/logger/tsconfig.cjs.json",
+    "build:esm": "pnpm --dir ../.. exec tsc --project packages/logger/tsconfig.build.json",
     "dev": "pnpm --dir ../.. exec tsc --project packages/logger/tsconfig.build.json --watch",
     "lint": "pnpm --dir ../.. exec oxlint packages/logger/src packages/logger/test",
     "test": "pnpm build && node --test ./test/logger.test.mjs",

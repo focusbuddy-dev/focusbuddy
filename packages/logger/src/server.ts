@@ -45,8 +45,8 @@ function resolveServerWrite(target: ServerLogWriter, level: LogEntry['level']): 
 export function createServerLogger(options: ServerLoggerOptions): Logger {
   return createLogger({
     context: {
-      runtime: options.runtime ?? DEFAULT_SERVER_RUNTIME,
       ...options.context,
+      runtime: options.runtime ?? DEFAULT_SERVER_RUNTIME,
     },
     adapter: {
       write(entry) {
