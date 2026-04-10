@@ -28,7 +28,7 @@ This document does not define a repository-wide app runtime conversion to pure E
 
 | Workspace | Current state | Migration stance | Notes |
 | --- | --- | --- | --- |
-| `packages/logger` | already explicit ESM with dual-publish exports | keep as the reference implementation | uses `type: module`, explicit `import` and `require` conditions, and separate ESM/CJS build outputs |
+| `packages/logger` | already explicit ESM with dual-publish exports | keep as the reference implementation | uses `type: module`, explicit `import` and `require` conditions, TypeScript-emitted ESM artifacts, and esbuild-generated CJS artifacts |
 | `packages/api-contract` | source-export package with generated `.ts` outputs and a CommonJS helper entry | next runtime package candidate after a build contract is defined | should not expose generated source files as the long-term runtime contract once it becomes explicit ESM |
 | `packages/config-typescript` | exports shared JSON config files | keep current mode for now | TypeScript config consumers do not benefit from package-level ESM and still depend on current tool loading behavior |
 | `packages/config-jest` | exports raw `.ts` config modules | coordinated migration only | current consumers rely on TypeScript config loading and Jest-specific loader behavior |
@@ -51,6 +51,8 @@ Any workspace package that becomes an explicit ESM package must satisfy all of t
 7. include verification that both the ESM import path and any required CommonJS path still resolve correctly
 
 The logger package is the current repository reference for this contract. Future package migrations should copy the contract shape, not improvise a new one for each workspace.
+
+For logger specifically, the CommonJS compatibility path should stay on a dedicated non-TypeScript transpile step. Declarations remain sourced from the ESM build output, `dist/cjs/package.json` keeps the CJS folder explicit, and the retired `tsconfig.cjs.json` plus `ignoreDeprecations` workaround should not be reintroduced.
 
 ## Tooling constraints and current breakpoints
 

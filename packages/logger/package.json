@@ -32,7 +32,7 @@
   "scripts": {
     "build": "pnpm build:clean && pnpm build:esm && pnpm build:cjs && node ./scripts/write-cjs-package-json.mjs",
     "build:clean": "rm -rf ./dist",
-    "build:cjs": "pnpm --dir ../.. exec tsc --project packages/logger/tsconfig.cjs.json",
+    "build:cjs": "node ./scripts/build-cjs.mjs",
     "build:esm": "pnpm --dir ../.. exec tsc --project packages/logger/tsconfig.build.json",
     "dev": "pnpm --dir ../.. exec tsc --project packages/logger/tsconfig.build.json --watch",
     "lint": "pnpm --dir ../.. exec oxlint packages/logger/src packages/logger/test",
@@ -40,6 +40,7 @@
     "typecheck": "pnpm --dir ../.. exec tsc --project packages/logger/tsconfig.json --noEmit"
   },
   "devDependencies": {
-    "@types/node": "^25.5.2"
+    "@types/node": "^25.5.2",
+    "esbuild": "^0.28.0"
   }
 }

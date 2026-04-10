@@ -31,6 +31,17 @@ The current repository now uses those boundaries directly.
 - API runtime integration: [../../apps/api/src/logging/api-request-logging.interceptor.ts](../../apps/api/src/logging/api-request-logging.interceptor.ts)
 - Web runtime integration: [../../apps/web/src/middleware.ts](../../apps/web/src/middleware.ts)
 
+## Build Contract
+
+The package keeps dual-publish runtime compatibility, but the CommonJS output no longer depends on a second TypeScript config with deprecated CommonJS module-resolution settings.
+
+- `pnpm build:esm` uses TypeScript to emit the canonical ESM JavaScript, declarations, and source maps into `dist`
+- `pnpm build:cjs` uses `esbuild` to transpile the same `src/**/*.ts` tree into `dist/cjs` as CommonJS JavaScript with source maps
+- declarations stay anchored at `dist/*.d.ts` and are shared by both the `import` and `require` export conditions
+- `scripts/write-cjs-package-json.mjs` keeps `dist/cjs/package.json` pinned to `{ "type": "commonjs" }` so the generated `.js` files stay require-safe inside an explicit ESM package
+
+That makes the logger package's CommonJS support explicit and removes the need for the retired `tsconfig.cjs.json` plus its temporary `ignoreDeprecations` escape hatch.
+
 The important alignment point is that API and Web now differ only at the sink boundary.
 
 - API sink: `pino` owned by the API app
