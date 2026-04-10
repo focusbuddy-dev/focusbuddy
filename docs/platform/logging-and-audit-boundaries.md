@@ -72,33 +72,53 @@ They usually need:
 - append-only or correction-by-new-record rules
 - authoritative linkage to actor, target, and outcome
 
-## Ownership boundary
+## Ownership boundaries
+
+The shared-package boundary is easier to understand when each concern is shown separately.
+
+### Logger boundary
 
 ```mermaid
 flowchart LR
-  subgraph SharedPackages[Shared packages]
-    direction TB
-    Logger[logger\nshared facade + event schema + sink boundary]
-    Sanitizer[log-sanitizer\nfield policy + redaction + header filtering]
-    Reporter[reporter\nbrowser error capture + delivery boundary]
-  end
+  Logger[logger\nshared facade + event schema + sink boundary]
+  WebRuntime[web runtime integration\nconsole or server sink injection]
+  ApiRuntime[api runtime integration\npino or another server sink injection]
 
-  subgraph AppLocal[App-local runtime and persistence design]
-    direction TB
-    WebRuntime[web runtime integration\nconsole or server sink injection]
-    ApiRuntime[api runtime integration\npino or another server sink injection]
-    Intake[frontend error intake\nserver-side validation + enrichment]
-    AuditRecording[audit-oriented recording\nsecurity audit + audit trail + business events]
-    ApiUseCases[apps/api use cases\napplication service contracts + transactions]
-  end
-
-  Reporter ~~~ Intake
   Logger --> WebRuntime
   Logger --> ApiRuntime
+```
+
+### Log-sanitizer boundary
+
+```mermaid
+flowchart LR
+  Sanitizer[log-sanitizer\nfield policy + redaction + header filtering]
+  WebRuntime[web runtime integration\nclient or server log preparation]
+  ApiRuntime[api runtime integration\nserver log preparation]
+  Intake[frontend error intake\nserver-side validation + enrichment]
+
   Sanitizer --> WebRuntime
   Sanitizer --> ApiRuntime
   Sanitizer --> Intake
+```
+
+### Reporter boundary
+
+```mermaid
+flowchart LR
+  Reporter[reporter\nbrowser error capture + delivery boundary]
+  Intake[frontend error intake\nserver-side validation + enrichment]
+
   Reporter --> Intake
+```
+
+### Audit-oriented recording boundary
+
+```mermaid
+flowchart LR
+  AuditRecording[audit-oriented recording\nsecurity audit + audit trail + business events]
+  ApiUseCases[apps/api use cases\napplication service contracts + transactions]
+
   AuditRecording --> ApiUseCases
 ```
 
