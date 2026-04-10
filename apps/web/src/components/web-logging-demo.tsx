@@ -9,28 +9,19 @@ import {
   logWebBaselineNavigationCompleted,
   logWebBaselinePageViewed,
 } from '../lib/logging/web-baseline-page-logger'
+import { useWebRequestLogging } from '../lib/logging/web-request-logging-context'
 import styles from './web-baseline-page.module.css'
 
 type WebLoggingDemoProps = {
-  requestId: string
   targetId: string
-  traceId: string
 }
 
-function createClientSessionId(): string {
-  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
-    return crypto.randomUUID()
-  }
-
-  return 'web-client-session'
-}
-
-export function WebLoggingDemo({ requestId, targetId, traceId }: WebLoggingDemoProps) {
+export function WebLoggingDemo({ targetId }: WebLoggingDemoProps) {
   const [isPending, startTransition] = useTransition()
   const pathname = usePathname()
   const router = useRouter()
   const searchParams = useSearchParams()
-  const sessionIdRef = useRef<string>(createClientSessionId())
+  const { requestId, sessionId, traceId } = useWebRequestLogging()
   const lastLocationRef = useRef<string | null>(null)
 
   const currentView = searchParams.get('view') ?? 'overview'
@@ -46,7 +37,7 @@ export function WebLoggingDemo({ requestId, targetId, traceId }: WebLoggingDemoP
       traceId,
     }
     const user = {
-      sessionId: sessionIdRef.current,
+      sessionId,
     }
 
     if (lastLocationRef.current === null) {
@@ -72,7 +63,7 @@ export function WebLoggingDemo({ requestId, targetId, traceId }: WebLoggingDemoP
       )
       lastLocationRef.current = currentLocation
     }
-  }, [currentLocation, currentView, requestId, targetId, traceId])
+  }, [currentLocation, currentView, requestId, sessionId, targetId, traceId])
 
   const handleClientActionClick = () => {
     logWebBaselineButtonClicked({
@@ -86,7 +77,7 @@ export function WebLoggingDemo({ requestId, targetId, traceId }: WebLoggingDemoP
         traceId,
       },
       user: {
-        sessionId: sessionIdRef.current,
+        sessionId,
       },
     })
   }
@@ -106,7 +97,7 @@ export function WebLoggingDemo({ requestId, targetId, traceId }: WebLoggingDemoP
         traceId,
       },
       user: {
-        sessionId: sessionIdRef.current,
+        sessionId,
       },
     })
 
@@ -124,6 +115,7 @@ export function WebLoggingDemo({ requestId, targetId, traceId }: WebLoggingDemoP
       <div className={styles.heroMeta}>
         <span className={styles.heroMetaItem}>Current view: {currentView}</span>
         <span className={styles.heroMetaItem}>Request: {requestId}</span>
+        <span className={styles.heroMetaItem}>Session: {sessionId}</span>
         <span className={styles.heroMetaItem}>Trace: {traceId}</span>
       </div>
       <div className={styles.loggingActionRow}>

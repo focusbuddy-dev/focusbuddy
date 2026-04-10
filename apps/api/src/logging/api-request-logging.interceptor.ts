@@ -4,7 +4,6 @@ import { focusbuddyRequestIdHeader, focusbuddyTraceIdHeader } from '@focusbuddy/
 import { Observable, tap } from 'rxjs';
 
 import { logApiRequestHandled } from './api-request-logger.example';
-import { apiRuntimeLogger } from './api-runtime-logger';
 
 type ApiRequestLike = {
   headers: Record<string, string | string[] | undefined>;
@@ -41,7 +40,7 @@ function readHeader(
 
 @Injectable()
 export class ApiRequestLoggingInterceptor implements NestInterceptor {
-  constructor(private readonly baseLogger: Logger = apiRuntimeLogger) {}
+  constructor(private readonly baseLogger: Logger) {}
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
     if (context.getType() !== 'http') {

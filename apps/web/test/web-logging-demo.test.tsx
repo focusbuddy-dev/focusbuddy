@@ -6,6 +6,7 @@ import {
   logWebBaselineNavigationCompleted,
   logWebBaselinePageViewed,
 } from '../src/lib/logging/web-baseline-page-logger'
+import { WebRequestLoggingProvider } from '../src/lib/logging/web-request-logging-context'
 
 const pushMock = jest.fn()
 
@@ -43,11 +44,9 @@ describe('WebLoggingDemo', () => {
 
   it('logs initial display, button clicks, and route changes from the real client component', () => {
     const { rerender } = render(
-      <WebLoggingDemo
-        requestId="request-100"
-        targetId="baseline-target"
-        traceId="trace-100"
-      />,
+      <WebRequestLoggingProvider requestId="request-100" traceId="trace-100">
+        <WebLoggingDemo targetId="baseline-target" />
+      </WebRequestLoggingProvider>,
     )
 
     expect(logWebBaselinePageViewed).toHaveBeenCalledWith({
@@ -101,11 +100,9 @@ describe('WebLoggingDemo', () => {
 
     currentSearchParams = new URLSearchParams('view=details')
     rerender(
-      <WebLoggingDemo
-        requestId="request-100"
-        targetId="baseline-target"
-        traceId="trace-100"
-      />,
+      <WebRequestLoggingProvider requestId="request-100" traceId="trace-100">
+        <WebLoggingDemo targetId="baseline-target" />
+      </WebRequestLoggingProvider>,
     )
 
     expect(logWebBaselineNavigationCompleted).toHaveBeenCalledWith({
@@ -122,5 +119,17 @@ describe('WebLoggingDemo', () => {
         sessionId: 'web-client-session',
       },
     })
+  })
+
+  it('shows distributed request materials from the provider', () => {
+    render(
+      <WebRequestLoggingProvider requestId="request-100" traceId="trace-100">
+        <WebLoggingDemo targetId="baseline-target" />
+      </WebRequestLoggingProvider>,
+    )
+
+    expect(screen.getByText('Request: request-100')).toBeInTheDocument()
+    expect(screen.getByText('Session: web-client-session')).toBeInTheDocument()
+    expect(screen.getByText('Trace: trace-100')).toBeInTheDocument()
   })
 })

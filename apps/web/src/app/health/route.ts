@@ -1,17 +1,10 @@
 import { NextResponse, type NextRequest } from 'next/server'
 
-import {
-  focusbuddyRequestIdHeader,
-  focusbuddyTraceIdHeader,
-} from '../../lib/logging/next-middleware-logger'
+import { resolveWebRequestCorrelation } from '../../lib/logging/web-request-correlation'
 import { logWebHealthRouteResponded } from '../../lib/logging/web-health-route-logger'
 
 export function GET(request: NextRequest) {
-  const requestId =
-    request.headers.get(focusbuddyRequestIdHeader) ??
-    request.headers.get(focusbuddyTraceIdHeader) ??
-    'web-health-request'
-  const traceId = request.headers.get(focusbuddyTraceIdHeader) ?? requestId
+  const { requestId, traceId } = resolveWebRequestCorrelation(request.headers)
 
   logWebHealthRouteResponded({
     request: {

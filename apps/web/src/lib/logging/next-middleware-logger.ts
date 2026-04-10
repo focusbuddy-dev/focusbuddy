@@ -32,6 +32,8 @@ export type PreparedNextMiddlewareLogger = {
   traceId: string
 }
 
+const middlewareRuntime = 'web-middleware'
+
 function createCorrelationId(): string {
   return crypto.randomUUID()
 }
@@ -54,11 +56,12 @@ export function prepareNextMiddlewareLogger(
 
   const logger = (options.baseLogger ??
     createWebServerRuntimeLogger({
-      runtime: 'web-middleware',
+      runtime: middlewareRuntime,
     })).child({
     requestId,
     requestMethod: request.method,
     requestPath: request.nextUrl.pathname,
+    runtime: middlewareRuntime,
     traceId,
   })
 

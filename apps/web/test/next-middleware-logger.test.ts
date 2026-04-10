@@ -80,6 +80,7 @@ describe('next middleware logger helper', () => {
       requestId: 'req-910',
       requestMethod: 'GET',
       requestPath: '/targets/focus-1',
+      runtime: 'web-middleware',
       timestamp: '2026-04-09T12:00:00.000Z',
       traceId: 'trace-910',
     })

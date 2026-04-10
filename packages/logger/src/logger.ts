@@ -89,6 +89,8 @@ const envelopeContextKeys = [
   'userRole',
 ] as const
 
+const envelopeContextKeySet = new Set<string>(envelopeContextKeys)
+
 function compactRecord<T extends Record<string, unknown>>(record?: T): T {
   if (!record) {
     return {} as T
@@ -100,7 +102,7 @@ function compactRecord<T extends Record<string, unknown>>(record?: T): T {
 }
 
 function isEnvelopeContextKey(key: string): key is (typeof envelopeContextKeys)[number] {
-  return (envelopeContextKeys as readonly string[]).includes(key)
+  return envelopeContextKeySet.has(key)
 }
 
 function splitContext(context?: LoggerContext): LoggerState {
