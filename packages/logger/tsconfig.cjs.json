@@ -3,6 +3,7 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "declaration": false,
+    "ignoreDeprecations": "6.0",
     "module": "CommonJS",
     "moduleResolution": "Node",
     "noEmit": false,
