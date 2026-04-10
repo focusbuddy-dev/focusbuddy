@@ -77,12 +77,14 @@ They usually need:
 ```mermaid
 flowchart LR
   subgraph SharedPackages[Shared packages]
+    direction TB
     Logger[logger\nshared facade + event schema + sink boundary]
     Sanitizer[log-sanitizer\nfield policy + redaction + header filtering]
     Reporter[reporter\nbrowser error capture + delivery boundary]
   end
 
   subgraph AppLocal[App-local runtime and persistence design]
+    direction TB
     WebRuntime[web runtime integration\nconsole or server sink injection]
     ApiRuntime[api runtime integration\npino or another server sink injection]
     Intake[frontend error intake\nserver-side validation + enrichment]
@@ -90,6 +92,7 @@ flowchart LR
     ApiUseCases[apps/api use cases\napplication service contracts + transactions]
   end
 
+  Reporter ~~~ Intake
   Logger --> WebRuntime
   Logger --> ApiRuntime
   Sanitizer --> WebRuntime
