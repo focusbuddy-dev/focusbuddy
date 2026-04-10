@@ -4,6 +4,8 @@ This document captures the output of issue #109.
 
 Its purpose is to define the local execution lane policy for FocusBuddy, describe the currently implemented default path, and explain why host-side direct app startup is not the primary full-stack development path.
 
+For the repository-level drift policy and must-match checklist behind these lanes, see [local-environment-drift-policy.md](./local-environment-drift-policy.md).
+
 ## Scope
 
 This document defines:

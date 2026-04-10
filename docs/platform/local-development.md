@@ -224,6 +224,8 @@ These differences are acceptable for the current stage because the goal is to ma
 
 For the distinction between the default `fast compose` path, the implemented `parity compose` path, and host-side auxiliary startup, see [local-execution-modes.md](./local-execution-modes.md).
 
+For the repository-level policy on must-match runtime categories and tolerated local drift, see [local-environment-drift-policy.md](./local-environment-drift-policy.md).
+
 ## Handoff to follow-up issues
 
 ### For #21
