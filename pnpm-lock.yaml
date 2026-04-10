@@ -166,7 +166,11 @@ importers:
         specifier: ^3.25.76
         version: 3.25.76
 
-  packages/config-jest: {}
+  packages/config-jest:
+    devDependencies:
+      '@jest/types':
+        specifier: ^30.3.0
+        version: 30.3.0
 
   packages/config-oxlint: {}
 

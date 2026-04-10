@@ -1,11 +1,10 @@
 /** @jest-config-loader ts-node */
 /** @jest-config-loader-options {"transpileOnly": true} */
 
-import type { Config } from 'jest';
-
+import { defineJestConfig } from '../../packages/config-jest/define.ts';
 import sharedConfig from '../../packages/config-jest/api.ts';
 
-const config: Config = {
+const config = defineJestConfig({
   ...sharedConfig,
   moduleFileExtensions: [...(sharedConfig.moduleFileExtensions ?? []), 'ts'],
   roots: ['<rootDir>/src', '<rootDir>/test'],
@@ -18,6 +17,6 @@ const config: Config = {
       },
     ],
   },
-};
+});
 
 export default config;

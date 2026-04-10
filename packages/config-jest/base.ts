@@ -1,6 +1,6 @@
-import type { Config } from 'jest';
+import { defineJestConfig } from './define.ts';
 
-const config: Config = {
+const config = defineJestConfig({
   clearMocks: true,
   coveragePathIgnorePatterns: [
     '/node_modules/',
@@ -19,6 +19,6 @@ const config: Config = {
     '/generated/',
     '/__generated__/',
   ],
-};
+});
 
 export default config;

@@ -44,7 +44,9 @@ This document does not define application code, end-to-end test strategy, or dep
 - `base.ts` defines the shared Jest defaults
 - `api.ts` sets the API test environment to Node
 - `web.ts` sets the web test environment to jsdom
+- `define.ts` owns the shared Jest config type contract for tooling files in this repo
 - the repository uses `ts-node` as the Jest config loader for TypeScript-based config files
+- app-level Jest config files should consume the shared config typing helper instead of importing low-level Jest type packages directly
 - the shared Jest baselines stay directory-agnostic until the real app source trees exist in follow-up issues
 - the shared Jest baselines do not enable TypeScript test execution until a real transform is chosen in follow-up app work
 
