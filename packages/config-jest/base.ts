@@ -19,6 +19,7 @@ const config = defineJestConfig({
     '/generated/',
     '/__generated__/',
   ],
+  transformIgnorePatterns: ['/node_modules/'],
 });
 
 export default config;

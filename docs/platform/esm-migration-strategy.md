@@ -20,6 +20,7 @@ This document does not define a repository-wide app runtime conversion to pure E
 
 - explicit ESM is opt-in per package; one package changing module mode does not authorize ad hoc conversion of unrelated packages
 - runtime packages that other workspaces import at runtime should prefer built artifact exports over raw source file exports before they become explicit ESM packages
+- runtime packages should default to explicit ESM-only exports and should add a CommonJS `require` path only when a verified current consumer or tool still blocks on it
 - config packages consumed directly by tools should not become explicit ESM packages until the consuming toolchain contract is documented and verified
 - a package must keep CommonJS compatibility whenever any current consumer or tool still relies on `require()` or a CommonJS-only loader path
 - no package may switch to explicit ESM without a documented export surface, build output contract, and verification plan
@@ -31,7 +32,7 @@ This document does not define a repository-wide app runtime conversion to pure E
 | `packages/logger` | explicit ESM runtime package | keep as the repository's simplest runtime-package reference | uses `type: module`, explicit ESM export entrypoints, and TypeScript-emitted build artifacts |
 | `packages/api-contract` | source-export package with generated `.ts` outputs and a CommonJS helper entry | next runtime package candidate after a build contract is defined | should not expose generated source files as the long-term runtime contract once it becomes explicit ESM |
 | `packages/config-typescript` | exports shared JSON config files | keep current mode for now | TypeScript config consumers do not benefit from package-level ESM and still depend on current tool loading behavior |
-| `packages/config-jest` | exports raw `.ts` config modules | coordinated migration only | current consumers rely on TypeScript config loading and Jest-specific loader behavior |
+| `packages/config-jest` | exports raw `.ts` config modules with a shared ESM-consumption helper | coordinated migration only | the shared baseline now owns `node_modules` allowlist rules for ESM package consumption, but the package itself still relies on TypeScript config loading and Jest-specific loader behavior |
 | `packages/config-oxlint` | exports raw `.ts` config modules | coordinated migration only | current consumers depend on tool execution of TypeScript config files |
 | `packages/config-prettier` | CommonJS-only `index.cjs` entry | keep CommonJS | Prettier config loading still requires a stable CommonJS path in this repository |
 | `apps/api` | NodeNext TypeScript app consumer | not a package-conversion target in this issue | app runtime strategy remains separate from package migration strategy |
@@ -46,9 +47,9 @@ Any workspace package that becomes an explicit ESM package must satisfy all of t
 2. export only documented public entrypoints through `exports`
 3. publish built JavaScript artifacts instead of exposing raw `.ts` source files as the primary runtime contract
 4. provide `types` entries for every public subpath
-5. provide a `require` condition whenever any current consumer still needs CommonJS compatibility
+5. omit the CommonJS `require` condition by default and add it only when a verified current consumer or tool still needs CommonJS compatibility
 6. use NodeNext-compatible relative import specifiers in source where emitted JavaScript requires them
-7. include verification that both the ESM import path and any required CommonJS path still resolve correctly
+7. include verification that the ESM import path resolves correctly and that any retained CommonJS path still resolves when one is intentionally kept
 
 The logger package is the current repository reference for a runtime package that can move to explicit ESM without retaining a separate CommonJS artifact. Future package migrations should copy the contract shape that matches their actual consumers, not preserve CommonJS by default.
 
@@ -56,13 +57,16 @@ The logger package is the current repository reference for a runtime package tha
 
 ### Jest and TypeScript test loading
 
-The API workspace currently uses `ts-jest` with the local TypeScript config and does not enable Jest's ESM mode. That means a workspace package can expose explicit ESM only if test consumers continue to resolve through a compatible path.
+The shared Jest baseline now includes one repository-owned way to consume ESM packages from Jest configs: `withEsmPackageSupport` in `packages/config-jest`. The current web Jest setup already uses that helper to allowlist specific ESM packages under `node_modules`.
 
-Before more runtime packages become explicit ESM packages, the shared Jest baseline should be updated so the repository has one documented answer for:
+The API workspace still uses `ts-jest` with the local TypeScript config and does not enable Jest's ESM mode by default. That means the next ESM-only runtime package consumed by API tests should update the API Jest transform at the same time instead of forcing the package back to CommonJS compatibility.
 
-- when `ts-jest` should run with `useESM: true`
-- when `.ts` should be treated as ESM in test resolution
-- how package tests verify both `import` and `require` conditions where dual publish remains necessary
+For this repository, the current Jest rule is:
+
+- use the shared Jest baseline to own `transformIgnorePatterns` allowlists for ESM packages under `node_modules`
+- add `extensionsToTreatAsEsm` through the shared helper only when the consuming app is actually opting into Jest ESM execution
+- pair `withEsmPackageSupport` with `ts-jest` `useESM: true` in the API workspace when the first ESM-only runtime package enters API test execution
+- verify `require` behavior only for packages that intentionally retain a CommonJS path
 
 ### Tool-owned config packages
 
@@ -94,20 +98,18 @@ The repository build and test tasks rely on upstream workspace builds through Tu
 
 ## Ordered follow-up plan
 
-1. keep `packages/logger` as the reference implementation and use it as the contract template for future runtime packages
-2. define the shared Jest and test-runner rules required to consume explicit ESM workspace packages safely
-3. define the build output and export contract for `packages/api-contract` so generated source stops being the primary runtime surface
-4. migrate `packages/api-contract` only after its build and consumer contract are documented
-5. decide whether config packages should remain direct source-export tool packages or move to a separate built-distribution model before attempting any config-package ESM change
-6. revisit application runtime module strategy only after package-level migration rules are stable and proven in at least one additional package
+1. keep `packages/logger` as the ESM-only runtime reference and `packages/config-jest` as the shared Jest ESM-consumption reference for future runtime packages
+2. define the build output and export contract for `packages/api-contract` so generated source stops being the primary runtime surface
+3. migrate `packages/api-contract` after its build and consumer contract are documented, keeping it ESM-only unless a verified blocker requires a CommonJS path
+4. decide whether config packages should remain direct source-export tool packages or move to a separate built-distribution model before attempting any config-package ESM change
+5. revisit application runtime module strategy only after package-level migration rules are stable and proven in at least one additional runtime package
 
 ## Follow-up issue split
 
 The next implementation work should be split into discrete repository tasks:
 
-- add a shared Jest baseline for consuming explicit ESM workspace packages
 - define the build artifact and export contract for `packages/api-contract`
-- migrate `packages/api-contract` with dual-publish support if any consumer still requires CommonJS
+- migrate `packages/api-contract` as ESM-only unless an actual current consumer forces a retained CommonJS path
 - decide the long-term contract for config packages: direct source exports versus built distribution packages
 - audit API-side consumer compatibility before any package drops CommonJS support
 
