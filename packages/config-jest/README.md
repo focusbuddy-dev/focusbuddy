@@ -19,6 +19,13 @@ Typing rule:
 - app-level Jest config files should use `defineJestConfig` from this package instead of importing `@jest/types` directly
 - this keeps Jest config typing deterministic without making each app workspace own the low-level Jest type package
 
+ESM package support rule:
+
+- the shared baseline owns the default `transformIgnorePatterns` contract for `node_modules`
+- app-level Jest config files should use `withEsmPackageSupport` when they need to allow specific ESM packages through Jest transforms
+- `withEsmPackageSupport` can also merge `extensionsToTreatAsEsm` for toolchains that opt into Jest ESM execution
+- Node plus `ts-jest` consumers should pair `extensionsToTreatAsEsm` with a matching `useESM: true` transform decision in the app-level config
+
 The repository uses `ts-node` to load TypeScript-based Jest config files.
 
 The shared Jest baselines do not require `src` or `test` directories yet. Follow-up app issues can add tighter roots when real source trees exist.
