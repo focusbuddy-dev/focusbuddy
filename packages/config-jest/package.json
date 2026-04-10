@@ -5,12 +5,17 @@
   "files": [
     "base.ts",
     "api.ts",
-    "web.ts"
+    "web.ts",
+    "define.ts"
   ],
   "exports": {
     "./base": "./base.ts",
     "./api": "./api.ts",
-    "./web": "./web.ts"
+    "./web": "./web.ts",
+    "./define": "./define.ts"
+  },
+  "devDependencies": {
+    "@jest/types": "^30.3.0"
   },
   "scripts": {
     "build": "node ../../scripts/workspace-task.mjs @focusbuddy/config-jest build",

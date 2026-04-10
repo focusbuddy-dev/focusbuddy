@@ -1,10 +1,9 @@
-import type { Config } from '@jest/types';
-
 import baseConfig from './base.ts';
+import { defineJestConfig } from './define.ts';
 
-const config: Config.InitialOptions = {
+const config = defineJestConfig({
   ...baseConfig,
   testEnvironment: 'jsdom',
-};
+});
 
 export default config;
