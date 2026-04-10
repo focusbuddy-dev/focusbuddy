@@ -26,6 +26,8 @@ The Docker-based local development environment is documented in [docs/platform/l
 
 The supported local execution modes and env contract are documented in [docs/platform/local-execution-modes.md](docs/platform/local-execution-modes.md).
 
+The repository-level local environment drift policy is documented in [docs/platform/local-environment-drift-policy.md](docs/platform/local-environment-drift-policy.md).
+
 For routine full-stack local development, use `just dev`.
 
 For production-oriented local validation with built runtimes and health waits, use `just parity`.
@@ -125,6 +127,7 @@ The default full-stack local entrypoint is `just dev`, which starts the current 
 ## Design Notes
 
 - The first web error handling policy note is available at [docs/platform/web-error-handling-policy.md](docs/platform/web-error-handling-policy.md).
+- The first logging and audit boundary note is available at [docs/platform/logging-and-audit-boundaries.md](docs/platform/logging-and-audit-boundaries.md).
 - The first shared API and domain error model note is available at [docs/domain/mvp-api-error-model.md](docs/domain/mvp-api-error-model.md).
 - The first web accident pattern inventory is available at [docs/platform/web-accident-pattern-inventory.md](docs/platform/web-accident-pattern-inventory.md).
 - The first public-safe domain design note is available at [docs/domain/mvp-domain-model.md](docs/domain/mvp-domain-model.md).
