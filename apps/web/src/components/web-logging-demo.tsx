@@ -22,7 +22,7 @@ export function WebLoggingDemo({ targetId }: WebLoggingDemoProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { requestId, sessionId, traceId } = useWebRequestLogging()
-  const lastLocationRef = useRef<string | null>(null)
+  const lastLocationRef = useRef<string | undefined>(undefined)
 
   const currentView = searchParams.get('view') ?? 'overview'
   const currentQuery = searchParams.toString()
@@ -40,7 +40,7 @@ export function WebLoggingDemo({ targetId }: WebLoggingDemoProps) {
       sessionId,
     }
 
-    if (lastLocationRef.current === null) {
+    if (lastLocationRef.current === undefined) {
       logWebBaselinePageViewed(
         {
           request,

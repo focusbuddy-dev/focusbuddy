@@ -8,6 +8,6 @@ const cjsPackageJsonPath = resolve(scriptsDir, '../dist/cjs/package.json')
 await mkdir(dirname(cjsPackageJsonPath), { recursive: true })
 await writeFile(
   cjsPackageJsonPath,
-  `${JSON.stringify({ type: 'commonjs' }, null, 2)}\n`,
+  `${JSON.stringify({ type: 'commonjs' }, undefined, 2)}\n`,
   'utf8',
 )
