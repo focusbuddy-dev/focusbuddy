@@ -2,14 +2,13 @@
   "name": "@focusbuddy/api-contract",
   "private": true,
   "version": "0.0.0",
+  "type": "module",
   "files": [
     "README.md",
-    "openapi-path.cjs",
     "openapi",
     "dist"
   ],
   "exports": {
-    "./openapi-path": "./openapi-path.cjs",
     "./generated/client": {
       "types": "./dist/generated/client.d.ts",
       "default": "./dist/generated/client.js"
@@ -23,7 +22,7 @@
     "build": "pnpm build:clean && pnpm generate && pnpm build:artifacts && pnpm build:postprocess",
     "build:artifacts": "pnpm --dir ../.. exec tsc --project packages/api-contract/tsconfig.build.json",
     "build:clean": "rm -rf ./dist",
-    "build:postprocess": "node ./scripts/fix-generated-import-specifiers.mjs && node ./scripts/write-dist-package-json.mjs",
+    "build:postprocess": "node ./scripts/fix-generated-import-specifiers.mjs",
     "clean:generated": "rm -rf ./generated && mkdir -p ./generated",
     "dev": "pnpm generate",
     "generate": "pnpm clean:generated && pnpm generate:types && pnpm generate:client",

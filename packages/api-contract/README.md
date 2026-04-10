@@ -16,17 +16,15 @@ This package owns the OpenAPI source of truth for FocusBuddy and the generated c
 
 ## Package exports
 
-- `@focusbuddy/api-contract/openapi-path` exposes a filesystem path for Node-based tooling that needs to read the source OpenAPI document
 - `@focusbuddy/api-contract/generated/types` exposes the built type contract from `dist/generated/types.*`
 - `@focusbuddy/api-contract/generated/client` exposes the built client scaffold from `dist/generated/client.*`
 
 ## Compatibility contract
 
 - the runtime contract for `./generated/client` and `./generated/types` is the built ESM artifact under `dist/generated`
-- this package does not currently declare a dedicated CommonJS `require` condition or separate CommonJS build for those runtime subpaths
-- `./openapi-path` remains a dedicated CommonJS helper entry for Node-side tooling that reads the source OpenAPI document
+- this package is an explicit ESM package and does not declare CommonJS runtime subpaths
 
-The current repository consumers import these subpaths through ESM-aware TypeScript and bundler flows. No in-repository consumer currently depends on a dedicated CommonJS export path for `@focusbuddy/api-contract/generated/*`, so dual-publish output is not part of this package contract today.
+The current repository consumers import these subpaths through ESM-aware TypeScript and bundler flows. No in-repository consumer currently depends on a CommonJS export path for `@focusbuddy/api-contract/generated/*`, so dual-publish output is not part of this package contract.
 
 The generated client scaffold depends on `@zodios/core`, `axios`, and `zod`, and this package declares those runtime dependencies directly so consumers do not need to install them separately.
 
