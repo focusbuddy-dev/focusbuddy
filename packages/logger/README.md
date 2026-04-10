@@ -31,6 +31,16 @@ The current repository now uses those boundaries directly.
 - API runtime integration: [../../apps/api/src/logging/api-request-logging.interceptor.ts](../../apps/api/src/logging/api-request-logging.interceptor.ts)
 - Web runtime integration: [../../apps/web/src/middleware.ts](../../apps/web/src/middleware.ts)
 
+## Build Contract
+
+The package now publishes one explicit ESM build.
+
+- `pnpm build:esm` uses TypeScript to emit the runtime JavaScript, declarations, and source maps into `dist`
+- the package exports only the ESM entrypoints under `exports`
+- declarations stay anchored at `dist/*.d.ts` for the root, browser, and server subpaths
+
+That keeps the package contract aligned with its `type: module` manifest and removes the extra CommonJS-specific build path entirely.
+
 The important alignment point is that API and Web now differ only at the sink boundary.
 
 - API sink: `pino` owned by the API app
