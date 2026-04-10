@@ -6,28 +6,31 @@
     "README.md",
     "openapi-path.cjs",
     "openapi",
-    "generated"
+    "dist"
   ],
   "exports": {
     "./openapi-path": "./openapi-path.cjs",
     "./generated/client": {
-      "types": "./generated/client.ts",
-      "default": "./generated/client.ts"
+      "types": "./dist/generated/client.d.ts",
+      "default": "./dist/generated/client.js"
     },
     "./generated/types": {
-      "types": "./generated/types.ts",
-      "default": "./generated/types.ts"
+      "types": "./dist/generated/types.d.ts",
+      "default": "./dist/generated/types.js"
     }
   },
   "scripts": {
-    "build": "pnpm generate",
+    "build": "pnpm build:clean && pnpm generate && pnpm build:artifacts && pnpm build:postprocess",
+    "build:artifacts": "pnpm --dir ../.. exec tsc --project packages/api-contract/tsconfig.build.json",
+    "build:clean": "rm -rf ./dist",
+    "build:postprocess": "node ./scripts/fix-generated-import-specifiers.mjs && node ./scripts/write-dist-package-json.mjs",
     "clean:generated": "rm -rf ./generated && mkdir -p ./generated",
     "dev": "pnpm generate",
     "generate": "pnpm clean:generated && pnpm generate:types && pnpm generate:client",
     "generate:client": "openapi-zod-client ./openapi/focusbuddy.openapi.yaml -o ./generated/client.ts --export-schemas -p ../../prettier.config.cjs",
     "generate:types": "openapi-typescript ./openapi/focusbuddy.openapi.yaml -o ./generated/types.ts",
     "lint": "pnpm --dir ../.. exec oxlint packages/api-contract",
-    "test": "node ../../scripts/workspace-task.mjs @focusbuddy/api-contract test",
+    "test": "pnpm build && node --test ./test/*.test.mjs",
     "typecheck": "pnpm generate && tsc --project tsconfig.json --noEmit"
   },
   "dependencies": {
