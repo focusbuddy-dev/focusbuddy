@@ -8,7 +8,7 @@ type WebRequestLoggingContextValue = WebRequestCorrelation & {
   sessionId: string
 }
 
-const WebRequestLoggingContext = createContext<WebRequestLoggingContextValue | null>(null)
+const WebRequestLoggingContext = createContext<WebRequestLoggingContextValue | undefined>(undefined)
 
 function createClientSessionId(): string {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
@@ -27,9 +27,9 @@ export function WebRequestLoggingProvider({
   requestId,
   traceId,
 }: WebRequestLoggingProviderProps) {
-  const sessionIdRef = useRef<string | null>(null)
+  const sessionIdRef = useRef<string | undefined>(undefined)
 
-  if (sessionIdRef.current === null) {
+  if (sessionIdRef.current === undefined) {
     sessionIdRef.current = createClientSessionId()
   }
 
@@ -49,7 +49,7 @@ export function WebRequestLoggingProvider({
 export function useWebRequestLogging(): WebRequestLoggingContextValue {
   const context = useContext(WebRequestLoggingContext)
 
-  if (context === null) {
+  if (context === undefined) {
     throw new Error('useWebRequestLogging must be used within WebRequestLoggingProvider')
   }
 
