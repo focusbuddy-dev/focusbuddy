@@ -11,7 +11,7 @@ This document defines:
 - which workspace packages are candidates for explicit ESM conversion
 - the package contract required before a package can declare `type: module`
 - where current tooling still assumes CommonJS-oriented behavior
-- when CommonJS compatibility must remain in place
+- when CommonJS compatibility must remain in place for packages that still need it
 - an ordered follow-up plan for package-by-package migration work
 
 This document does not define a repository-wide app runtime conversion to pure ESM.
@@ -28,7 +28,7 @@ This document does not define a repository-wide app runtime conversion to pure E
 
 | Workspace | Current state | Migration stance | Notes |
 | --- | --- | --- | --- |
-| `packages/logger` | already explicit ESM with dual-publish exports | keep as the reference implementation | uses `type: module`, explicit `import` and `require` conditions, TypeScript-emitted ESM artifacts, and esbuild-generated CJS artifacts |
+| `packages/logger` | explicit ESM runtime package | keep as the repository's simplest runtime-package reference | uses `type: module`, explicit ESM export entrypoints, and TypeScript-emitted build artifacts |
 | `packages/api-contract` | source-export package with generated `.ts` outputs and a CommonJS helper entry | next runtime package candidate after a build contract is defined | should not expose generated source files as the long-term runtime contract once it becomes explicit ESM |
 | `packages/config-typescript` | exports shared JSON config files | keep current mode for now | TypeScript config consumers do not benefit from package-level ESM and still depend on current tool loading behavior |
 | `packages/config-jest` | exports raw `.ts` config modules | coordinated migration only | current consumers rely on TypeScript config loading and Jest-specific loader behavior |
@@ -50,9 +50,7 @@ Any workspace package that becomes an explicit ESM package must satisfy all of t
 6. use NodeNext-compatible relative import specifiers in source where emitted JavaScript requires them
 7. include verification that both the ESM import path and any required CommonJS path still resolve correctly
 
-The logger package is the current repository reference for this contract. Future package migrations should copy the contract shape, not improvise a new one for each workspace.
-
-For logger specifically, the CommonJS compatibility path should stay on a dedicated non-TypeScript transpile step. Declarations remain sourced from the ESM build output, `dist/cjs/package.json` keeps the CJS folder explicit, and the retired `tsconfig.cjs.json` plus `ignoreDeprecations` workaround should not be reintroduced.
+The logger package is the current repository reference for a runtime package that can move to explicit ESM without retaining a separate CommonJS artifact. Future package migrations should copy the contract shape that matches their actual consumers, not preserve CommonJS by default.
 
 ## Tooling constraints and current breakpoints
 
@@ -85,7 +83,7 @@ The repository build and test tasks rely on upstream workspace builds through Tu
 ## What can move package-by-package
 
 - runtime libraries with a narrow public API and an explicit build output can migrate individually once they adopt the full package contract
-- packages that can follow the logger dual-publish pattern without changing shared tooling may proceed in separate implementation issues
+- packages whose current consumers are already ESM-compatible can follow the logger package's ESM-only pattern in separate implementation issues
 
 ## What must be coordinated across the repository
 

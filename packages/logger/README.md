@@ -33,14 +33,13 @@ The current repository now uses those boundaries directly.
 
 ## Build Contract
 
-The package keeps dual-publish runtime compatibility, but the CommonJS output no longer depends on a second TypeScript config with deprecated CommonJS module-resolution settings.
+The package now publishes one explicit ESM build.
 
-- `pnpm build:esm` uses TypeScript to emit the canonical ESM JavaScript, declarations, and source maps into `dist`
-- `pnpm build:cjs` uses `esbuild` to transpile the same `src/**/*.ts` tree into `dist/cjs` as CommonJS JavaScript with source maps
-- declarations stay anchored at `dist/*.d.ts` and are shared by both the `import` and `require` export conditions
-- `scripts/write-cjs-package-json.mjs` keeps `dist/cjs/package.json` pinned to `{ "type": "commonjs" }` so the generated `.js` files stay require-safe inside an explicit ESM package
+- `pnpm build:esm` uses TypeScript to emit the runtime JavaScript, declarations, and source maps into `dist`
+- the package exports only the ESM entrypoints under `exports`
+- declarations stay anchored at `dist/*.d.ts` for the root, browser, and server subpaths
 
-That makes the logger package's CommonJS support explicit and removes the need for the retired `tsconfig.cjs.json` plus its temporary `ignoreDeprecations` escape hatch.
+That keeps the package contract aligned with its `type: module` manifest and removes the extra CommonJS-specific build path entirely.
 
 The important alignment point is that API and Web now differ only at the sink boundary.
 

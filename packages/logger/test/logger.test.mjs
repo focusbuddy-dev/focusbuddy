@@ -1,12 +1,9 @@
 import assert from 'node:assert/strict'
-import { createRequire } from 'node:module'
 import test from 'node:test'
 
 import { createBrowserLogger } from '../dist/browser.js'
 import { createEventLogger, createLogger, defineEvent } from '../dist/index.js'
 import { createServerLogger } from '../dist/server.js'
-
-const require = createRequire(import.meta.url)
 
 test('merges base, request, and user context through one facade', () => {
   const writes = []
@@ -228,14 +225,4 @@ test('emits event schema logs with logId and rendered message templates', () => 
       traceId: 'trace-700',
     },
   ])
-})
-
-test('keeps CommonJS require entrypoints available for current consumers', () => {
-  const cjsRoot = require('@focusbuddy/logger')
-  const cjsBrowser = require('@focusbuddy/logger/browser')
-  const cjsServer = require('@focusbuddy/logger/server')
-
-  assert.equal(typeof cjsRoot.createLogger, 'function')
-  assert.equal(typeof cjsBrowser.createBrowserLogger, 'function')
-  assert.equal(typeof cjsServer.createServerLogger, 'function')
 })
