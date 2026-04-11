@@ -209,7 +209,7 @@ async function discoverWorkspaces(repoRoot) {
     }
   }
 
-  return workspaces.sort((left, right) => right.rootPath.length - left.rootPath.length);
+  return workspaces.toSorted((left, right) => right.rootPath.length - left.rootPath.length);
 }
 
 async function collectWorkspaceFiles(rootPath) {

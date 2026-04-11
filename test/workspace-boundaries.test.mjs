@@ -12,7 +12,11 @@ async function createWorkspace(tempRoot, relativePath, packageName, extra = {}) 
   await mkdir(resolve(workspaceRoot, 'src'), { recursive: true });
   await writeFile(
     resolve(workspaceRoot, 'package.json'),
-    JSON.stringify({ name: packageName, private: true, version: '0.0.0', ...extra }, null, 2),
+    JSON.stringify(
+      { name: packageName, private: true, version: '0.0.0', ...extra },
+      undefined,
+      2,
+    ),
     'utf8',
   );
   return workspaceRoot;
@@ -181,7 +185,7 @@ test('rejects undeclared workspace packages in tsconfig extends', async () => {
 
   await writeFile(
     resolve(repoRoot, 'apps/api/tsconfig.json'),
-    JSON.stringify({ extends: '@focusbuddy/config-typescript/api' }, null, 2),
+    JSON.stringify({ extends: '@focusbuddy/config-typescript/api' }, undefined, 2),
     'utf8',
   );
 
@@ -207,7 +211,7 @@ test('accepts exported workspace subpaths in tsconfig extends', async () => {
 
   await writeFile(
     resolve(repoRoot, 'apps/api/tsconfig.json'),
-    JSON.stringify({ extends: '@focusbuddy/config-typescript/api' }, null, 2),
+    JSON.stringify({ extends: '@focusbuddy/config-typescript/api' }, undefined, 2),
     'utf8',
   );
 
