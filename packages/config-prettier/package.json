@@ -2,12 +2,12 @@
   "name": "@focusbuddy/config-prettier",
   "private": true,
   "version": "0.0.0",
-  "main": "index.cjs",
+  "main": "index.mjs",
   "files": [
-    "index.cjs"
+    "index.mjs"
   ],
   "exports": {
-    ".": "./index.cjs"
+    ".": "./index.mjs"
   },
   "scripts": {
     "build": "node ../../scripts/workspace-task.mjs @focusbuddy/config-prettier build",

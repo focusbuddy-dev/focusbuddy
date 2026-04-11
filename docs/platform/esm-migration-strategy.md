@@ -1,40 +1,51 @@
-# Package ESM Migration Strategy
+# Repository ESM Strategy
 
-This document captures the output of issue #120.
+This document captures the repository module strategy after issue #57 and the package migration work from issue #120.
 
-Its purpose is to define a repository-wide strategy for converting workspace packages to explicit ESM packages after the focused logger-package change from issue #23.
+Its purpose is to define an ESM-first repository policy, the file-level CommonJS exceptions that still remain, and the package contract for workspace packages that move to explicit ESM after the focused logger-package change from issue #23.
 
 ## Scope
 
 This document defines:
 
+- the repository default for hand-written JavaScript, TypeScript, and tool config files
+- which current files are allowed to remain CommonJS
 - which workspace packages are candidates for explicit ESM conversion
 - the package contract required before a package can declare `type: module`
-- where current tooling still assumes CommonJS-oriented behavior
-- when CommonJS compatibility must remain in place for packages that still need it
+- when CommonJS compatibility may remain in place for packages or config files that still need it
 - an ordered follow-up plan for package-by-package migration work
 
 This document does not define a repository-wide app runtime conversion to pure ESM.
 
 ## Decision rules
 
+- all hand-written JavaScript and TypeScript should be written in ESM form unless a documented exception still applies
+- tool config files should use ESM-compatible formats whenever the current toolchain supports them in a stable way
+- CommonJS is allowed only for a file whose current tool or invocation path is not yet verified as stable under ESM
+- CommonJS exceptions must be tracked file-by-file with both the current reason and the condition that would allow removal
+- new files must default to ESM and must not introduce new CommonJS entrypoints without a documented blocker
+- existing CommonJS files should be treated as temporary compatibility shims and removed once the blocker is verified gone
 - explicit ESM is opt-in per package; one package changing module mode does not authorize ad hoc conversion of unrelated packages
 - runtime packages that other workspaces import at runtime should prefer built artifact exports over raw source file exports before they become explicit ESM packages
 - runtime packages should default to explicit ESM-only exports and should add a CommonJS `require` path only when a verified current consumer or tool still blocks on it
-- config packages consumed directly by tools should not become explicit ESM packages until the consuming toolchain contract is documented and verified
-- a package must keep CommonJS compatibility whenever any current consumer or tool still relies on `require()` or a CommonJS-only loader path
+- config packages consumed directly by tools should not change module contracts until the consuming toolchain contract is documented and verified
+- a package or config file may keep CommonJS compatibility only while a verified current consumer or tool still relies on `require()` or a CommonJS-only loader path
 - no package may switch to explicit ESM without a documented export surface, build output contract, and verification plan
+
+## Current CommonJS exceptions
+
+The repository currently has no documented file-level CommonJS exceptions.
 
 ## Package inventory and migration stance
 
 | Workspace | Current state | Migration stance | Notes |
 | --- | --- | --- | --- |
 | `packages/logger` | explicit ESM runtime package | keep as the repository's simplest runtime-package reference | uses `type: module`, explicit ESM export entrypoints, and TypeScript-emitted build artifacts |
-| `packages/api-contract` | source-export package with generated `.ts` outputs and a CommonJS helper entry | next runtime package candidate after a build contract is defined | should not expose generated source files as the long-term runtime contract once it becomes explicit ESM |
+| `packages/api-contract` | explicit ESM runtime package with generated `.ts` source and built `.js` artifacts | continue tightening the build contract | should keep moving toward built-artifact-first consumption and now points generator formatting at the root ESM Prettier entry |
 | `packages/config-typescript` | exports shared JSON config files | keep current mode for now | TypeScript config consumers do not benefit from package-level ESM and still depend on current tool loading behavior |
 | `packages/config-jest` | exports raw `.ts` config modules with a shared ESM-consumption helper | coordinated migration only | the shared baseline now owns `node_modules` allowlist rules for ESM package consumption, but the package itself still relies on TypeScript config loading and Jest-specific loader behavior |
 | `packages/config-oxlint` | exports raw `.ts` config modules | coordinated migration only | current consumers depend on tool execution of TypeScript config files |
-| `packages/config-prettier` | CommonJS-only `index.cjs` entry | keep CommonJS | Prettier config loading still requires a stable CommonJS path in this repository |
+| `packages/config-prettier` | explicit `.mjs` tool config package | keep as the shared Prettier reference | the repository root and the API contract generator both consume the ESM entry |
 | `apps/api` | NodeNext TypeScript app consumer | not a package-conversion target in this issue | app runtime strategy remains separate from package migration strategy |
 | `apps/web` | bundler-managed app consumer | not a package-conversion target in this issue | can consume ESM packages without forcing repository-wide package conversion |
 | `apps/mobile` | placeholder workspace | no action now | revisit when the workspace has real runtime code |
@@ -70,9 +81,15 @@ For this repository, the current Jest rule is:
 
 ### Tool-owned config packages
 
-The shared config packages currently export raw `.ts`, `.json`, and `.cjs` files that are consumed directly by TypeScript, Jest, oxlint, and Prettier tooling entrypoints.
+The shared config packages currently export raw `.ts`, `.json`, and `.mjs` files that are consumed directly by TypeScript, Jest, oxlint, and Prettier tooling entrypoints.
 
 Those packages should not be converted package-by-package without a coordinated loader decision because their consumers are tools, not normal runtime imports. A repository-wide loader break in config packages would block routine lint, test, and typecheck flows.
+
+The repository default is still ESM-first for tool configs. The current rule is:
+
+- prefer `.ts`, `.mts`, `.mjs`, or other ESM-compatible config formats when the tool documents stable support
+- keep a CommonJS config only when the exact current invocation path is still unverified or unstable under ESM
+- document each remaining CommonJS file in the exception table above instead of treating config packages as blanket CommonJS-only areas
 
 ### API runtime compatibility
 
@@ -88,12 +105,13 @@ The repository build and test tasks rely on upstream workspace builds through Tu
 
 - runtime libraries with a narrow public API and an explicit build output can migrate individually once they adopt the full package contract
 - packages whose current consumers are already ESM-compatible can follow the logger package's ESM-only pattern in separate implementation issues
+- root tool configs such as commitlint and stylelint should move to ESM-compatible file formats as soon as their current command paths are verified
 
 ## What must be coordinated across the repository
 
 - any change to `packages/config-jest`, `packages/config-oxlint`, `packages/config-typescript`, or `packages/config-prettier`
 - any change that requires the shared Jest baseline to adopt repository-wide ESM handling rules
-- any change that removes CommonJS compatibility from a package still consumed by existing Node or tool entrypoints
+- any change that removes CommonJS compatibility from a package or config file still consumed by existing Node or tool entrypoints
 - any change that couples package migration with an application runtime module-strategy change
 
 ## Ordered follow-up plan
@@ -101,8 +119,9 @@ The repository build and test tasks rely on upstream workspace builds through Tu
 1. keep `packages/logger` as the ESM-only runtime reference and `packages/config-jest` as the shared Jest ESM-consumption reference for future runtime packages
 2. define the build output and export contract for `packages/api-contract` so generated source stops being the primary runtime surface
 3. migrate `packages/api-contract` after its build and consumer contract are documented, keeping it ESM-only unless a verified blocker requires a CommonJS path
-4. decide whether config packages should remain direct source-export tool packages or move to a separate built-distribution model before attempting any config-package ESM change
-5. revisit application runtime module strategy only after package-level migration rules are stable and proven in at least one additional runtime package
+4. keep converting root tool configs to ESM-compatible formats when their current invocations are verified, and keep the CommonJS exception list as small as possible
+5. decide whether config packages should remain direct source-export tool packages or move to a separate built-distribution model before attempting any coordinated config-package module-contract change
+6. revisit application runtime module strategy only after package-level migration rules are stable and proven in at least one additional runtime package
 
 ## Follow-up issue split
 

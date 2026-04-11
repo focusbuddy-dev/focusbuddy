@@ -4,12 +4,12 @@ import { resolve } from 'node:path';
 
 const failures = [];
 
-const commitlintConfigPath = resolve(process.cwd(), 'commitlint.config.cjs');
+const commitlintConfigPath = resolve(process.cwd(), 'commitlint.config.ts');
 const commitMsgHookPath = resolve(process.cwd(), '.husky/commit-msg');
 const huskyRuntimePath = resolve(process.cwd(), '.husky/_');
 
 if (!existsSync(commitlintConfigPath)) {
-  failures.push('commitlint.config.cjs is missing');
+  failures.push('commitlint.config.ts is missing');
 }
 
 if (!existsSync(commitMsgHookPath)) {
@@ -37,7 +37,7 @@ if (hooksPath.status !== 0 || hooksPath.stdout.trim() !== '.husky/_') {
 
 const validSmokeTest = spawnSync(
   'pnpm',
-  ['exec', 'commitlint', '--config', 'commitlint.config.cjs'],
+  ['exec', 'commitlint', '--config', 'commitlint.config.ts'],
   {
     cwd: process.cwd(),
     encoding: 'utf8',
@@ -51,7 +51,7 @@ if (validSmokeTest.status !== 0) {
 
 const invalidSmokeTest = spawnSync(
   'pnpm',
-  ['exec', 'commitlint', '--config', 'commitlint.config.cjs'],
+  ['exec', 'commitlint', '--config', 'commitlint.config.ts'],
   {
     cwd: process.cwd(),
     encoding: 'utf8',

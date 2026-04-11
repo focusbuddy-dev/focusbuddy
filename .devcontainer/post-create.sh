@@ -4,7 +4,9 @@
 
 set -euo pipefail
 
-expected_package_manager="$(node -p "require('./package.json').packageManager")"
+expected_package_manager="$({
+	node --input-type=module -e "import { readFileSync } from 'node:fs'; console.log(JSON.parse(readFileSync('./package.json', 'utf8')).packageManager);"
+})"
 
 node --version
 corepack --version

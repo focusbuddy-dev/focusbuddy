@@ -21,7 +21,7 @@ const scenarios = [
 let hasFailure = false;
 
 for (const scenario of scenarios) {
-  const result = spawnSync('pnpm', ['exec', 'commitlint', '--config', 'commitlint.config.cjs'], {
+  const result = spawnSync('pnpm', ['exec', 'commitlint', '--config', 'commitlint.config.ts'], {
     cwd: process.cwd(),
     encoding: 'utf8',
     input: scenario.message,
