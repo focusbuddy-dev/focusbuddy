@@ -71,12 +71,15 @@ Current verified app-level exception:
 - `apps/web` should still keep same-folder and nearby relative imports where they remain shorter and clearer, such as CSS modules or tightly local helpers
 - this is a web-local allowance, not a repository-wide default for all workspaces
 
-Current explicit app-level hold:
+Current verified app-level contract:
 
-- `apps/api` should stay relative-import-first for app-local imports under the current NodeNext runtime contract
-- the current API toolchain does not have one repository-owned alias contract that covers TypeScript compile-time resolution, Nest local startup, emitted runtime execution from `dist`, Jest resolution, and Prisma command execution together
-- introducing an API-local alias now would require additional runtime or test-only resolution wiring rather than a documentation-level style preference, which is exactly the drift this policy is meant to avoid
-- revisit API-local aliases only after the repository defines and verifies one explicit alias-resolution story across API build, local dev, parity runtime, Jest, and Prisma commands
+- `apps/api` may use `#api/*` for app-local imports rooted at `apps/api`
+- the current API toolchain now verifies one repository-owned contract across TypeScript compile-time resolution, source startup, emitted runtime execution from `dist`, Jest resolution, and Prisma command execution
+- `#api/*` is the only supported app-local alias family for the API workspace today
+- `@/`, `~/`, and bare `src/*` remain unsupported in `apps/api`
+- same-folder and nearby relative imports remain allowed when they are shorter and clearer than `#api/*`
+
+The current API-side module resolution contract is documented in `docs/platform/api-module-resolution-contract.md`.
 
 ## Function declaration style policy
 
@@ -137,7 +140,7 @@ This means issue #96 is the decision point, not the implementation vehicle for a
 - current app and package code still uses relative imports in many hand-written files
 - current hand-written exported code is mostly written with function declarations rather than arrow functions
 - the web workspace could pilot an alias earlier than the API workspace, but that would still not justify a repository-wide rule today
-- the API workspace still lacks a verified alias-resolution contract across NodeNext build, Nest startup, Jest, and Prisma command paths
+- the API workspace now has a verified `#api/*` contract across compile, source startup, `dist` runtime, Jest, and Prisma command paths
 - function-style enforcement would be weaker than the repository's existing boundary-oriented rules unless a later issue identifies a concrete maintenance benefit
 
 ## Review triggers

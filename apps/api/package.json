@@ -3,17 +3,24 @@
   "private": true,
   "version": "0.0.0",
   "main": "dist/main.js",
+  "imports": {
+    "#api/*": {
+      "types": "./src/*.ts",
+      "development": "./src/*.ts",
+      "default": "./dist/*.js"
+    }
+  },
   "scripts": {
     "build": "pnpm contract:build && pnpm logger:build && pnpm prisma:generate && pnpm --dir ../.. exec tsc --project apps/api/tsconfig.build.json",
     "contract:build": "pnpm --dir ../.. --filter @focusbuddy/api-contract build",
-    "dev": "pnpm contract:build && pnpm logger:build && pnpm prisma:generate && pnpm exec nest start --watch",
+    "dev": "pnpm contract:build && pnpm logger:build && pnpm prisma:generate && NODE_OPTIONS=--conditions=development pnpm exec tsx watch src/main.ts",
     "logger:build": "pnpm --dir ../.. --filter @focusbuddy/logger build",
     "lint": "pnpm --dir ../.. exec oxlint apps/api/src apps/api/test apps/api/prisma",
     "parity": "pnpm build && node dist/main.js",
-    "prisma:generate": "prisma generate --config prisma.config.ts",
-    "prisma:migrate:dev": "prisma migrate dev --config prisma.config.ts",
-    "prisma:studio": "prisma studio --config prisma.config.ts",
-    "test": "pnpm contract:build && pnpm logger:build && pnpm prisma:generate && pnpm --dir ../.. exec jest --config apps/api/jest.config.ts --runInBand",
+    "prisma:generate": "NODE_OPTIONS=--conditions=development prisma generate --config prisma.config.ts",
+    "prisma:migrate:dev": "NODE_OPTIONS=--conditions=development prisma migrate dev --config prisma.config.ts",
+    "prisma:studio": "NODE_OPTIONS=--conditions=development prisma studio --config prisma.config.ts",
+    "test": "pnpm contract:build && pnpm logger:build && pnpm prisma:generate && NODE_OPTIONS=--conditions=development pnpm --dir ../.. exec jest --config apps/api/jest.config.ts --runInBand",
     "typecheck": "pnpm contract:build && pnpm logger:build && pnpm prisma:generate && pnpm --dir ../.. exec tsc --project apps/api/tsconfig.build.json --noEmit"
   },
   "dependencies": {
@@ -39,6 +46,7 @@
     "@types/jest": "^30.0.0",
     "@types/node": "^25.5.2",
     "prisma": "^7.7.0",
+    "tsx": "^4.20.6",
     "ts-jest": "^29.4.9",
     "typescript": "^6.0.2"
   }

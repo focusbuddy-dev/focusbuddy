@@ -1,7 +1,7 @@
 import { Test } from '@nestjs/testing';
 
-import { HealthController } from '../src/health/health.controller';
-import { PrismaService } from '../src/prisma/prisma.service';
+import { HealthController } from '#api/health/health.controller';
+import { PrismaService } from '#api/prisma/prisma.service';
 
 type PrismaProbe = {
   $queryRaw: (query: TemplateStringsArray) => Promise<unknown>;

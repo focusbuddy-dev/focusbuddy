@@ -8,15 +8,15 @@ jest.mock('@focusbuddy/logger', () => ({
 
 const logApiRequestHandled = jest.fn()
 
-jest.mock('../src/logging/api-request-logger.example', () => ({
+jest.mock('#api/logging/api-request-logger.example', () => ({
   logApiRequestHandled: (...args: unknown[]) => logApiRequestHandled(...args),
 }))
 
-jest.mock('../src/logging/api-runtime-logger', () => ({
+jest.mock('#api/logging/api-runtime-logger', () => ({
   apiRuntimeLogger: {},
 }))
 
-import { ApiRequestLoggingInterceptor } from '../src/logging/api-request-logging.interceptor';
+import { ApiRequestLoggingInterceptor } from '#api/logging/api-request-logging.interceptor';
 
 describe('ApiRequestLoggingInterceptor', () => {
   it('binds correlation headers and emits a handled request event', async () => {

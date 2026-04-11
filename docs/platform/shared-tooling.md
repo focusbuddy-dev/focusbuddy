@@ -99,6 +99,8 @@ The repository-wide package ESM migration strategy is documented in `docs/platfo
 
 The current repository policy for app-local import paths and preferred function declaration style is documented in `docs/platform/import-and-function-style-policy.md`.
 
+The current `apps/api` module resolution contract across compile, startup, built runtime, Jest, and Prisma command paths is documented in `docs/platform/api-module-resolution-contract.md`.
+
 The repository default for hand-written JavaScript, TypeScript, and tool config files is now ESM-first. Remaining CommonJS files must be tracked as explicit file-level exceptions in that strategy document.
 
 ## Generated files rule

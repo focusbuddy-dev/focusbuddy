@@ -2,7 +2,7 @@ import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '@prisma/client';
 
-import { getRequiredDatabaseUrl, loadLocalRuntimeEnv } from '../config/local-runtime-env';
+import { getRequiredDatabaseUrl, loadLocalRuntimeEnv } from '#api/config/local-runtime-env';
 
 function createPrismaClientOptions(): ConstructorParameters<typeof PrismaClient>[0] {
   loadLocalRuntimeEnv();
