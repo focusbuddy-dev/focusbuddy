@@ -152,7 +152,7 @@ function isSpecifierAllowedByExports(targetWorkspace, specifier) {
     }
 
     const exportSubpath = entry.key.startsWith('./') ? entry.key.slice(2) : entry.key;
-    const pattern = exportSubpath.replace(/\*/g, '.*');
+    const pattern = escapeRegularExpression(exportSubpath).replace(/\\\*/g, '.*');
     const specifierPatternText = `^${escapeRegularExpression(targetWorkspace.name)}/${pattern}$`;
 
     return new RegExp(specifierPatternText).test(specifier);

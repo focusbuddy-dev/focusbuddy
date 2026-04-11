@@ -137,6 +137,38 @@ test('rejects imports for unexported workspace subpaths', async () => {
   assert.match(violations[0], /@focusbuddy\/logger\/server/);
 });
 
+test('treats export subpath regex metacharacters literally except for export wildcards', async () => {
+  const repoRoot = await mkdtemp(resolve(tmpdir(), 'focusbuddy-boundaries-subpath-regex-'));
+
+  await createWorkspace(repoRoot, 'apps/web', '@focusbuddy/web', {
+    dependencies: {
+      '@focusbuddy/logger': 'workspace:*',
+    },
+  });
+  await createWorkspace(repoRoot, 'packages/logger', '@focusbuddy/logger', {
+    exports: {
+      './feature.v1/*': './dist/feature.v1/*.js',
+    },
+  });
+
+  await writeFile(
+    resolve(repoRoot, 'apps/web/src/index.ts'),
+    [
+      "import { allowed } from '@focusbuddy/logger/feature.v1/browser';",
+      "import { blocked } from '@focusbuddy/logger/featureXv1/browser';",
+      'export { allowed, blocked };',
+      '',
+    ].join('\n'),
+    'utf8',
+  );
+
+  const violations = await checkWorkspaceBoundaries(repoRoot);
+
+  assert.equal(violations.length, 1);
+  assert.match(violations[0], /@focusbuddy\/logger\/featureXv1\/browser/);
+  assert.doesNotMatch(violations[0], /@focusbuddy\/logger\/feature\.v1\/browser/);
+});
+
 test('rejects undeclared workspace packages in tsconfig extends', async () => {
   const repoRoot = await mkdtemp(resolve(tmpdir(), 'focusbuddy-boundaries-tsconfig-'));
 

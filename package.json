@@ -9,7 +9,7 @@
     }
   },
   "scripts": {
-    "build": "turbo run build",
+    "build": "pnpm generate && turbo run build",
     "dev": "turbo run dev --parallel",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
@@ -24,8 +24,8 @@
     "merge-gate:typecheck": "pnpm typecheck",
     "preinstall": "node scripts/enforce-pnpm.mjs",
     "prepare": "husky",
-    "test": "node --test test/*.test.mjs && turbo run test",
-    "typecheck": "turbo run typecheck"
+    "test": "pnpm generate && node --test test/*.test.mjs && turbo run test",
+    "typecheck": "pnpm generate && turbo run typecheck"
   },
   "devDependencies": {
     "@commitlint/cli": "^20.5.0",
