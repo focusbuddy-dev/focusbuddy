@@ -88,6 +88,7 @@ packages/
 
 - app code lives under `apps/*`
 - shared reusable code or configuration lives under `packages/*`
+- app workspaces must consume code and config from `packages/*` through package names and exported entrypoints, not through relative filesystem paths into package internals
 - API contract ownership starts in `packages/api-contract`, not in the API app
 - Prisma and database access stay in the API boundary unless a later issue explicitly extracts a shared database package
 - generated contract outputs are expected to be consumed by apps, not edited manually inside apps
