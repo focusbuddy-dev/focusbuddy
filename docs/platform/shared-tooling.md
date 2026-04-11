@@ -36,9 +36,9 @@ This document does not define application code, end-to-end test strategy, or dep
 
 ### `packages/config-prettier`
 
-- `index.cjs` is the single source of truth for formatting decisions
+- `index.mjs` is the single source of truth for formatting decisions
 - quote style is defined here so style comments do not need to be repeated in reviews
-- this package is currently a documented CommonJS exception and should move only after the root Prettier entry and generator callers can consume an ESM config path safely
+- the repository root consumes this package through `prettier.config.mjs`
 
 ### `packages/config-jest`
 

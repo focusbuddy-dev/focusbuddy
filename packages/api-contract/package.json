@@ -25,7 +25,7 @@
     "clean:generated": "rm -rf ./generated && mkdir -p ./generated",
     "dev": "pnpm generate",
     "generate": "pnpm clean:generated && pnpm generate:types && pnpm generate:client",
-    "generate:client": "openapi-zod-client ./openapi/focusbuddy.openapi.yaml -o ./generated/client.ts --export-schemas -p ../../prettier.config.cjs",
+    "generate:client": "openapi-zod-client ./openapi/focusbuddy.openapi.yaml -o ./generated/client.ts --export-schemas -p ../../prettier.config.mjs",
     "generate:types": "openapi-typescript ./openapi/focusbuddy.openapi.yaml -o ./generated/types.ts",
     "lint": "pnpm --dir ../.. exec oxlint packages/api-contract",
     "test": "pnpm build && node --test ./test/*.test.mjs",

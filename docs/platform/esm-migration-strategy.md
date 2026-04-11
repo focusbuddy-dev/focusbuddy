@@ -34,23 +34,18 @@ This document does not define a repository-wide app runtime conversion to pure E
 
 ## Current CommonJS exceptions
 
-The repository currently allows only these file-level CommonJS exceptions:
-
-| File | Why it remains CommonJS | Exit condition |
-| --- | --- | --- |
-| `prettier.config.cjs` | the repository root and generator tooling still rely on a stable CommonJS Prettier config path | remove once the root Prettier entry and all explicit callers are verified against an ESM config path |
-| `packages/config-prettier/index.cjs` | the shared Prettier config package currently publishes the CommonJS entry consumed by `prettier.config.cjs` | remove once the shared Prettier package can publish an ESM entry that all current callers load without compatibility issues |
+The repository currently has no documented file-level CommonJS exceptions.
 
 ## Package inventory and migration stance
 
 | Workspace | Current state | Migration stance | Notes |
 | --- | --- | --- | --- |
 | `packages/logger` | explicit ESM runtime package | keep as the repository's simplest runtime-package reference | uses `type: module`, explicit ESM export entrypoints, and TypeScript-emitted build artifacts |
-| `packages/api-contract` | explicit ESM runtime package with generated `.ts` source and built `.js` artifacts | continue tightening the build contract | should keep moving toward built-artifact-first consumption and currently still points generator formatting at the root CommonJS Prettier entry |
+| `packages/api-contract` | explicit ESM runtime package with generated `.ts` source and built `.js` artifacts | continue tightening the build contract | should keep moving toward built-artifact-first consumption and now points generator formatting at the root ESM Prettier entry |
 | `packages/config-typescript` | exports shared JSON config files | keep current mode for now | TypeScript config consumers do not benefit from package-level ESM and still depend on current tool loading behavior |
 | `packages/config-jest` | exports raw `.ts` config modules with a shared ESM-consumption helper | coordinated migration only | the shared baseline now owns `node_modules` allowlist rules for ESM package consumption, but the package itself still relies on TypeScript config loading and Jest-specific loader behavior |
 | `packages/config-oxlint` | exports raw `.ts` config modules | coordinated migration only | current consumers depend on tool execution of TypeScript config files |
-| `packages/config-prettier` | CommonJS-only `index.cjs` entry | keep CommonJS | Prettier config loading still requires a stable CommonJS path in this repository |
+| `packages/config-prettier` | explicit `.mjs` tool config package | keep as the shared Prettier reference | the repository root and the API contract generator both consume the ESM entry |
 | `apps/api` | NodeNext TypeScript app consumer | not a package-conversion target in this issue | app runtime strategy remains separate from package migration strategy |
 | `apps/web` | bundler-managed app consumer | not a package-conversion target in this issue | can consume ESM packages without forcing repository-wide package conversion |
 | `apps/mobile` | placeholder workspace | no action now | revisit when the workspace has real runtime code |
@@ -86,7 +81,7 @@ For this repository, the current Jest rule is:
 
 ### Tool-owned config packages
 
-The shared config packages currently export raw `.ts`, `.json`, and `.cjs` files that are consumed directly by TypeScript, Jest, oxlint, and Prettier tooling entrypoints.
+The shared config packages currently export raw `.ts`, `.json`, and `.mjs` files that are consumed directly by TypeScript, Jest, oxlint, and Prettier tooling entrypoints.
 
 Those packages should not be converted package-by-package without a coordinated loader decision because their consumers are tools, not normal runtime imports. A repository-wide loader break in config packages would block routine lint, test, and typecheck flows.
 
@@ -135,7 +130,6 @@ The next implementation work should be split into discrete repository tasks:
 - define the build artifact and export contract for `packages/api-contract`
 - migrate `packages/api-contract` as ESM-only unless an actual current consumer forces a retained CommonJS path
 - decide the long-term contract for config packages: direct source exports versus built distribution packages
-- verify and remove the remaining CommonJS Prettier exception chain when generator callers can consume an ESM config path
 - audit API-side consumer compatibility before any package drops CommonJS support
 
 ## Review trigger
