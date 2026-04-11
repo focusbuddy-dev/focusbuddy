@@ -1,7 +1,7 @@
 import { defineEvent } from '@focusbuddy/logger';
 import { NextResponse, type NextRequest } from 'next/server';
 
-import { prepareNextMiddlewareLogger } from './lib/logging/next-middleware-logger';
+import { prepareNextMiddlewareLogger } from '@/lib/logging/next-middleware-logger';
 
 const middlewareMatchedEvent = defineEvent<{ pathname: string }>({
   logId: 'WEB_MIDDLEWARE_001',

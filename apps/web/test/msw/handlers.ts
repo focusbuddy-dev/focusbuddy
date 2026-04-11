@@ -1,6 +1,6 @@
 import { rest } from 'msw';
 
-import { buildExamplePublicTargetSummary } from '../../src/lib/api/example-public-target-summary';
+import { buildExamplePublicTargetSummary } from '@/lib/api/example-public-target-summary';
 
 export const handlers = [
   rest.get('*/v1/public/targets/:targetId/summary', (req, res, ctx) => {

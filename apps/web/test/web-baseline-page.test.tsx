@@ -2,8 +2,8 @@ import type { ComponentProps } from 'react';
 
 import { render, screen } from '@testing-library/react';
 
-import { WebBaselinePage } from '../src/components/web-baseline-page';
-import { buildExamplePublicTargetSummary } from '../src/lib/api/example-public-target-summary';
+import { WebBaselinePage } from '@/components/web-baseline-page';
+import { buildExamplePublicTargetSummary } from '@/lib/api/example-public-target-summary';
 
 describe('WebBaselinePage', () => {
   it('renders the baseline guidance and contract-backed preview', () => {

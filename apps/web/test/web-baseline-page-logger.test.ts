@@ -5,7 +5,7 @@ import {
   logWebBaselineButtonClicked,
   logWebBaselineNavigationCompleted,
   logWebBaselinePageViewed,
-} from '../src/lib/logging/web-baseline-page-logger'
+} from '@/lib/logging/web-baseline-page-logger'
 
 describe('web baseline page logger', () => {
   it('keeps page request and session context on the shared client facade', () => {
