@@ -36,6 +36,7 @@
     "typecheck": "pnpm --dir ../.. exec tsc --project packages/logger/tsconfig.json --noEmit"
   },
   "devDependencies": {
+    "@focusbuddy/config-typescript": "workspace:*",
     "@types/node": "^25.5.2"
   }
 }

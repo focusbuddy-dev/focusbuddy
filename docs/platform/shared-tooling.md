@@ -65,6 +65,7 @@ The repository root now exposes:
 
 - `pnpm format` to apply Prettier
 - `pnpm format:check` to verify formatting without writing changes
+- `pnpm lint:boundaries` to reject workspace-to-workspace imports and dependencies that break the monorepo boundary rules
 - `pnpm lint` to run root oxlint checks and then workspace lint tasks
 - `pnpm merge-gate` to run the initial merge validation sequence
 - `pnpm test` to keep the existing root test flow and workspace test flow
@@ -78,6 +79,17 @@ The initial merge gate sequence is:
 - `pnpm test`
 
 This keeps generated contract outputs available before downstream validation steps run.
+
+The root `turbo.json` task graph also keeps `generate` ahead of `build`, `typecheck`, and `test` so the same ordering applies when those root commands are invoked individually.
+
+The workspace boundary check currently enforces these minimum repository rules:
+
+- apps may depend on packages, but not on other apps
+- packages may depend on packages, but not on apps
+- workspace code must not reach into another workspace through relative filesystem imports
+- shared packages may be consumed through declared package names and exported subpaths
+- workspace imports and tsconfig package extends must have a matching declared workspace dependency in `package.json`
+- workspace package imports must stay within the target package's exported subpaths
 
 The repository now uses GitHub Actions to run the same merge gate on pull requests and pushes to `main`.
 
@@ -124,6 +136,7 @@ This keeps issue #21 and issue #22 focused on app implementation instead of re-d
 
 - keep the root command entrypoints aligned with the repository merge gate
 - keep generated outputs available before downstream validation tasks
+- keep `pnpm lint:boundaries` aligned with the documented workspace boundary rules when new workspaces are added
 
 ### For #71
 
