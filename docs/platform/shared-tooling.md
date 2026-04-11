@@ -36,8 +36,9 @@ This document does not define application code, end-to-end test strategy, or dep
 
 ### `packages/config-prettier`
 
-- `index.cjs` is the single source of truth for formatting decisions
+- `index.mjs` is the single source of truth for formatting decisions
 - quote style is defined here so style comments do not need to be repeated in reviews
+- the repository root consumes this package through `prettier.config.mjs`
 
 ### `packages/config-jest`
 
@@ -75,6 +76,8 @@ The repository now uses GitHub Actions to run the same merge gate on pull reques
 Deploy-only checks remain outside this merge gate. Examples include deployed acceptance checks, deploy approval rules, and runtime-only validation in non-local environments.
 
 The repository-wide package ESM migration strategy is documented in `docs/platform/esm-migration-strategy.md` and must be consulted before converting additional workspace packages to explicit ESM.
+
+The repository default for hand-written JavaScript, TypeScript, and tool config files is now ESM-first. Remaining CommonJS files must be tracked as explicit file-level exceptions in that strategy document.
 
 ## Generated files rule
 

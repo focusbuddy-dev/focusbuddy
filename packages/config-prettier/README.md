@@ -2,6 +2,6 @@
 
 This package provides the shared Prettier baseline for the FocusBuddy monorepo.
 
-The repository root uses this package through `prettier.config.cjs`.
+The repository root uses this package through `prettier.config.mjs`.
 
 The shared config is the single source of truth for formatting details such as quote style.
