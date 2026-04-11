@@ -1,5 +1,5 @@
 import { defineConfig } from 'oxlint';
-import apiConfig from '../../packages/config-oxlint/api/oxlint.config.ts';
+import apiConfig from '@focusbuddy/config-oxlint/api';
 
 export default defineConfig({
   extends: [apiConfig],

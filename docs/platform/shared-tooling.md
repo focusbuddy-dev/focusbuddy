@@ -51,6 +51,14 @@ This document does not define application code, end-to-end test strategy, or dep
 - the shared Jest baselines stay directory-agnostic until the real app source trees exist in follow-up issues
 - the shared Jest baselines do not enable TypeScript test execution until a real transform is chosen in follow-up app work
 
+## Shared config consumption rule
+
+- app workspaces must consume shared config packages through package names and exported subpaths such as `@focusbuddy/config-jest/web`
+- app workspaces must not reach into `packages/*` through relative filesystem paths such as `../../packages/config-jest/...`
+- when an app-level config or test file imports a shared config package, that app must declare the package in its own `devDependencies`
+- this rule also applies to TypeScript config inheritance when the shared config package exposes a stable package subpath
+- root-owned tool executables such as `jest`, `oxlint`, `ts-node`, and `stylelint` may stay at the repository root when package scripts intentionally invoke them through repository-owned command entrypoints
+
 ## Repository commands
 
 The repository root now exposes:

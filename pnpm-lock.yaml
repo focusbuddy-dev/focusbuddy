@@ -93,6 +93,15 @@ importers:
         specifier: ^7.8.2
         version: 7.8.2
     devDependencies:
+      '@focusbuddy/config-jest':
+        specifier: workspace:*
+        version: link:../../packages/config-jest
+      '@focusbuddy/config-oxlint':
+        specifier: workspace:*
+        version: link:../../packages/config-oxlint
+      '@focusbuddy/config-typescript':
+        specifier: workspace:*
+        version: link:../../packages/config-typescript
       '@nestjs/cli':
         specifier: ^11.0.18
         version: 11.0.18(@types/node@25.5.2)
@@ -135,6 +144,15 @@ importers:
         specifier: ^19.2.4
         version: 19.2.4(react@19.2.4)
     devDependencies:
+      '@focusbuddy/config-jest':
+        specifier: workspace:*
+        version: link:../../packages/config-jest
+      '@focusbuddy/config-oxlint':
+        specifier: workspace:*
+        version: link:../../packages/config-oxlint
+      '@focusbuddy/config-typescript':
+        specifier: workspace:*
+        version: link:../../packages/config-typescript
       '@testing-library/jest-dom':
         specifier: ^6.9.1
         version: 6.9.1

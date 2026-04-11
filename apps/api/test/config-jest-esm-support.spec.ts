@@ -1,4 +1,4 @@
-import { defineJestConfig, withEsmPackageSupport } from '../../../packages/config-jest/define.ts'
+import { defineJestConfig, withEsmPackageSupport } from '@focusbuddy/config-jest/define'
 
 describe('withEsmPackageSupport', () => {
   it('replaces the node_modules ignore pattern with one allowlist pattern', () => {

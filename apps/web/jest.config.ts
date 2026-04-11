@@ -3,8 +3,8 @@
 
 import nextJest from 'next/jest.js';
 
-import { defineJestConfig, withEsmPackageSupport } from '../../packages/config-jest/define.ts';
-import sharedConfig from '../../packages/config-jest/web.ts';
+import { defineJestConfig, withEsmPackageSupport } from '@focusbuddy/config-jest/define';
+import sharedConfig from '@focusbuddy/config-jest/web';
 
 const createJestConfig = nextJest({ dir: './apps/web' });
 
