@@ -65,6 +65,12 @@ If an app later adopts an alias such as `@/`, that rollout should:
 
 Packages should not introduce private source aliases as a default style. Published entrypoints and exported subpaths are the package contract that matters more than source-level path shortening.
 
+Current verified app-level exception:
+
+- `apps/web` may use `@/` for imports rooted at `apps/web/src/*` when crossing app-local directory boundaries
+- `apps/web` should still keep same-folder and nearby relative imports where they remain shorter and clearer, such as CSS modules or tightly local helpers
+- this is a web-local allowance, not a repository-wide default for all workspaces
+
 ## Function declaration style policy
 
 The current repository default for hand-written code is function-declaration-first.

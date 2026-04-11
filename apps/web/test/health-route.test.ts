@@ -1,10 +1,10 @@
 /** @jest-environment node */
 
-import { GET } from '../src/app/health/route';
+import { GET } from '@/app/health/route';
 import {
   focusbuddyRequestIdHeader,
   focusbuddyTraceIdHeader,
-} from '../src/lib/logging/next-middleware-logger';
+} from '@/lib/logging/next-middleware-logger';
 
 describe('web health route', () => {
   it('returns the expected health payload', async () => {

@@ -14,6 +14,9 @@ const config = withEsmPackageSupport(
     rootDir: '.',
     moduleDirectories: ['node_modules', '<rootDir>/src', '<rootDir>/test'],
     moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'cjs', 'mjs', 'json'],
+    moduleNameMapper: {
+      '^@/(.*)$': '<rootDir>/src/$1',
+    },
     setupFilesAfterEnv: ['<rootDir>/test/setup-tests.ts'],
     testMatch: ['<rootDir>/test/**/*.test.ts?(x)'],
   }),

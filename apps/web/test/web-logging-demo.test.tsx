@@ -1,12 +1,12 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 
-import { WebLoggingDemo } from '../src/components/web-logging-demo'
+import { WebLoggingDemo } from '@/components/web-logging-demo'
 import {
   logWebBaselineButtonClicked,
   logWebBaselineNavigationCompleted,
   logWebBaselinePageViewed,
-} from '../src/lib/logging/web-baseline-page-logger'
-import { WebRequestLoggingProvider } from '../src/lib/logging/web-request-logging-context'
+} from '@/lib/logging/web-baseline-page-logger'
+import { WebRequestLoggingProvider } from '@/lib/logging/web-request-logging-context'
 
 const pushMock = jest.fn()
 
@@ -21,7 +21,7 @@ jest.mock('next/navigation', () => ({
   useSearchParams: () => currentSearchParams,
 }))
 
-jest.mock('../src/lib/logging/web-baseline-page-logger', () => ({
+jest.mock('@/lib/logging/web-baseline-page-logger', () => ({
   logWebBaselineButtonClicked: jest.fn(),
   logWebBaselineNavigationCompleted: jest.fn(),
   logWebBaselinePageViewed: jest.fn(),

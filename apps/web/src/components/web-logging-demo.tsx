@@ -8,8 +8,8 @@ import {
   logWebBaselineButtonClicked,
   logWebBaselineNavigationCompleted,
   logWebBaselinePageViewed,
-} from '../lib/logging/web-baseline-page-logger'
-import { useWebRequestLogging } from '../lib/logging/web-request-logging-context'
+} from '@/lib/logging/web-baseline-page-logger'
+import { useWebRequestLogging } from '@/lib/logging/web-request-logging-context'
 import styles from './web-baseline-page.module.css'
 
 type WebLoggingDemoProps = {
