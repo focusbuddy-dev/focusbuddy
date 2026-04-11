@@ -78,6 +78,8 @@ Current explicit app-level hold:
 - introducing an API-local alias now would require additional runtime or test-only resolution wiring rather than a documentation-level style preference, which is exactly the drift this policy is meant to avoid
 - revisit API-local aliases only after the repository defines and verifies one explicit alias-resolution story across API build, local dev, parity runtime, Jest, and Prisma commands
 
+The current API-side module resolution contract is documented in `docs/platform/api-module-resolution-contract.md`.
+
 ## Function declaration style policy
 
 The current repository default for hand-written code is function-declaration-first.

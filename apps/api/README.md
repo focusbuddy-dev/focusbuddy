@@ -17,3 +17,5 @@ This workspace now contains the first NestJS API baseline for issue #21.
 - Prisma CLI uses `prisma.config.ts`, while runtime access uses the PostgreSQL driver adapter required by Prisma 7
 
 The API workspace depends on `@focusbuddy/api-contract` and expects its generated outputs to be built before local compile or test commands run.
+
+The current repository-owned module resolution contract for this workspace is documented in `docs/platform/api-module-resolution-contract.md`.
