@@ -97,6 +97,8 @@ Deploy-only checks remain outside this merge gate. Examples include deployed acc
 
 The repository-wide package ESM migration strategy is documented in `docs/platform/esm-migration-strategy.md` and must be consulted before converting additional workspace packages to explicit ESM.
 
+The current repository policy for app-local import paths and preferred function declaration style is documented in `docs/platform/import-and-function-style-policy.md`.
+
 The repository default for hand-written JavaScript, TypeScript, and tool config files is now ESM-first. Remaining CommonJS files must be tracked as explicit file-level exceptions in that strategy document.
 
 ## Generated files rule
