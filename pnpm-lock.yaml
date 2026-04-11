@@ -186,6 +186,10 @@ importers:
       zod:
         specifier: ^3.25.76
         version: 3.25.76
+    devDependencies:
+      '@focusbuddy/config-typescript':
+        specifier: workspace:*
+        version: link:../config-typescript
 
   packages/config-jest:
     devDependencies:
@@ -201,6 +205,9 @@ importers:
 
   packages/logger:
     devDependencies:
+      '@focusbuddy/config-typescript':
+        specifier: workspace:*
+        version: link:../config-typescript
       '@types/node':
         specifier: ^25.5.2
         version: 25.5.2
