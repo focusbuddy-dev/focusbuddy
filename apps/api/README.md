@@ -18,4 +18,4 @@ This workspace now contains the first NestJS API baseline for issue #21.
 
 The API workspace depends on `@focusbuddy/api-contract` and expects its generated outputs to be built before local compile or test commands run.
 
-The current repository-owned module resolution contract for this workspace is documented in `docs/platform/api-module-resolution-contract.md`.
+The current repository-owned module resolution contract for this workspace uses `#api/*` for app-local imports and is documented in `docs/platform/api-module-resolution-contract.md`.

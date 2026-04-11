@@ -4,7 +4,7 @@ import {
   buildDatabaseUrlRequirementMessage,
   loadLocalRuntimeEnv,
   resolveLocalRuntimeDatabaseUrl,
-} from './src/config/local-runtime-env';
+} from '#api/config/local-runtime-env';
 
 loadLocalRuntimeEnv(process.env, { cwd: __dirname });
 

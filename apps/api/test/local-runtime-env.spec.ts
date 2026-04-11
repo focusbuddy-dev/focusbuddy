@@ -8,7 +8,7 @@ import {
   loadLocalRuntimeEnv,
   resolveTrackedDotenvPath,
   resolveLocalRuntimeDatabaseUrl,
-} from '../src/config/local-runtime-env';
+} from '#api/config/local-runtime-env';
 
 describe('local runtime env contract', () => {
   it('keeps an explicit DATABASE_URL unchanged', () => {
