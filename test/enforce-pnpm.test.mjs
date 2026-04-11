@@ -87,3 +87,13 @@ test('declares pnpm as the npm devEngines package manager requirement', async ()
   assert.equal(packageManager.name, 'pnpm');
   assert.equal(packageManager.onFail, 'error');
 });
+
+test('defines a workspace boundary lint entrypoint', async () => {
+  const packageJson = JSON.parse(await readFile(packageJsonPath, 'utf8'));
+
+  assert.equal(
+    packageJson.scripts['lint:boundaries'],
+    'node scripts/check-workspace-boundaries.mjs',
+  );
+  assert.match(packageJson.scripts.lint, /lint:boundaries/);
+});

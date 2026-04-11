@@ -7,6 +7,7 @@
     "build": "pnpm contract:build && pnpm logger:build && pnpm prisma:generate && pnpm --dir ../.. exec tsc --project apps/api/tsconfig.build.json",
     "contract:build": "pnpm --dir ../.. --filter @focusbuddy/api-contract build",
     "dev": "pnpm contract:build && pnpm logger:build && pnpm prisma:generate && pnpm exec nest start --watch",
+    "generate": "pnpm prisma:generate",
     "logger:build": "pnpm --dir ../.. --filter @focusbuddy/logger build",
     "lint": "pnpm --dir ../.. exec oxlint apps/api/src apps/api/test apps/api/prisma",
     "parity": "pnpm build && node dist/main.js",
