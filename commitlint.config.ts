@@ -1,4 +1,6 @@
-module.exports = {
+import type { UserConfig } from '@commitlint/types';
+
+const config: UserConfig = {
   extends: ['@commitlint/config-conventional'],
   plugins: [
     {
@@ -21,3 +23,5 @@ module.exports = {
     'issue-reference-required': [2, 'always'],
   },
 };
+
+export default config;
