@@ -1,6 +1,6 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
-  "extends": "../../packages/config-typescript/web.json",
+  "extends": "@focusbuddy/config-typescript/web",
   "compilerOptions": {
     "allowJs": false,
     "incremental": true,

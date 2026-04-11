@@ -1,8 +1,8 @@
 /** @jest-config-loader ts-node */
 /** @jest-config-loader-options {"transpileOnly": true} */
 
-import { defineJestConfig } from '../../packages/config-jest/define.ts';
-import sharedConfig from '../../packages/config-jest/api.ts';
+import { defineJestConfig } from '@focusbuddy/config-jest/define';
+import sharedConfig from '@focusbuddy/config-jest/api';
 
 const config = defineJestConfig({
   ...sharedConfig,
