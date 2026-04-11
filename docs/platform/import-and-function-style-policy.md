@@ -1,6 +1,6 @@
 # Import Path And Function Style Policy
 
-This document captures the output of issue #96.
+This document captures the output of issue #96 and the follow-up enforcement review from issue #152.
 
 Its purpose is to define the current repository policy for app-local import paths and preferred function declaration style without forcing premature style churn before build and runtime wiring is fully settled.
 
@@ -11,7 +11,8 @@ This document defines:
 - the current default for app-local imports inside `apps/*`
 - the current default for function declaration style in hand-written code
 - where the policy differs between workspace boundaries and intra-workspace code
-- when a future alias rollout or stricter enforcement may be reconsidered
+- the current decision on whether these preferences should gain lint enforcement
+- when a future alias rollout or stricter enforcement may be reconsidered again
 
 This document does not define a repository-wide alias migration, a broad style-only refactor, or new lint enforcement for stylistic preferences.
 
@@ -24,7 +25,7 @@ This document does not define a repository-wide alias migration, a broad style-o
 - short same-folder and nearby relative imports remain allowed and are still the default even if a future app later adopts an alias for deeper paths
 - hand-written exported code should stay function-declaration-first by default, including React components, route handlers, controllers, mappers, and shared utility functions
 - arrow functions remain appropriate for file-local callbacks, event handlers, hook callbacks, promise chains, and other closure-oriented local logic
-- the repository should not run a style-only migration or add lint enforcement for these preferences until the practical readability and enforcement benefits are clearer than the churn cost
+- the repository should not run a style-only migration or add lint enforcement for these preferences unless the practical maintenance value becomes clearer than the churn cost
 
 ## Import path policy
 
@@ -112,7 +113,11 @@ This policy does not require converting existing arrow functions back to declara
 
 ## Enforcement stance
 
-The repository should not add a new lint rule yet just to force app-local aliases or to require arrow functions for components.
+Issue #152 revisited this policy after the repository had stable app-level import contracts for the current workspaces.
+
+That review keeps the repository on a documentation-first stance for import-path and function-style preferences.
+
+The repository should not add a new lint rule at repository or workspace scope just to force app-local aliases or to require one function declaration shape for all exported code.
 
 No immediate source migration is required by this policy.
 
@@ -123,7 +128,15 @@ Current enforcement should stay focused on:
 - runtime-safety and null-handling rules
 - generated-versus-hand-written code boundaries
 
-If future implementation work proves that app-local aliases improve readability enough to justify enforcement, any linting should be introduced as a targeted follow-up after the relevant app has a stable and verified resolution contract.
+The post-review reasons are:
+
+- the workspace-boundary rules already enforce the import mistakes that create architectural risk
+- `apps/web` and `apps/api` now have verified app-local alias contracts, but both still intentionally allow short same-folder and nearby relative imports where those remain clearer than an alias hop
+- a lint rule strict enough to force alias usage would either ban intentionally allowed local relative imports or require exception-heavy configuration that adds maintenance cost without protecting a stronger repository invariant
+- exported hand-written code already leans strongly toward named function declarations, so a new function-style rule would mostly restate an existing convention while creating noisy edge cases for expression-shaped code
+- no recurring bug class or review churn has shown that documentation-only guidance is failing badly enough to justify new style enforcement
+
+If future implementation work proves that one workspace has a concrete maintenance problem that linting can solve with narrow and low-exception rules, that linting should be introduced as a targeted follow-up for that workspace only.
 
 ## Follow-up issue split
 
@@ -131,24 +144,25 @@ The policy decision in this document intentionally separates future implementati
 
 - #153 verifies whether `apps/web` should adopt an app-local alias without changing repository-wide defaults
 - #154 verifies whether `apps/api` should keep relative imports or can safely support an alias under the NodeNext runtime contract
-- #152 revisits whether any import-path or function-style enforcement is worth adding after app-level contracts are stable
+- #152 reviews the now-stable app-level contracts and keeps import-path and function-style preferences documentation-first rather than adding new lint enforcement
 
 This means issue #96 is the decision point, not the implementation vehicle for any broad migration.
 
 ## Current observations behind this policy
 
 - current app and package code still uses relative imports in many hand-written files
+- the web workspace now has a verified `@/` allowance for deeper app-local imports while still allowing shorter nearby relative imports
 - current hand-written exported code is mostly written with function declarations rather than arrow functions
-- the web workspace could pilot an alias earlier than the API workspace, but that would still not justify a repository-wide rule today
 - the API workspace now has a verified `#api/*` contract across compile, source startup, `dist` runtime, Jest, and Prisma command paths
-- function-style enforcement would be weaker than the repository's existing boundary-oriented rules unless a later issue identifies a concrete maintenance benefit
+- import-style enforcement would be weaker than the repository's existing boundary-oriented rules unless a later issue identifies a concrete maintenance benefit that documentation cannot handle
+- function-style enforcement would still be weaker than the repository's existing boundary-oriented rules unless a later issue identifies a concrete maintenance benefit
 
 ## Review triggers
 
 This document should be revisited when one of the following becomes true:
 
-- the repository has a clearly verified app-level resolution story across compile-time, runtime, Jest, local development commands, and CI
-- a specific workspace demonstrates a concrete readability or maintenance win from an app-local alias with low migration risk
-- a future lint proposal can show boundary or maintenance value beyond style preference alone
+- a specific workspace starts seeing repeated review churn or source drift that a narrow import-style lint rule can prevent without banning intentionally allowed nearby relative imports
+- a future lint rule can express the function-declaration preference without forcing local callback-shaped code into suppressions or awkward rewrites
+- a future lint proposal can show concrete maintenance value beyond style preference alone
 
-Until then, the repository should keep the current low-churn rule: relative imports inside a workspace, package-name imports across workspace boundaries, and function declarations as the default shape for hand-written exported code.
+Until then, the repository should keep the current low-churn rule: package-name imports across workspace boundaries, workspace-local import choices documented per app contract, and function declarations as the default shape for hand-written exported code without new style-only lint enforcement.
