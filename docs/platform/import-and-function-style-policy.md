@@ -12,7 +12,7 @@ This document defines:
 - the current default for function declaration style in hand-written code
 - where the policy differs between workspace boundaries and intra-workspace code
 - the current decision on whether these preferences should gain lint enforcement
-- when a future alias rollout or stricter enforcement may be reconsidered again
+- when a future alias rollout or stricter enforcement may be reconsidered
 
 This document does not define a repository-wide alias migration, a broad style-only refactor, or new lint enforcement for stylistic preferences.
 
