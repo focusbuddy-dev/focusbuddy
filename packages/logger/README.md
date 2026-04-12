@@ -96,8 +96,8 @@ The `child()` API is a low-level primitive for building those scoped loggers. It
 The event schema layer adds `logId`, `messageTemplate`, `category`, and required field validation on top of the raw logger facade.
 
 ```ts
-import { createEventLogger, defineEvent } from '@focusbuddy/logger'
-import { apiRuntimeLogger } from './logging/api-runtime-logger'
+import { createEventLogger, defineEvent } from '@focusbuddy/logger';
+import { apiRuntimeLogger } from './logging/api-runtime-logger';
 
 const apiRequestHandled = defineEvent<{ statusCode: number }>({
   logId: 'API_REQUEST_001',
@@ -105,7 +105,7 @@ const apiRequestHandled = defineEvent<{ statusCode: number }>({
   category: 'Request',
   messageTemplate: 'API request handled - Status: {statusCode}',
   requiredContext: ['statusCode'],
-})
+});
 
 const requestLogger = createEventLogger(
   apiRuntimeLogger.child({
@@ -120,52 +120,58 @@ const requestLogger = createEventLogger(
     application: 'focusbuddy-api',
     layer: 'api',
   },
-)
+);
 
 requestLogger.emit(apiRequestHandled, {
   statusCode: 200,
-})
+});
 ```
 
 ## API Wrapper Example
 
 ```ts
-import { logApiRequestHandled } from './logging/api-request-logger'
-import { apiRuntimeLogger } from './logging/api-runtime-logger'
+import { logApiRequestHandled } from './logging/api-request-logger';
+import { apiRuntimeLogger } from './logging/api-runtime-logger';
 
-logApiRequestHandled({
-  request: {
-    requestId: 'req-42',
-    requestMethod: 'GET',
-    requestPath: '/health',
-    route: 'health.read',
+logApiRequestHandled(
+  {
+    request: {
+      requestId: 'req-42',
+      requestMethod: 'GET',
+      requestPath: '/health',
+      route: 'health.read',
+    },
+    user: {
+      userId: 'user-7',
+    },
+    statusCode: 200,
   },
-  user: {
-    userId: 'user-7',
-  },
-  statusCode: 200,
-}, apiRuntimeLogger)
+  apiRuntimeLogger,
+);
 ```
 
 ## Web Wrapper Example
 
 ```ts
-import { logPublicSummaryViewed } from './logging/public-summary-logger'
-import { webRuntimeLogger } from './logging/web-runtime-logger'
+import { logPublicSummaryViewed } from './logging/public-summary-logger';
+import { webRuntimeLogger } from './logging/web-runtime-logger';
 
-logPublicSummaryViewed({
-  request: {
-    requestId: 'page-1',
-    requestPath: '/targets/alpha',
-    route: 'public-summary.view',
-    targetId: 'alpha',
+logPublicSummaryViewed(
+  {
+    request: {
+      requestId: 'page-1',
+      requestPath: '/targets/alpha',
+      route: 'public-summary.view',
+      targetId: 'alpha',
+    },
+    user: {
+      userId: 'user-7',
+      sessionId: 'session-9',
+    },
+    source: 'share-card',
   },
-  user: {
-    userId: 'user-7',
-    sessionId: 'session-9',
-  },
-  source: 'share-card',
-}, webRuntimeLogger)
+  webRuntimeLogger,
+);
 ```
 
 ## Web Runtime Integration Map

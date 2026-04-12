@@ -23,10 +23,10 @@ This document does not define the final CDN or ingress product, final production
 
 The repository should separate two failure classes.
 
-| Failure class | Reaches normal app code | Shared JSON error contract available | Normal app request ID available | Primary owner |
-| --- | --- | --- | --- | --- |
-| app-level error | yes | yes | yes | app error handling and web response policy |
-| transport-level request rejection | not reliably | not guaranteed | not guaranteed | edge, platform, transport policy, and observability |
+| Failure class                     | Reaches normal app code | Shared JSON error contract available | Normal app request ID available | Primary owner                                       |
+| --------------------------------- | ----------------------- | ------------------------------------ | ------------------------------- | --------------------------------------------------- |
+| app-level error                   | yes                     | yes                                  | yes                             | app error handling and web response policy          |
+| transport-level request rejection | not reliably            | not guaranteed                       | not guaranteed                  | edge, platform, transport policy, and observability |
 
 The practical classification rule is:
 
@@ -49,12 +49,12 @@ Typical characteristics are:
 
 The repository should treat the following as first-class transport rejection examples.
 
-| Example class | Typical trigger | Why it is transport-level | First prevention owner |
-| --- | --- | --- | --- |
-| oversized request headers | cookie growth, duplicated cookies, forwarded-header growth, accidental custom-header bloat | request may be rejected by browser, proxy, or HTTP server before the app runs | auth/session transport plus platform |
-| cookie-bomb or cookie duplication | repeated cookie appends, stale cookie names left in place, multiple session layers writing independently | the aggregate `Cookie` header can exceed a platform limit before any route logic runs | auth/session transport |
-| malformed or invalid headers | illegal header encoding, invalid header syntax, broken proxy forwarding | request parsing may fail before middleware or route handlers run | platform and transport configuration |
-| protocol or server boundary rejection | request rejected by reverse proxy, ingress, or server parser due to boundary rules | no app-owned error mapping is available | platform layer |
+| Example class                         | Typical trigger                                                                                          | Why it is transport-level                                                             | First prevention owner               |
+| ------------------------------------- | -------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- | ------------------------------------ |
+| oversized request headers             | cookie growth, duplicated cookies, forwarded-header growth, accidental custom-header bloat               | request may be rejected by browser, proxy, or HTTP server before the app runs         | auth/session transport plus platform |
+| cookie-bomb or cookie duplication     | repeated cookie appends, stale cookie names left in place, multiple session layers writing independently | the aggregate `Cookie` header can exceed a platform limit before any route logic runs | auth/session transport               |
+| malformed or invalid headers          | illegal header encoding, invalid header syntax, broken proxy forwarding                                  | request parsing may fail before middleware or route handlers run                      | platform and transport configuration |
+| protocol or server boundary rejection | request rejected by reverse proxy, ingress, or server parser due to boundary rules                       | no app-owned error mapping is available                                               | platform layer                       |
 
 These examples matter because they create a real failure class that app-level JSON error design cannot normalize after the fact.
 
@@ -62,13 +62,13 @@ These examples matter because they create a real failure class that app-level JS
 
 The first ownership split should stay explicit.
 
-| Area | Owns | Does not own |
-| --- | --- | --- |
-| shared app error model from issue #73 | typed JSON errors for requests that reach the app boundary | failures rejected before app code runs |
-| web error handling from issue #74 | how the web product reacts to app-level error codes and route failures | pretending early rejection always has a typed app error body |
-| auth and session transport | cookie shape, serialization discipline, header-budget awareness, duplicate-cookie prevention | generic proxy or ingress response generation |
-| platform and edge layer | actual early rejection behavior, status code choice, server or proxy limits, raw rejection logging | redefining app-level public error codes |
-| observability | cross-layer visibility when app request IDs are missing | assuming app logs are always present |
+| Area                                  | Owns                                                                                               | Does not own                                                 |
+| ------------------------------------- | -------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| shared app error model from issue #73 | typed JSON errors for requests that reach the app boundary                                         | failures rejected before app code runs                       |
+| web error handling from issue #74     | how the web product reacts to app-level error codes and route failures                             | pretending early rejection always has a typed app error body |
+| auth and session transport            | cookie shape, serialization discipline, header-budget awareness, duplicate-cookie prevention       | generic proxy or ingress response generation                 |
+| platform and edge layer               | actual early rejection behavior, status code choice, server or proxy limits, raw rejection logging | redefining app-level public error codes                      |
+| observability                         | cross-layer visibility when app request IDs are missing                                            | assuming app logs are always present                         |
 
 The rule of thumb is:
 

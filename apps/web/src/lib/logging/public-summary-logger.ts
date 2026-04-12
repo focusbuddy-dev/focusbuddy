@@ -4,10 +4,10 @@ import {
   type Logger,
   type RequestLogContext,
   type UserLogContext,
-} from '@focusbuddy/logger'
-import { webRuntimeLogger } from './web-runtime-logger'
+} from '@focusbuddy/logger';
+import { webRuntimeLogger } from './web-runtime-logger';
 
-const webLogger = webRuntimeLogger
+const webLogger = webRuntimeLogger;
 
 const publicSummaryViewedEvent = defineEvent<{ source: 'landing' | 'search' | 'share-card' }>({
   logId: 'PUBLIC_SUMMARY_001',
@@ -15,22 +15,22 @@ const publicSummaryViewedEvent = defineEvent<{ source: 'landing' | 'search' | 's
   category: 'PublicSummary',
   messageTemplate: 'Public summary viewed - Source: {source}',
   requiredContext: ['source'],
-})
+});
 
 type PublicSummaryRequestContext = RequestLogContext & {
-  route: string
-  targetId: string
-}
+  route: string;
+  targetId: string;
+};
 
 type PublicSummaryUserContext = UserLogContext & {
-  sessionId?: string
-}
+  sessionId?: string;
+};
 
 type LogPublicSummaryViewedInput = {
-  request: PublicSummaryRequestContext
-  source: 'landing' | 'search' | 'share-card'
-  user?: PublicSummaryUserContext
-}
+  request: PublicSummaryRequestContext;
+  source: 'landing' | 'search' | 'share-card';
+  user?: PublicSummaryUserContext;
+};
 
 export function createPublicSummaryLogger(
   request: PublicSummaryRequestContext,
@@ -40,7 +40,7 @@ export function createPublicSummaryLogger(
   return baseLogger.child({
     ...request,
     ...user,
-  })
+  });
 }
 
 export function logPublicSummaryViewed(
@@ -52,5 +52,5 @@ export function logPublicSummaryViewed(
     layer: 'web',
   }).emit(publicSummaryViewedEvent, {
     source,
-  })
+  });
 }

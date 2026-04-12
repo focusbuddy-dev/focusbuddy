@@ -1,17 +1,20 @@
-import { createLogger, defineEvent, type LogEntry } from '@focusbuddy/logger'
+import { createLogger, defineEvent, type LogEntry } from '@focusbuddy/logger';
 
 import {
   focusbuddyRequestIdHeader,
   focusbuddyTraceIdHeader,
   prepareNextMiddlewareLogger,
-} from '@/lib/logging/next-middleware-logger'
+} from '@/lib/logging/next-middleware-logger';
 
-function createMiddlewareRequest(pathname: string, headers?: Headers): {
-  headers: Headers
-  method: string
+function createMiddlewareRequest(
+  pathname: string,
+  headers?: Headers,
+): {
+  headers: Headers;
+  method: string;
   nextUrl: {
-    pathname: string
-  }
+    pathname: string;
+  };
 } {
   return {
     headers: headers ?? new Headers(),
@@ -19,20 +22,20 @@ function createMiddlewareRequest(pathname: string, headers?: Headers): {
     nextUrl: {
       pathname,
     },
-  }
+  };
 }
 
 describe('next middleware logger helper', () => {
   it('reuses incoming correlation ids and binds middleware envelope fields', () => {
-    const writes: LogEntry[] = []
+    const writes: LogEntry[] = [];
     const baseLogger = createLogger({
       adapter: {
         write(entry) {
-          writes.push(entry)
+          writes.push(entry);
         },
       },
       now: () => new Date('2026-04-09T12:00:00.000Z'),
-    })
+    });
 
     const prepared = prepareNextMiddlewareLogger(
       createMiddlewareRequest(
@@ -47,7 +50,7 @@ describe('next middleware logger helper', () => {
         baseLogger,
         environment: 'test',
       },
-    )
+    );
 
     prepared.eventLogger.emit(
       defineEvent<{ matcher: string }>({
@@ -60,12 +63,12 @@ describe('next middleware logger helper', () => {
       {
         matcher: 'public-target',
       },
-    )
+    );
 
-    expect(prepared.requestId).toBe('req-910')
-    expect(prepared.traceId).toBe('trace-910')
-    expect(prepared.requestHeaders.get(focusbuddyRequestIdHeader)).toBe('req-910')
-    expect(prepared.responseHeaders.get(focusbuddyTraceIdHeader)).toBe('trace-910')
+    expect(prepared.requestId).toBe('req-910');
+    expect(prepared.traceId).toBe('trace-910');
+    expect(prepared.requestHeaders.get(focusbuddyRequestIdHeader)).toBe('req-910');
+    expect(prepared.responseHeaders.get(focusbuddyTraceIdHeader)).toBe('trace-910');
     expect(writes[0]).toMatchObject({
       application: 'focusbuddy-web',
       category: 'Middleware',
@@ -83,14 +86,14 @@ describe('next middleware logger helper', () => {
       runtime: 'web-middleware',
       timestamp: '2026-04-09T12:00:00.000Z',
       traceId: 'trace-910',
-    })
-  })
+    });
+  });
 
   it('creates request and trace ids when they are missing', () => {
-    const prepared = prepareNextMiddlewareLogger(createMiddlewareRequest('/health'))
+    const prepared = prepareNextMiddlewareLogger(createMiddlewareRequest('/health'));
 
-    expect(prepared.requestId).toHaveLength(36)
-    expect(prepared.traceId).toBe(prepared.requestId)
-    expect(prepared.responseHeaders.get(focusbuddyRequestIdHeader)).toBe(prepared.requestId)
-  })
-})
+    expect(prepared.requestId).toHaveLength(36);
+    expect(prepared.traceId).toBe(prepared.requestId);
+    expect(prepared.responseHeaders.get(focusbuddyRequestIdHeader)).toBe(prepared.requestId);
+  });
+});

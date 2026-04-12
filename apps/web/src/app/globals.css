@@ -16,8 +16,7 @@
 html {
   background:
     radial-gradient(circle at top left, rgb(255 107 53 / 22%), transparent 34%),
-    radial-gradient(circle at bottom right, rgb(20 33 61 / 16%), transparent 30%),
-    var(--canvas);
+    radial-gradient(circle at bottom right, rgb(20 33 61 / 16%), transparent 30%), var(--canvas);
 }
 
 body {

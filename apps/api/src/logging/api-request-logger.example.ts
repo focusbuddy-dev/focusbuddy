@@ -4,10 +4,10 @@ import {
   type Logger,
   type RequestLogContext,
   type UserLogContext,
-} from '@focusbuddy/logger'
-import { apiRuntimeLogger } from '#api/logging/api-runtime-logger'
+} from '@focusbuddy/logger';
+import { apiRuntimeLogger } from '#api/logging/api-runtime-logger';
 
-const apiLogger = apiRuntimeLogger
+const apiLogger = apiRuntimeLogger;
 
 const apiRequestHandledEvent = defineEvent<{ statusCode: number }>({
   logId: 'API_REQUEST_001',
@@ -15,22 +15,22 @@ const apiRequestHandledEvent = defineEvent<{ statusCode: number }>({
   category: 'Request',
   messageTemplate: 'API request handled - Status: {statusCode}',
   requiredContext: ['statusCode'],
-})
+});
 
 type ApiRequestContext = RequestLogContext & {
-  route: string
-  traceId?: string
-}
+  route: string;
+  traceId?: string;
+};
 
 type ApiUserContext = UserLogContext & {
-  workspaceId?: string
-}
+  workspaceId?: string;
+};
 
 type LogApiRequestHandledInput = {
-  request: ApiRequestContext
-  user?: ApiUserContext
-  statusCode: number
-}
+  request: ApiRequestContext;
+  user?: ApiUserContext;
+  statusCode: number;
+};
 
 export function createApiRequestLogger(
   request: ApiRequestContext,
@@ -40,7 +40,7 @@ export function createApiRequestLogger(
   return baseLogger.child({
     ...request,
     ...user,
-  })
+  });
 }
 
 export function logApiRequestHandled(
@@ -52,5 +52,5 @@ export function logApiRequestHandled(
     layer: 'api',
   }).emit(apiRequestHandledEvent, {
     statusCode,
-  })
+  });
 }

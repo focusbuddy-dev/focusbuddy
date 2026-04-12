@@ -1,4 +1,5 @@
 import { Test } from '@nestjs/testing';
+import { jest } from '@jest/globals';
 
 import { HealthController } from '#api/health/health.controller';
 import { PrismaService } from '#api/prisma/prisma.service';

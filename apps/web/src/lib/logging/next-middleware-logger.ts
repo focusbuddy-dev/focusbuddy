@@ -4,38 +4,38 @@ import {
   focusbuddyTraceIdHeader,
   type EventLogger,
   type Logger,
-} from '@focusbuddy/logger'
-import type { NextRequest } from 'next/server'
+} from '@focusbuddy/logger';
+import type { NextRequest } from 'next/server';
 
-import { createWebServerRuntimeLogger } from './web-server-runtime-logger'
+import { createWebServerRuntimeLogger } from './web-server-runtime-logger';
 
-export { focusbuddyRequestIdHeader, focusbuddyTraceIdHeader } from '@focusbuddy/logger'
+export { focusbuddyRequestIdHeader, focusbuddyTraceIdHeader } from '@focusbuddy/logger';
 
 type MiddlewareRequestLike = Pick<NextRequest, 'headers' | 'method'> & {
   nextUrl: {
-    pathname: string
-  }
-}
+    pathname: string;
+  };
+};
 
 export type NextMiddlewareLoggerOptions = {
-  application?: string
-  baseLogger?: Logger
-  environment?: string
-}
+  application?: string;
+  baseLogger?: Logger;
+  environment?: string;
+};
 
 export type PreparedNextMiddlewareLogger = {
-  eventLogger: EventLogger
-  logger: Logger
-  requestHeaders: Headers
-  requestId: string
-  responseHeaders: Headers
-  traceId: string
-}
+  eventLogger: EventLogger;
+  logger: Logger;
+  requestHeaders: Headers;
+  requestId: string;
+  responseHeaders: Headers;
+  traceId: string;
+};
 
-const middlewareRuntime = 'web-middleware'
+const middlewareRuntime = 'web-middleware';
 
 function createCorrelationId(): string {
-  return crypto.randomUUID()
+  return crypto.randomUUID();
 }
 
 export function prepareNextMiddlewareLogger(
@@ -43,27 +43,31 @@ export function prepareNextMiddlewareLogger(
   options: NextMiddlewareLoggerOptions = {},
 ): PreparedNextMiddlewareLogger {
   const requestId =
-    request.headers.get(focusbuddyRequestIdHeader) ?? request.headers.get(focusbuddyTraceIdHeader) ?? createCorrelationId()
-  const traceId = request.headers.get(focusbuddyTraceIdHeader) ?? requestId
+    request.headers.get(focusbuddyRequestIdHeader) ??
+    request.headers.get(focusbuddyTraceIdHeader) ??
+    createCorrelationId();
+  const traceId = request.headers.get(focusbuddyTraceIdHeader) ?? requestId;
 
-  const requestHeaders = new Headers(request.headers)
-  requestHeaders.set(focusbuddyRequestIdHeader, requestId)
-  requestHeaders.set(focusbuddyTraceIdHeader, traceId)
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set(focusbuddyRequestIdHeader, requestId);
+  requestHeaders.set(focusbuddyTraceIdHeader, traceId);
 
-  const responseHeaders = new Headers()
-  responseHeaders.set(focusbuddyRequestIdHeader, requestId)
-  responseHeaders.set(focusbuddyTraceIdHeader, traceId)
+  const responseHeaders = new Headers();
+  responseHeaders.set(focusbuddyRequestIdHeader, requestId);
+  responseHeaders.set(focusbuddyTraceIdHeader, traceId);
 
-  const logger = (options.baseLogger ??
+  const logger = (
+    options.baseLogger ??
     createWebServerRuntimeLogger({
       runtime: middlewareRuntime,
-    })).child({
+    })
+  ).child({
     requestId,
     requestMethod: request.method,
     requestPath: request.nextUrl.pathname,
     runtime: middlewareRuntime,
     traceId,
-  })
+  });
 
   return {
     eventLogger: createEventLogger(logger, {
@@ -76,5 +80,5 @@ export function prepareNextMiddlewareLogger(
     requestId,
     responseHeaders,
     traceId,
-  }
+  };
 }

@@ -5,7 +5,11 @@ import { config as loadDotenvConfig } from 'dotenv';
 
 const DEFAULT_LOCAL_POSTGRES_HOST = 'localhost';
 const DEFAULT_POSTGRES_PORT = '5432';
-const REQUIRED_TRACKED_POSTGRES_ENV_NAMES = ['POSTGRES_DB', 'POSTGRES_USER', 'POSTGRES_PASSWORD'] as const;
+const REQUIRED_TRACKED_POSTGRES_ENV_NAMES = [
+  'POSTGRES_DB',
+  'POSTGRES_USER',
+  'POSTGRES_PASSWORD',
+] as const;
 const WORKSPACE_MARKER_FILE = 'pnpm-workspace.yaml';
 
 function readTrimmedEnv(env: NodeJS.ProcessEnv, name: string): string | undefined {
@@ -36,9 +40,15 @@ function findWorkspaceRoot(startDirectory: string): string | undefined {
   }
 }
 
-export function resolveTrackedDotenvPath(currentWorkingDirectory = process.cwd()): string | undefined {
-  const candidateDirectories = [findWorkspaceRoot(currentWorkingDirectory), resolve(currentWorkingDirectory)].filter(
-    (directory, index, directories): directory is string => Boolean(directory) && directories.indexOf(directory) === index,
+export function resolveTrackedDotenvPath(
+  currentWorkingDirectory = process.cwd(),
+): string | undefined {
+  const candidateDirectories = [
+    findWorkspaceRoot(currentWorkingDirectory),
+    resolve(currentWorkingDirectory),
+  ].filter(
+    (directory, index, directories): directory is string =>
+      Boolean(directory) && directories.indexOf(directory) === index,
   );
 
   for (const directory of candidateDirectories) {
@@ -52,7 +62,9 @@ export function resolveTrackedDotenvPath(currentWorkingDirectory = process.cwd()
   return undefined;
 }
 
-export function deriveLocalDatabaseUrlFromTrackedInputs(env: NodeJS.ProcessEnv = process.env): string | undefined {
+export function deriveLocalDatabaseUrlFromTrackedInputs(
+  env: NodeJS.ProcessEnv = process.env,
+): string | undefined {
   const databaseName = readTrimmedEnv(env, 'POSTGRES_DB');
   const user = readTrimmedEnv(env, 'POSTGRES_USER');
   const password = readTrimmedEnv(env, 'POSTGRES_PASSWORD');
@@ -66,7 +78,9 @@ export function deriveLocalDatabaseUrlFromTrackedInputs(env: NodeJS.ProcessEnv =
   return `postgresql://${encodeConnectionPart(user)}:${encodeConnectionPart(password)}@${DEFAULT_LOCAL_POSTGRES_HOST}:${port}/${encodeConnectionPart(databaseName)}`;
 }
 
-export function resolveLocalRuntimeDatabaseUrl(env: NodeJS.ProcessEnv = process.env): string | undefined {
+export function resolveLocalRuntimeDatabaseUrl(
+  env: NodeJS.ProcessEnv = process.env,
+): string | undefined {
   return readTrimmedEnv(env, 'DATABASE_URL') ?? deriveLocalDatabaseUrlFromTrackedInputs(env);
 }
 
@@ -74,7 +88,9 @@ export function buildDatabaseUrlRequirementMessage(
   runtimeContext: string,
   env: NodeJS.ProcessEnv = process.env,
 ): string {
-  const missingTrackedInputs = REQUIRED_TRACKED_POSTGRES_ENV_NAMES.filter((name) => !readTrimmedEnv(env, name));
+  const missingTrackedInputs = REQUIRED_TRACKED_POSTGRES_ENV_NAMES.filter(
+    (name) => !readTrimmedEnv(env, name),
+  );
   const missingTrackedInputsText = missingTrackedInputs.length
     ? ` Missing tracked local inputs: ${missingTrackedInputs.join(', ')}.`
     : '';

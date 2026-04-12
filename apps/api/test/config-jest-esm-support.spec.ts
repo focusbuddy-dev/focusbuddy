@@ -1,4 +1,4 @@
-import { defineJestConfig, withEsmPackageSupport } from '@focusbuddy/config-jest/define'
+import { defineJestConfig, withEsmPackageSupport } from '@focusbuddy/config-jest/define';
 
 describe('withEsmPackageSupport', () => {
   it('replaces the node_modules ignore pattern with one allowlist pattern', () => {
@@ -9,13 +9,13 @@ describe('withEsmPackageSupport', () => {
       {
         packageNames: ['msw', '@mswjs', '@open-draft/until'],
       },
-    )
+    );
 
     expect(config.transformIgnorePatterns).toEqual([
       '/node_modules/(?!(?:msw|@mswjs|@open-draft/until)(?:/|$))/',
       '/dist/',
-    ])
-  })
+    ]);
+  });
 
   it('merges ESM extensions without duplicates', () => {
     const config = withEsmPackageSupport(
@@ -26,9 +26,9 @@ describe('withEsmPackageSupport', () => {
       {
         extensionsToTreatAsEsm: ['.tsx', '.ts'],
       },
-    )
+    );
 
-    expect(config.extensionsToTreatAsEsm).toEqual(['.ts', '.tsx'])
-    expect(config.transformIgnorePatterns).toEqual(['/node_modules/'])
-  })
-})
+    expect(config.extensionsToTreatAsEsm).toEqual(['.ts', '.tsx']);
+    expect(config.transformIgnorePatterns).toEqual(['/node_modules/']);
+  });
+});

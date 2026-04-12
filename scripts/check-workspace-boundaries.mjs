@@ -4,16 +4,7 @@ import { fileURLToPath } from 'node:url';
 
 const scriptFilePath = fileURLToPath(import.meta.url);
 const defaultRepoRoot = resolve(dirname(scriptFilePath), '..');
-const codeFileExtensions = new Set([
-  '.cjs',
-  '.cts',
-  '.js',
-  '.jsx',
-  '.mjs',
-  '.mts',
-  '.ts',
-  '.tsx',
-]);
+const codeFileExtensions = new Set(['.cjs', '.cts', '.js', '.jsx', '.mjs', '.mts', '.ts', '.tsx']);
 const dependencyFieldNames = [
   'dependencies',
   'devDependencies',

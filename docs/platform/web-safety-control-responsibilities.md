@@ -113,16 +113,16 @@ It owns:
 
 The matrix below names the primary owner for prevention, detection, and recovery. Secondary support is still allowed when needed.
 
-| Accident class | Prevention owner | Detection owner | Recovery owner | Notes |
-| --- | --- | --- | --- | --- |
-| async navigation race | runtime helpers plus approved route-aware entry points | observability plus route race tests | runtime helpers | route changes invalidate old work even when the underlying request technically succeeded |
-| double submit or rapid re-entry | runtime helpers plus product lock-state design | observability plus duplicate-submit tests | runtime helpers plus typed mutation state | prevention should be the default; backend idempotency is support, not the only defense |
-| concurrent fetch with stale response win | runtime helpers plus typed fetch context | observability plus race tests | runtime helpers | stale-result discard policy must be centralized instead of screen-local |
-| unsaved exit during multi-step flow | design plus runtime flow guards | flow tests plus abandonment telemetry | runtime helpers plus product recovery UX | this is a mixed-control case; prevention alone is not enough |
-| destructive mutation versus background refresh | runtime helpers plus design lock policy | concurrency tests plus suppression telemetry | runtime helpers | destructive windows should pause or serialize conflicting refresh work |
-| auth expiry or permission drift mid-flow | centralized auth-aware API path plus runtime capability invalidation | observability plus auth-interruption tests | runtime helpers plus #74 web error policy | prevention is partial here; forced recovery paths are required |
-| over-broad fallback behavior | design plus typed error categories from #73 and #74 | tests plus fallback telemetry | runtime helpers plus app-level policy | recoverable failures should not collapse into generic redirect or route reset |
-| hidden failure due to missing instrumentation | telemetry-bearing helper entry points | observability | runtime helpers plus CI spot checks | this concern is primarily detection-first |
+| Accident class                                 | Prevention owner                                                     | Detection owner                              | Recovery owner                            | Notes                                                                                    |
+| ---------------------------------------------- | -------------------------------------------------------------------- | -------------------------------------------- | ----------------------------------------- | ---------------------------------------------------------------------------------------- |
+| async navigation race                          | runtime helpers plus approved route-aware entry points               | observability plus route race tests          | runtime helpers                           | route changes invalidate old work even when the underlying request technically succeeded |
+| double submit or rapid re-entry                | runtime helpers plus product lock-state design                       | observability plus duplicate-submit tests    | runtime helpers plus typed mutation state | prevention should be the default; backend idempotency is support, not the only defense   |
+| concurrent fetch with stale response win       | runtime helpers plus typed fetch context                             | observability plus race tests                | runtime helpers                           | stale-result discard policy must be centralized instead of screen-local                  |
+| unsaved exit during multi-step flow            | design plus runtime flow guards                                      | flow tests plus abandonment telemetry        | runtime helpers plus product recovery UX  | this is a mixed-control case; prevention alone is not enough                             |
+| destructive mutation versus background refresh | runtime helpers plus design lock policy                              | concurrency tests plus suppression telemetry | runtime helpers                           | destructive windows should pause or serialize conflicting refresh work                   |
+| auth expiry or permission drift mid-flow       | centralized auth-aware API path plus runtime capability invalidation | observability plus auth-interruption tests   | runtime helpers plus #74 web error policy | prevention is partial here; forced recovery paths are required                           |
+| over-broad fallback behavior                   | design plus typed error categories from #73 and #74                  | tests plus fallback telemetry                | runtime helpers plus app-level policy     | recoverable failures should not collapse into generic redirect or route reset            |
+| hidden failure due to missing instrumentation  | telemetry-bearing helper entry points                                | observability                                | runtime helpers plus CI spot checks       | this concern is primarily detection-first                                                |
 
 ## Layer-by-layer decisions
 

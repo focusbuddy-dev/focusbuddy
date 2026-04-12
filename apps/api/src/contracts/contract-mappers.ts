@@ -54,7 +54,9 @@ export function mapPrismaUserToContractUserRef(user: PrismaUser): ContractUserRe
   };
 }
 
-export function mapPrismaFocusTargetToContract(target: PrismaFocusTargetRecord): ContractFocusTarget {
+export function mapPrismaFocusTargetToContract(
+  target: PrismaFocusTargetRecord,
+): ContractFocusTarget {
   const sourceUrl = target.sourceUrl ?? undefined;
   const genre = target.genre ?? undefined;
 
@@ -71,7 +73,9 @@ export function mapPrismaFocusTargetToContract(target: PrismaFocusTargetRecord):
   };
 }
 
-export function mapPrismaResumeSourceToContract(resumeSource: PrismaResumeSource): ContractResumeSource {
+export function mapPrismaResumeSourceToContract(
+  resumeSource: PrismaResumeSource,
+): ContractResumeSource {
   const invalidatedAt = resumeSource.invalidatedAt?.toISOString() ?? undefined;
   const invalidationNote = resumeSource.invalidationNote ?? undefined;
 
@@ -88,9 +92,13 @@ export function mapPrismaResumeSourceToContract(resumeSource: PrismaResumeSource
   };
 }
 
-export function mapPrismaFocusSessionToContract(session: PrismaFocusSessionRecord): ContractFocusSession {
+export function mapPrismaFocusSessionToContract(
+  session: PrismaFocusSessionRecord,
+): ContractFocusSession {
   const note = session.note ?? undefined;
-  const noteVisibility = session.noteVisibility ? noteVisibilityMap[session.noteVisibility] : undefined;
+  const noteVisibility = session.noteVisibility
+    ? noteVisibilityMap[session.noteVisibility]
+    : undefined;
   const endedAt = session.endedAt?.toISOString() ?? undefined;
   const durationSeconds = session.durationSeconds ?? undefined;
   const resumeSource = session.startedResume

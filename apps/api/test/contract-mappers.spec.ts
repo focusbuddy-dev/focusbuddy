@@ -1,6 +1,9 @@
 import { NoteVisibility, SessionVisibility, TargetSourceType } from '@prisma/client';
 
-import { mapPrismaFocusSessionToContract, mapPrismaFocusTargetToContract } from '#api/contracts/contract-mappers';
+import {
+  mapPrismaFocusSessionToContract,
+  mapPrismaFocusTargetToContract,
+} from '#api/contracts/contract-mappers';
 
 describe('contract mappers', () => {
   it('maps a Prisma focus target into the generated contract shape', () => {

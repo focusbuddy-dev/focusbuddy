@@ -1,5 +1,7 @@
 /** @jest-environment node */
 
+import { jest } from '@jest/globals';
+
 import { GET } from '@/app/health/route';
 import {
   focusbuddyRequestIdHeader,
@@ -43,7 +45,9 @@ describe('web health route', () => {
 
   it('mints a unique fallback request id when correlation headers are missing', async () => {
     const infoSpy = jest.spyOn(console, 'info').mockImplementation(() => undefined);
-    const randomUuidSpy = jest.spyOn(globalThis.crypto, 'randomUUID').mockReturnValue('generated-web-health-id');
+    const randomUuidSpy = jest
+      .spyOn(globalThis.crypto, 'randomUUID')
+      .mockReturnValue('generated-web-health-id');
 
     const response = GET({
       headers: new Headers(),

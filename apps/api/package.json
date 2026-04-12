@@ -1,6 +1,7 @@
 {
   "name": "@focusbuddy/api",
   "private": true,
+  "type": "module",
   "version": "0.0.0",
   "main": "dist/main.js",
   "imports": {
@@ -20,7 +21,7 @@
     "prisma:generate": "NODE_OPTIONS=--conditions=development prisma generate --config prisma.config.ts",
     "prisma:migrate:dev": "NODE_OPTIONS=--conditions=development prisma migrate dev --config prisma.config.ts",
     "prisma:studio": "NODE_OPTIONS=--conditions=development prisma studio --config prisma.config.ts",
-    "test": "pnpm contract:build && pnpm logger:build && pnpm prisma:generate && NODE_OPTIONS=--conditions=development pnpm --dir ../.. exec jest --config apps/api/jest.config.ts --runInBand",
+    "test": "pnpm contract:build && pnpm logger:build && pnpm prisma:generate && NODE_OPTIONS='--conditions=development --experimental-vm-modules' pnpm --dir ../.. exec jest --config apps/api/jest.config.ts --runInBand",
     "typecheck": "pnpm contract:build && pnpm logger:build && pnpm prisma:generate && pnpm --dir ../.. exec tsc --project apps/api/tsconfig.build.json --noEmit"
   },
   "dependencies": {

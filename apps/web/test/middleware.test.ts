@@ -1,5 +1,6 @@
 /** @jest-environment node */
 
+import { jest } from '@jest/globals';
 import { NextRequest } from 'next/server';
 
 import { middleware } from '@/middleware';

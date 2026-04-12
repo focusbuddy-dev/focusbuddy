@@ -1,4 +1,9 @@
-import { Injectable, type CallHandler, type ExecutionContext, type NestInterceptor } from '@nestjs/common';
+import {
+  Injectable,
+  type CallHandler,
+  type ExecutionContext,
+  type NestInterceptor,
+} from '@nestjs/common';
 import type { Logger } from '@focusbuddy/logger';
 import { focusbuddyRequestIdHeader, focusbuddyTraceIdHeader } from '@focusbuddy/logger';
 import { Observable, tap } from 'rxjs';

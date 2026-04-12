@@ -1,26 +1,20 @@
 import type { CallHandler, ExecutionContext } from '@nestjs/common';
+import { jest } from '@jest/globals';
+import { focusbuddyRequestIdHeader, focusbuddyTraceIdHeader } from '@focusbuddy/logger';
 import { lastValueFrom, of } from 'rxjs';
-
-jest.mock('@focusbuddy/logger', () => ({
-  focusbuddyRequestIdHeader: 'x-focusbuddy-request-id',
-  focusbuddyTraceIdHeader: 'x-focusbuddy-trace-id',
-}))
-
-const logApiRequestHandled = jest.fn()
-
-jest.mock('#api/logging/api-request-logger.example', () => ({
-  logApiRequestHandled: (...args: unknown[]) => logApiRequestHandled(...args),
-}))
-
-jest.mock('#api/logging/api-runtime-logger', () => ({
-  apiRuntimeLogger: {},
-}))
 
 import { ApiRequestLoggingInterceptor } from '#api/logging/api-request-logging.interceptor';
 
 describe('ApiRequestLoggingInterceptor', () => {
   it('binds correlation headers and emits a handled request event', async () => {
-    logApiRequestHandled.mockReset()
+    const info = jest.fn();
+    const requestLogger = {
+      child: jest.fn(() => requestLogger),
+      info,
+    };
+    const baseLogger = {
+      child: jest.fn(() => requestLogger),
+    };
 
     const response = {
       setHeader: jest.fn(),
@@ -48,24 +42,27 @@ describe('ApiRequestLoggingInterceptor', () => {
       handle: () => of({ ok: true }),
     } satisfies CallHandler;
 
-    const interceptor = new ApiRequestLoggingInterceptor({} as never);
+    const interceptor = new ApiRequestLoggingInterceptor(baseLogger as never);
 
     await lastValueFrom(interceptor.intercept(context, next));
 
-    expect(response.setHeader).toHaveBeenCalledWith('x-focusbuddy-request-id', 'req-123');
-    expect(response.setHeader).toHaveBeenCalledWith('x-focusbuddy-trace-id', 'trace-123');
-    expect(logApiRequestHandled).toHaveBeenCalledWith(
-      {
-        request: {
-          requestId: 'req-123',
-          requestMethod: 'GET',
-          requestPath: '/health',
-          route: '/health',
-          traceId: 'trace-123',
-        },
-        statusCode: 200,
-      },
-      {},
-    )
+    expect(response.setHeader).toHaveBeenCalledWith(focusbuddyRequestIdHeader, 'req-123');
+    expect(response.setHeader).toHaveBeenCalledWith(focusbuddyTraceIdHeader, 'trace-123');
+    expect(baseLogger.child).toHaveBeenCalledWith({
+      requestId: 'req-123',
+      requestMethod: 'GET',
+      requestPath: '/health',
+      route: '/health',
+      traceId: 'trace-123',
+    });
+    expect(requestLogger.child).toHaveBeenCalledWith({
+      application: 'focusbuddy-api',
+      layer: 'api',
+    });
+    expect(info).toHaveBeenCalledWith('API request handled - Status: 200', {
+      category: 'Request',
+      logId: 'API_REQUEST_001',
+      statusCode: 200,
+    });
   });
 });

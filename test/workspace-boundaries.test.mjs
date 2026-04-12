@@ -12,11 +12,7 @@ async function createWorkspace(tempRoot, relativePath, packageName, extra = {}) 
   await mkdir(resolve(workspaceRoot, 'src'), { recursive: true });
   await writeFile(
     resolve(workspaceRoot, 'package.json'),
-    JSON.stringify(
-      { name: packageName, private: true, version: '0.0.0', ...extra },
-      undefined,
-      2,
-    ),
+    JSON.stringify({ name: packageName, private: true, version: '0.0.0', ...extra }, undefined, 2),
     'utf8',
   );
   return workspaceRoot;
@@ -42,7 +38,11 @@ test('accepts package imports from apps and same-workspace relative imports', as
     "import { logger } from '@focusbuddy/logger';\nimport './local.js';\nexport { logger };\n",
     'utf8',
   );
-  await writeFile(resolve(repoRoot, 'apps/web/src/local.js'), 'export const local = true;\n', 'utf8');
+  await writeFile(
+    resolve(repoRoot, 'apps/web/src/local.js'),
+    'export const local = true;\n',
+    'utf8',
+  );
 
   const violations = await checkWorkspaceBoundaries(repoRoot);
 

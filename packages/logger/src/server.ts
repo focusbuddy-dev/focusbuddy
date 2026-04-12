@@ -4,41 +4,41 @@ import {
   type LogEntry,
   type Logger,
   type LoggerRuntime,
-} from './logger.js'
+} from './logger.js';
 
 export type ServerLogWriter = {
-  trace: (bindings: Record<string, unknown>, message: string) => void
-  debug: (bindings: Record<string, unknown>, message: string) => void
-  info: (bindings: Record<string, unknown>, message: string) => void
-  warn: (bindings: Record<string, unknown>, message: string) => void
-  error: (bindings: Record<string, unknown>, message: string) => void
-  fatal: (bindings: Record<string, unknown>, message: string) => void
-}
+  trace: (bindings: Record<string, unknown>, message: string) => void;
+  debug: (bindings: Record<string, unknown>, message: string) => void;
+  info: (bindings: Record<string, unknown>, message: string) => void;
+  warn: (bindings: Record<string, unknown>, message: string) => void;
+  error: (bindings: Record<string, unknown>, message: string) => void;
+  fatal: (bindings: Record<string, unknown>, message: string) => void;
+};
 
 export type ServerLoggerOptions = {
-  context?: FactoryLoggerContext
-  logger: ServerLogWriter
-  runtime?: LoggerRuntime
-}
+  context?: FactoryLoggerContext;
+  logger: ServerLogWriter;
+  runtime?: LoggerRuntime;
+};
 
-const DEFAULT_SERVER_RUNTIME: LoggerRuntime = 'api'
+const DEFAULT_SERVER_RUNTIME: LoggerRuntime = 'api';
 
-type ServerWrite = (bindings: Record<string, unknown>, message: string) => void
+type ServerWrite = (bindings: Record<string, unknown>, message: string) => void;
 
 function resolveServerWrite(target: ServerLogWriter, level: LogEntry['level']): ServerWrite {
   switch (level) {
     case 'trace':
-      return target.trace.bind(target)
+      return target.trace.bind(target);
     case 'debug':
-      return target.debug.bind(target)
+      return target.debug.bind(target);
     case 'info':
-      return target.info.bind(target)
+      return target.info.bind(target);
     case 'warn':
-      return target.warn.bind(target)
+      return target.warn.bind(target);
     case 'error':
-      return target.error.bind(target)
+      return target.error.bind(target);
     case 'fatal':
-      return target.fatal.bind(target)
+      return target.fatal.bind(target);
   }
 }
 
@@ -68,14 +68,14 @@ export function createServerLogger(options: ServerLoggerOptions): Logger {
             userId: entry.userId,
             userRole: entry.userRole,
           }).filter(([, value]) => value !== undefined),
-        )
+        );
 
         if (entry.error) {
-          payload.error = entry.error
+          payload.error = entry.error;
         }
 
-        resolveServerWrite(options.logger, entry.level)(payload, entry.message)
+        resolveServerWrite(options.logger, entry.level)(payload, entry.message);
       },
     },
-  })
+  });
 }
