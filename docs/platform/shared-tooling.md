@@ -97,11 +97,15 @@ Deploy-only checks remain outside this merge gate. Examples include deployed acc
 
 The repository-wide package ESM migration strategy is documented in `docs/platform/esm-migration-strategy.md` and must be consulted before converting additional workspace packages to explicit ESM.
 
+The repository-wide language baseline for new hand-written code is documented in `docs/platform/typescript-first-coding-policy.md`.
+
 The current repository policy for app-local import paths and preferred function declaration style is documented in `docs/platform/import-and-function-style-policy.md`.
 
 The current `apps/api` module resolution contract across compile, startup, built runtime, Jest, and Prisma command paths is documented in `docs/platform/api-module-resolution-contract.md`.
 
 The repository default for hand-written JavaScript, TypeScript, and tool config files is now ESM-first. Remaining CommonJS files must be tracked as explicit file-level exceptions in that strategy document.
+
+That language-baseline policy is intentionally separate from the ESM strategy so future issues do not conflate file authoring language with module format.
 
 ## Generated files rule
 
