@@ -83,6 +83,9 @@
 - current branch が detached、current worktree が一覧に存在しない、current branch が別 worktree に割り当て済み、のどれかに当たる場合は作業を止めて確認する
 - worktree を使わないリポジトリでも、少なくとも current branch と作業ルートの確認は省略しない
 - Issue が確定した更新系作業は、main の current workspace では進めず、main から切った Issue 専用 worktree 上でだけ進める
+- Issue 専用 worktree の配置先は必ず `.worktrees/` 配下に限定する
+- `.worktrees/` 配下以外のトップレベルや任意ディレクトリに Issue 専用 worktree を新設してはならない
+- Agent は `.worktrees/<issue-or-purpose>/` 以外の場所にある新規 worktree 作成や利用を提案せず、既存の逸脱配置がある場合も cleanup や退避のための最小操作以外では使わない
 - チャットの current workspace が main のままでも、編集対象や実行対象が Issue 専用 worktree 配下の絶対パスに限定されている場合だけ更新を許容する
 - Issue 作成、Issue 確認、git preflight、git worktree add のような準備操作だけは main 上で行ってよい
 
