@@ -4,24 +4,24 @@ import {
   type LogEntry,
   type Logger,
   type LoggerRuntime,
-} from './logger.js'
+} from './logger.js';
 
 export type BrowserConsole = {
-  debug: (...args: unknown[]) => void
-  error: (...args: unknown[]) => void
-  info: (...args: unknown[]) => void
-  log: (...args: unknown[]) => void
-  warn: (...args: unknown[]) => void
-}
+  debug: (...args: unknown[]) => void;
+  error: (...args: unknown[]) => void;
+  info: (...args: unknown[]) => void;
+  log: (...args: unknown[]) => void;
+  warn: (...args: unknown[]) => void;
+};
 
 export type BrowserLoggerOptions = {
-  console?: BrowserConsole
-  context?: FactoryLoggerContext
-  includeTimestamp?: boolean
-  runtime?: LoggerRuntime
-}
+  console?: BrowserConsole;
+  context?: FactoryLoggerContext;
+  includeTimestamp?: boolean;
+  runtime?: LoggerRuntime;
+};
 
-const DEFAULT_BROWSER_RUNTIME: LoggerRuntime = 'web'
+const DEFAULT_BROWSER_RUNTIME: LoggerRuntime = 'web';
 
 const levelToConsoleMethod: Record<LogEntry['level'], keyof BrowserConsole> = {
   trace: 'debug',
@@ -30,7 +30,7 @@ const levelToConsoleMethod: Record<LogEntry['level'], keyof BrowserConsole> = {
   warn: 'warn',
   error: 'error',
   fatal: 'error',
-}
+};
 
 function buildBrowserPayload(entry: LogEntry, includeTimestamp: boolean): Record<string, unknown> {
   return Object.fromEntries(
@@ -53,12 +53,12 @@ function buildBrowserPayload(entry: LogEntry, includeTimestamp: boolean): Record
       userId: entry.userId,
       userRole: entry.userRole,
     }).filter(([, value]) => value !== undefined),
-  )
+  );
 }
 
 export function createBrowserLogger(options: BrowserLoggerOptions = {}): Logger {
-  const targetConsole = options.console ?? console
-  const includeTimestamp = options.includeTimestamp ?? true
+  const targetConsole = options.console ?? console;
+  const includeTimestamp = options.includeTimestamp ?? true;
 
   return createLogger({
     context: {
@@ -67,16 +67,16 @@ export function createBrowserLogger(options: BrowserLoggerOptions = {}): Logger 
     },
     adapter: {
       write(entry) {
-        const consoleMethod = targetConsole[levelToConsoleMethod[entry.level]] ?? targetConsole.log
-        const payload = buildBrowserPayload(entry, includeTimestamp)
+        const consoleMethod = targetConsole[levelToConsoleMethod[entry.level]] ?? targetConsole.log;
+        const payload = buildBrowserPayload(entry, includeTimestamp);
 
         if (entry.error) {
-          consoleMethod(payload, entry.error)
-          return
+          consoleMethod(payload, entry.error);
+          return;
         }
 
-        consoleMethod(payload)
+        consoleMethod(payload);
       },
     },
-  })
+  });
 }

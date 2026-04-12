@@ -1,10 +1,10 @@
-import { NextResponse, type NextRequest } from 'next/server'
+import { NextResponse, type NextRequest } from 'next/server';
 
-import { resolveWebRequestCorrelation } from '../../lib/logging/web-request-correlation'
-import { logWebHealthRouteResponded } from '../../lib/logging/web-health-route-logger'
+import { resolveWebRequestCorrelation } from '../../lib/logging/web-request-correlation';
+import { logWebHealthRouteResponded } from '../../lib/logging/web-health-route-logger';
 
 export function GET(request: NextRequest) {
-  const { requestId, traceId } = resolveWebRequestCorrelation(request.headers)
+  const { requestId, traceId } = resolveWebRequestCorrelation(request.headers);
 
   logWebHealthRouteResponded({
     request: {
@@ -14,7 +14,7 @@ export function GET(request: NextRequest) {
       traceId,
     },
     status: 200,
-  })
+  });
 
-  return NextResponse.json({ ok: true, service: 'web' })
+  return NextResponse.json({ ok: true, service: 'web' });
 }

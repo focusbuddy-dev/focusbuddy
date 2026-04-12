@@ -22,11 +22,11 @@ This document does not define final copy, localization, design-system wording, m
 
 The first ownership split should stay explicit.
 
-| Area | Owns | Does not own |
-| --- | --- | --- |
-| shared contract consumption in `apps/web` | branching by public `code`, using `retryable`, choosing UI states, route fallback decisions | defining canonical server codes or HTTP mappings |
-| route and page UX in `apps/web` | redirect destinations, not-found rendering, route-level error rendering, mutation feedback patterns | server exception normalization |
-| shared contract in `packages/api-contract` | error code vocabulary and response shape consumed by web | UI copy, route transitions, visual severity |
+| Area                                       | Owns                                                                                                | Does not own                                     |
+| ------------------------------------------ | --------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
+| shared contract consumption in `apps/web`  | branching by public `code`, using `retryable`, choosing UI states, route fallback decisions         | defining canonical server codes or HTTP mappings |
+| route and page UX in `apps/web`            | redirect destinations, not-found rendering, route-level error rendering, mutation feedback patterns | server exception normalization                   |
+| shared contract in `packages/api-contract` | error code vocabulary and response shape consumed by web                                            | UI copy, route transitions, visual severity      |
 
 The rule of thumb is:
 
@@ -50,30 +50,30 @@ The first web error policy should follow these principles.
 
 The first policy uses these primitives.
 
-| UI primitive | Primary use |
-| --- | --- |
-| redirect to sign-in | `AUTH_REQUIRED` when the current action cannot continue without new auth context |
-| not-found rendering | `RESOURCE_NOT_FOUND` and secrecy-preserving `ACCESS_DENIED` cases |
-| inline field feedback | `VALIDATION_ERROR` |
+| UI primitive                        | Primary use                                                                        |
+| ----------------------------------- | ---------------------------------------------------------------------------------- |
+| redirect to sign-in                 | `AUTH_REQUIRED` when the current action cannot continue without new auth context   |
+| not-found rendering                 | `RESOURCE_NOT_FOUND` and secrecy-preserving `ACCESS_DENIED` cases                  |
+| inline field feedback               | `VALIDATION_ERROR`                                                                 |
 | inline page-level business feedback | `INVALID_STATE_TRANSITION`, `DOMAIN_RULE_VIOLATION`, selected `DUPLICATE_RESOURCE` |
-| retryable route error state | `UPSTREAM_UNAVAILABLE`, selected route-load `RATE_LIMITED` |
-| generic route error state | `INTERNAL_ERROR` and unrecoverable route-load failures |
-| non-blocking toast or banner | selected background-refresh failures and capability-loss signals |
+| retryable route error state         | `UPSTREAM_UNAVAILABLE`, selected route-load `RATE_LIMITED`                         |
+| generic route error state           | `INTERNAL_ERROR` and unrecoverable route-load failures                             |
+| non-blocking toast or banner        | selected background-refresh failures and capability-loss signals                   |
 
 ## Decision matrix
 
-| Public code | Route load on protected or owner-scoped page | Route load on public page | Mutation or form submit | Background refresh |
-| --- | --- | --- | --- | --- |
-| `VALIDATION_ERROR` | treat as unexpected and log; render generic route error only if no local recovery exists | same as protected route load | show inline field or form error and preserve user input | do not interrupt the view; log for investigation if it occurs |
-| `AUTH_REQUIRED` | hard redirect to sign-in and preserve return path | keep the public page unless the viewer explicitly initiated an auth-required action | redirect to sign-in or open auth flow, then allow retry when the route can recover safely | show session-expired banner or prompt without destroying the current view |
-| `ACCESS_DENIED` | render access-denied state only when the route already discloses resource existence; otherwise use not-found | usually render not-found for secrecy-preserving public surfaces | show non-field error and keep the current view; do not retry automatically | surface a non-blocking capability-lost message and stop the blocked action |
-| `RESOURCE_NOT_FOUND` | render not-found | render not-found | show resource-missing message, disable stale action, and navigate away only if the current route can no longer remain valid | keep stale data only if it is still safe to show; otherwise replace with empty or not-found state |
-| `INVALID_STATE_TRANSITION` | show recoverable page state when current resource state can be refreshed; otherwise use generic route error | same as protected route load | show inline or page-level business message and refetch current resource state | refetch once, then show non-blocking state-changed message |
-| `DOMAIN_RULE_VIOLATION` | show recoverable page state when the resource context remains trustworthy | same as protected route load | show inline or adjacent explanatory message and preserve current form state | keep current UI and surface a lightweight warning if the action was rejected |
-| `DUPLICATE_RESOURCE` | usually treat as recoverable and refresh the resource | same as protected route load | show idempotent success hint or narrow conflict message based on action semantics | suppress noisy UI and reconcile with fresh data |
-| `RATE_LIMITED` | show retryable route error with cooldown guidance when the route cannot proceed | same as protected route load | show inline or toast cooldown message and temporarily disable repeated submit | back off silently first, then surface a banner only if the condition persists |
-| `UPSTREAM_UNAVAILABLE` | render retryable route error state with request ID and retry affordance | render retryable route error state with request ID and retry affordance | preserve user input, show retry affordance, and avoid route reset | retain stale data, mark refresh failure, and retry later |
-| `INTERNAL_ERROR` | render generic route error state and log with request ID | render generic route error state and log with request ID | show generic failure message, preserve input when possible, and offer retry | keep stale data if safe, log, and avoid repeated user interruption |
+| Public code                | Route load on protected or owner-scoped page                                                                 | Route load on public page                                                           | Mutation or form submit                                                                                                     | Background refresh                                                                                |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| `VALIDATION_ERROR`         | treat as unexpected and log; render generic route error only if no local recovery exists                     | same as protected route load                                                        | show inline field or form error and preserve user input                                                                     | do not interrupt the view; log for investigation if it occurs                                     |
+| `AUTH_REQUIRED`            | hard redirect to sign-in and preserve return path                                                            | keep the public page unless the viewer explicitly initiated an auth-required action | redirect to sign-in or open auth flow, then allow retry when the route can recover safely                                   | show session-expired banner or prompt without destroying the current view                         |
+| `ACCESS_DENIED`            | render access-denied state only when the route already discloses resource existence; otherwise use not-found | usually render not-found for secrecy-preserving public surfaces                     | show non-field error and keep the current view; do not retry automatically                                                  | surface a non-blocking capability-lost message and stop the blocked action                        |
+| `RESOURCE_NOT_FOUND`       | render not-found                                                                                             | render not-found                                                                    | show resource-missing message, disable stale action, and navigate away only if the current route can no longer remain valid | keep stale data only if it is still safe to show; otherwise replace with empty or not-found state |
+| `INVALID_STATE_TRANSITION` | show recoverable page state when current resource state can be refreshed; otherwise use generic route error  | same as protected route load                                                        | show inline or page-level business message and refetch current resource state                                               | refetch once, then show non-blocking state-changed message                                        |
+| `DOMAIN_RULE_VIOLATION`    | show recoverable page state when the resource context remains trustworthy                                    | same as protected route load                                                        | show inline or adjacent explanatory message and preserve current form state                                                 | keep current UI and surface a lightweight warning if the action was rejected                      |
+| `DUPLICATE_RESOURCE`       | usually treat as recoverable and refresh the resource                                                        | same as protected route load                                                        | show idempotent success hint or narrow conflict message based on action semantics                                           | suppress noisy UI and reconcile with fresh data                                                   |
+| `RATE_LIMITED`             | show retryable route error with cooldown guidance when the route cannot proceed                              | same as protected route load                                                        | show inline or toast cooldown message and temporarily disable repeated submit                                               | back off silently first, then surface a banner only if the condition persists                     |
+| `UPSTREAM_UNAVAILABLE`     | render retryable route error state with request ID and retry affordance                                      | render retryable route error state with request ID and retry affordance             | preserve user input, show retry affordance, and avoid route reset                                                           | retain stale data, mark refresh failure, and retry later                                          |
+| `INTERNAL_ERROR`           | render generic route error state and log with request ID                                                     | render generic route error state and log with request ID                            | show generic failure message, preserve input when possible, and offer retry                                                 | keep stale data if safe, log, and avoid repeated user interruption                                |
 
 ## Route-context rules
 

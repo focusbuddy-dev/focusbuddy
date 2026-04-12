@@ -1,25 +1,25 @@
-import { createLogger, type LogEntry } from '@focusbuddy/logger'
+import { createLogger, type LogEntry } from '@focusbuddy/logger';
 
 import {
   createPublicSummaryLogger,
   logPublicSummaryViewed,
-} from '../src/lib/logging/public-summary-logger'
+} from '../src/lib/logging/public-summary-logger';
 
 describe('public summary logger example', () => {
   it('keeps request and user context on the shared browser facade', () => {
-    const writes: LogEntry[] = []
+    const writes: LogEntry[] = [];
 
     const baseLogger = createLogger({
       adapter: {
         write(entry) {
-          writes.push(entry)
+          writes.push(entry);
         },
       },
       context: {
         surface: 'web-test',
       },
       now: () => new Date('2026-04-09T11:00:00.000Z'),
-    })
+    });
 
     const logger = createPublicSummaryLogger(
       {
@@ -33,11 +33,11 @@ describe('public summary logger example', () => {
         sessionId: 'session-1',
       },
       baseLogger,
-    )
+    );
 
     logger.info('Public summary rendered', {
       source: 'landing',
-    })
+    });
 
     expect(writes[0]).toMatchObject({
       level: 'info',
@@ -53,22 +53,22 @@ describe('public summary logger example', () => {
         targetId: 'focus-42',
       },
       timestamp: '2026-04-09T11:00:00.000Z',
-    })
-  })
+    });
+  });
 
   it('logs public summary views with the same facade shape', () => {
-    const writes: LogEntry[] = []
+    const writes: LogEntry[] = [];
 
     const baseLogger = createLogger({
       adapter: {
         write(entry) {
-          writes.push(entry)
+          writes.push(entry);
         },
       },
       context: {
         surface: 'web-test',
       },
-    })
+    });
 
     logPublicSummaryViewed(
       {
@@ -84,7 +84,7 @@ describe('public summary logger example', () => {
         },
       },
       baseLogger,
-    )
+    );
 
     expect(writes[0]).toMatchObject({
       application: 'focusbuddy-web',
@@ -102,6 +102,6 @@ describe('public summary logger example', () => {
         surface: 'web-test',
         targetId: 'focus-43',
       },
-    })
-  })
-})
+    });
+  });
+});

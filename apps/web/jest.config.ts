@@ -11,6 +11,7 @@ const createJestConfig = nextJest({ dir: './apps/web' });
 const config = withEsmPackageSupport(
   defineJestConfig({
     ...sharedConfig,
+    extensionsToTreatAsEsm: ['.ts', '.tsx'],
     rootDir: '.',
     moduleDirectories: ['node_modules', '<rootDir>/src', '<rootDir>/test'],
     moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'cjs', 'mjs', 'json'],
@@ -18,7 +19,13 @@ const config = withEsmPackageSupport(
     testMatch: ['<rootDir>/test/**/*.test.ts?(x)'],
   }),
   {
-    packageNames: ['msw', '@mswjs', '@open-draft/until'],
+    packageNames: [
+      '@focusbuddy/api-contract',
+      '@focusbuddy/logger',
+      'msw',
+      '@mswjs',
+      '@open-draft/until',
+    ],
   },
 );
 

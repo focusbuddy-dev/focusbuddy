@@ -1,6 +1,7 @@
 {
   "name": "@focusbuddy/config-oxlint",
   "private": true,
+  "type": "module",
   "version": "0.0.0",
   "files": [
     "base",

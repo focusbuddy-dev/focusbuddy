@@ -57,11 +57,11 @@ This path is not documented as the default full-stack workflow because supportin
 
 ## Lane comparison
 
-| Lane | Primary purpose | Runtime shape | Why it is not enough by itself |
-| --- | --- | --- | --- |
-| `fast compose` | day-to-day implementation speed | Compose-managed stack with development runtimes | can hide failures that only appear with built artifacts or stricter startup assumptions |
-| `parity compose` | production-oriented local validation | Compose-managed stack with built runtimes and stricter startup | too heavy for routine editing and therefore not the default lane |
-| host-side direct startup | narrow debugging escape hatch | web and api started from the dev container, with PostgreSQL and auth started separately | diverges from the repository's default full-stack topology |
+| Lane                     | Primary purpose                      | Runtime shape                                                                           | Why it is not enough by itself                                                          |
+| ------------------------ | ------------------------------------ | --------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| `fast compose`           | day-to-day implementation speed      | Compose-managed stack with development runtimes                                         | can hide failures that only appear with built artifacts or stricter startup assumptions |
+| `parity compose`         | production-oriented local validation | Compose-managed stack with built runtimes and stricter startup                          | too heavy for routine editing and therefore not the default lane                        |
+| host-side direct startup | narrow debugging escape hatch        | web and api started from the dev container, with PostgreSQL and auth started separately | diverges from the repository's default full-stack topology                              |
 
 ## Execution lane diagram
 

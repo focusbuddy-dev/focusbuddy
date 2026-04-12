@@ -106,12 +106,12 @@ flowchart LR
 
 ### Runtime summary
 
-| Runtime | `logger` | `log-sanitizer` | `reporter` | audit-oriented recording |
-| --- | --- | --- | --- | --- |
-| web client | yes, for normal developer-visible logging | yes, with the strictest client profile | yes, for browser exceptions and rejected promises | no authoritative persistence; only user action origination |
-| web middleware | yes, for structured ingress and correlation logs | yes, server-side profile | no | usually no authoritative persistence; may emit operational or security-relevant ingress signals only |
-| web server | yes, for structured server logs | yes, server-side profile | no | limited local use; authoritative persistence should stay with the API boundary unless the web server owns the business mutation |
-| api server | yes, for structured operational logs | yes, server-side profile | no | yes, this is the primary place for authoritative audit and business recording |
+| Runtime        | `logger`                                         | `log-sanitizer`                        | `reporter`                                        | audit-oriented recording                                                                                                        |
+| -------------- | ------------------------------------------------ | -------------------------------------- | ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| web client     | yes, for normal developer-visible logging        | yes, with the strictest client profile | yes, for browser exceptions and rejected promises | no authoritative persistence; only user action origination                                                                      |
+| web middleware | yes, for structured ingress and correlation logs | yes, server-side profile               | no                                                | usually no authoritative persistence; may emit operational or security-relevant ingress signals only                            |
+| web server     | yes, for structured server logs                  | yes, server-side profile               | no                                                | limited local use; authoritative persistence should stay with the API boundary unless the web server owns the business mutation |
+| api server     | yes, for structured operational logs             | yes, server-side profile               | no                                                | yes, this is the primary place for authoritative audit and business recording                                                   |
 
 ### Runtime map
 

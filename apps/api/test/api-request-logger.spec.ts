@@ -1,68 +1,77 @@
+import { jest } from '@jest/globals';
+
 function formatMockEventMessage(template: string, context: Record<string, unknown>): string {
-  return template.replaceAll(/\{([a-zA-Z0-9_]+)\}/g, (_, token: string) => String(context[token]))
+  return template.replaceAll(/\{([a-zA-Z0-9_]+)\}/g, (_, token: string) => String(context[token]));
 }
 
 jest.mock('@focusbuddy/logger', () => {
   return {
     createEventLogger(
-      logger: { child: (context?: Record<string, unknown>) => { info: (message: string, context?: Record<string, unknown>) => void } },
+      logger: {
+        child: (context?: Record<string, unknown>) => {
+          info: (message: string, context?: Record<string, unknown>) => void;
+        };
+      },
       envelope: Record<string, unknown>,
     ) {
-      const scopedLogger = logger.child(envelope)
+      const scopedLogger = logger.child(envelope);
 
       return {
-        emit(event: { category: string; logId: string; messageTemplate: string }, context: Record<string, unknown>) {
+        emit(
+          event: { category: string; logId: string; messageTemplate: string },
+          context: Record<string, unknown>,
+        ) {
           scopedLogger.info(formatMockEventMessage(event.messageTemplate, context), {
             ...context,
             category: event.category,
             logId: event.logId,
-          })
+          });
         },
-      }
+      };
     },
     defineEvent<T>(definition: T) {
-      return definition
+      return definition;
     },
-  }
-})
+  };
+});
 
-jest.mock('../src/logging/api-runtime-logger', () => {
+jest.mock('../src/logging/api-runtime-logger.js', () => {
   const noOpLogger = {
     child() {
-      return noOpLogger
+      return noOpLogger;
     },
     info() {},
-  }
+  };
 
   return {
     apiRuntimeLogger: noOpLogger,
-  }
-})
+  };
+});
 
 import {
   createApiRequestLogger,
   logApiRequestHandled,
-} from '../src/logging/api-request-logger.example'
+} from '../src/logging/api-request-logger.example.js';
 
 type RecordedEntry = {
-  application?: string
-  category?: string
-  level: 'info'
-  layer?: string
-  logId?: string
-  message: string
-  requestId?: string
-  requestMethod?: string
-  requestPath?: string
-  context: Record<string, unknown>
-  timestamp?: string
-  userId?: string
-}
+  application?: string;
+  category?: string;
+  level: 'info';
+  layer?: string;
+  logId?: string;
+  message: string;
+  requestId?: string;
+  requestMethod?: string;
+  requestPath?: string;
+  context: Record<string, unknown>;
+  timestamp?: string;
+  userId?: string;
+};
 
 type TestLogger = {
-  child: (context?: Record<string, unknown>) => TestLogger
-  info: (message: string, context?: Record<string, unknown>) => void
-}
+  child: (context?: Record<string, unknown>) => TestLogger;
+  info: (message: string, context?: Record<string, unknown>) => void;
+};
 
 const envelopeKeys = new Set([
   'application',
@@ -78,7 +87,7 @@ const envelopeKeys = new Set([
   'traceId',
   'userId',
   'userRole',
-])
+]);
 
 function mergeContext(
   baseContext: Record<string, unknown>,
@@ -89,29 +98,29 @@ function mergeContext(
       ...baseContext,
       ...nextContext,
     }).filter(([, value]) => value !== undefined),
-  )
+  );
 }
 
 function splitLoggedContext(context: Record<string, unknown>): {
-  context: Record<string, unknown>
-  envelope: Record<string, unknown>
+  context: Record<string, unknown>;
+  envelope: Record<string, unknown>;
 } {
-  const envelope: Record<string, unknown> = {}
-  const extraContext: Record<string, unknown> = {}
+  const envelope: Record<string, unknown> = {};
+  const extraContext: Record<string, unknown> = {};
 
   for (const [key, value] of Object.entries(context)) {
     if (envelopeKeys.has(key)) {
-      envelope[key] = value
-      continue
+      envelope[key] = value;
+      continue;
     }
 
-    extraContext[key] = value
+    extraContext[key] = value;
   }
 
   return {
     context: extraContext,
     envelope,
-  }
+  };
 }
 
 function createTestLogger(
@@ -121,11 +130,11 @@ function createTestLogger(
 ): TestLogger {
   return {
     child(context) {
-      return createTestLogger(writes, mergeContext(baseContext, context), timestamp)
+      return createTestLogger(writes, mergeContext(baseContext, context), timestamp);
     },
     info(message, context) {
-      const mergedContext = mergeContext(baseContext, context)
-      const { context: entryContext, envelope } = splitLoggedContext(mergedContext)
+      const mergedContext = mergeContext(baseContext, context);
+      const { context: entryContext, envelope } = splitLoggedContext(mergedContext);
 
       writes.push({
         ...envelope,
@@ -133,16 +142,20 @@ function createTestLogger(
         message,
         context: entryContext,
         ...(timestamp ? { timestamp } : {}),
-      })
+      });
     },
-  }
+  };
 }
 
 describe('api request logger example', () => {
   it('carries request and user context into one shared facade', () => {
-    const writes: RecordedEntry[] = []
+    const writes: RecordedEntry[] = [];
 
-    const baseLogger = createTestLogger(writes, { service: 'api-test' }, '2026-04-09T10:30:00.000Z')
+    const baseLogger = createTestLogger(
+      writes,
+      { service: 'api-test' },
+      '2026-04-09T10:30:00.000Z',
+    );
 
     const requestLogger = createApiRequestLogger(
       {
@@ -156,11 +169,11 @@ describe('api request logger example', () => {
         workspaceId: 'workspace-9',
       },
       baseLogger,
-    )
+    );
 
     requestLogger.info('API request accepted', {
       statusCode: 202,
-    })
+    });
 
     expect(writes[0]).toMatchObject({
       level: 'info',
@@ -176,13 +189,13 @@ describe('api request logger example', () => {
         workspaceId: 'workspace-9',
       },
       timestamp: '2026-04-09T10:30:00.000Z',
-    })
-  })
+    });
+  });
 
   it('logs handled requests with the shared facade shape', () => {
-    const writes: RecordedEntry[] = []
+    const writes: RecordedEntry[] = [];
 
-    const baseLogger = createTestLogger(writes, { service: 'api-test' })
+    const baseLogger = createTestLogger(writes, { service: 'api-test' });
 
     logApiRequestHandled(
       {
@@ -198,7 +211,7 @@ describe('api request logger example', () => {
         statusCode: 200,
       },
       baseLogger,
-    )
+    );
 
     expect(writes[0]).toMatchObject({
       application: 'focusbuddy-api',
@@ -216,6 +229,6 @@ describe('api request logger example', () => {
         service: 'api-test',
         statusCode: 200,
       },
-    })
-  })
-})
+    });
+  });
+});

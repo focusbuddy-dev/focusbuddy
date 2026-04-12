@@ -23,11 +23,11 @@ This document does not define final web redirect behavior, final NestJS filter i
 
 The first ownership split should stay explicit.
 
-| Area | Owns | Does not own |
-| --- | --- | --- |
-| `packages/api-contract` | public error codes, public error response schema, generated client-visible types, stable validation and conflict detail shapes | NestJS filters, Prisma or provider exception mapping, UI copy |
-| `apps/api` | runtime exception normalization, HTTP status mapping, request ID attachment, internal diagnostics, server logging metadata | the public contract as source of truth, web presentation behavior |
-| `apps/web` | redirect policy, inline error feedback, retry prompts, toast behavior, ErrorBoundary rendering | canonical error codes, server HTTP mapping, internal diagnostics |
+| Area                    | Owns                                                                                                                           | Does not own                                                      |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------- |
+| `packages/api-contract` | public error codes, public error response schema, generated client-visible types, stable validation and conflict detail shapes | NestJS filters, Prisma or provider exception mapping, UI copy     |
+| `apps/api`              | runtime exception normalization, HTTP status mapping, request ID attachment, internal diagnostics, server logging metadata     | the public contract as source of truth, web presentation behavior |
+| `apps/web`              | redirect policy, inline error feedback, retry prompts, toast behavior, ErrorBoundary rendering                                 | canonical error codes, server HTTP mapping, internal diagnostics  |
 
 The main rule is simple:
 
@@ -64,18 +64,18 @@ This means most validation, auth, authorization, and domain-rule failures are no
 
 ## Minimum stable public error code set
 
-| Code | Category | Default HTTP | Retryable | Typical situations |
-| --- | --- | --- | --- | --- |
-| `VALIDATION_ERROR` | request validation | `400` | `false` | missing required input, malformed payload, invalid enum |
-| `AUTH_REQUIRED` | authentication | `401` | `false` | missing auth, expired auth, invalid token |
-| `ACCESS_DENIED` | authorization | `403` | `false` | authenticated user lacks permission for the action |
-| `RESOURCE_NOT_FOUND` | existence or secrecy-preserving access | `404` | `false` | target, session, summary, or stamp should not be disclosed or does not exist |
-| `INVALID_STATE_TRANSITION` | state transition failure | `409` | `false` | invalid publish or unpublish step, invalid visibility transition |
-| `DOMAIN_RULE_VIOLATION` | domain invariant failure | `409` | `false` | note visibility exceeds session visibility, summary prerequisites not met |
-| `DUPLICATE_RESOURCE` | uniqueness conflict outside explicit idempotent APIs | `409` | `false` | duplicate create for a resource or relation that must stay unique |
-| `RATE_LIMITED` | throttling or abuse protection | `429` | `true` | repeated stamp action, too many mutation attempts |
-| `UPSTREAM_UNAVAILABLE` | dependency failure | `503` | `true` | auth provider outage, downstream service unavailable |
-| `INTERNAL_ERROR` | unexpected server failure | `500` | `false` | uncaught runtime, unmapped persistence error |
+| Code                       | Category                                             | Default HTTP | Retryable | Typical situations                                                           |
+| -------------------------- | ---------------------------------------------------- | ------------ | --------- | ---------------------------------------------------------------------------- |
+| `VALIDATION_ERROR`         | request validation                                   | `400`        | `false`   | missing required input, malformed payload, invalid enum                      |
+| `AUTH_REQUIRED`            | authentication                                       | `401`        | `false`   | missing auth, expired auth, invalid token                                    |
+| `ACCESS_DENIED`            | authorization                                        | `403`        | `false`   | authenticated user lacks permission for the action                           |
+| `RESOURCE_NOT_FOUND`       | existence or secrecy-preserving access               | `404`        | `false`   | target, session, summary, or stamp should not be disclosed or does not exist |
+| `INVALID_STATE_TRANSITION` | state transition failure                             | `409`        | `false`   | invalid publish or unpublish step, invalid visibility transition             |
+| `DOMAIN_RULE_VIOLATION`    | domain invariant failure                             | `409`        | `false`   | note visibility exceeds session visibility, summary prerequisites not met    |
+| `DUPLICATE_RESOURCE`       | uniqueness conflict outside explicit idempotent APIs | `409`        | `false`   | duplicate create for a resource or relation that must stay unique            |
+| `RATE_LIMITED`             | throttling or abuse protection                       | `429`        | `true`    | repeated stamp action, too many mutation attempts                            |
+| `UPSTREAM_UNAVAILABLE`     | dependency failure                                   | `503`        | `true`    | auth provider outage, downstream service unavailable                         |
+| `INTERNAL_ERROR`           | unexpected server failure                            | `500`        | `false`   | uncaught runtime, unmapped persistence error                                 |
 
 ## Visibility-related failures
 
@@ -113,12 +113,12 @@ This keeps duplicate submission handling separate from intentional user reversal
 
 The first public conflict reasons should be:
 
-| Public reason | Typical public code | Meaning |
-| --- | --- | --- |
-| `INVALID_VISIBILITY_TRANSITION` | `INVALID_STATE_TRANSITION` | requested visibility change is not allowed from the current state |
-| `SUMMARY_PREREQUISITE_NOT_MET` | `INVALID_STATE_TRANSITION` | summary publication prerequisites are not satisfied |
-| `NOTE_VISIBILITY_EXCEEDS_SESSION` | `DOMAIN_RULE_VIOLATION` | note visibility request exceeds session visibility |
-| `RESOURCE_ALREADY_EXISTS` | `DUPLICATE_RESOURCE` | request tried to create a resource or relation that must stay unique |
+| Public reason                     | Typical public code        | Meaning                                                              |
+| --------------------------------- | -------------------------- | -------------------------------------------------------------------- |
+| `INVALID_VISIBILITY_TRANSITION`   | `INVALID_STATE_TRANSITION` | requested visibility change is not allowed from the current state    |
+| `SUMMARY_PREREQUISITE_NOT_MET`    | `INVALID_STATE_TRANSITION` | summary publication prerequisites are not satisfied                  |
+| `NOTE_VISIBILITY_EXCEEDS_SESSION` | `DOMAIN_RULE_VIOLATION`    | note visibility request exceeds session visibility                   |
+| `RESOURCE_ALREADY_EXISTS`         | `DUPLICATE_RESOURCE`       | request tried to create a resource or relation that must stay unique |
 
 This means:
 
@@ -195,15 +195,15 @@ No raw database message, provider detail, or stack trace should cross this bound
 
 ## Domain mapping examples
 
-| Situation | Public result | Notes |
-| --- | --- | --- |
-| trying to show a private session in a public surface | `RESOURCE_NOT_FOUND` | prefer secrecy-preserving behavior over explicit disclosure |
-| trying to expose note content when note visibility does not allow it on a public surface | `RESOURCE_NOT_FOUND` | existence may stay hidden externally while logs keep the internal reason |
-| trying to expose note content beyond session visibility rules in an owner flow | `DOMAIN_RULE_VIOLATION` plus `NOTE_VISIBILITY_EXCEEDS_SESSION` | recoverable business rule failure |
-| trying to enable a public summary before prerequisites are met | `INVALID_STATE_TRANSITION` plus `SUMMARY_PREREQUISITE_NOT_MET` | action conflicts with current aggregate state |
-| trying to mutate a visible target that belongs to another user | `ACCESS_DENIED` | resource may be visible but the operation is forbidden |
-| repeating a helpful stamp enable action that is already effective | success no-op | idempotent success with no state change |
-| removing a helpful stamp that is already inactive or absent | success no-op or idempotent remove | exact empty-state payload may remain implementation-defined |
+| Situation                                                                                | Public result                                                  | Notes                                                                    |
+| ---------------------------------------------------------------------------------------- | -------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| trying to show a private session in a public surface                                     | `RESOURCE_NOT_FOUND`                                           | prefer secrecy-preserving behavior over explicit disclosure              |
+| trying to expose note content when note visibility does not allow it on a public surface | `RESOURCE_NOT_FOUND`                                           | existence may stay hidden externally while logs keep the internal reason |
+| trying to expose note content beyond session visibility rules in an owner flow           | `DOMAIN_RULE_VIOLATION` plus `NOTE_VISIBILITY_EXCEEDS_SESSION` | recoverable business rule failure                                        |
+| trying to enable a public summary before prerequisites are met                           | `INVALID_STATE_TRANSITION` plus `SUMMARY_PREREQUISITE_NOT_MET` | action conflicts with current aggregate state                            |
+| trying to mutate a visible target that belongs to another user                           | `ACCESS_DENIED`                                                | resource may be visible but the operation is forbidden                   |
+| repeating a helpful stamp enable action that is already effective                        | success no-op                                                  | idempotent success with no state change                                  |
+| removing a helpful stamp that is already inactive or absent                              | success no-op or idempotent remove                             | exact empty-state payload may remain implementation-defined              |
 
 ## OpenAPI-friendly response model
 

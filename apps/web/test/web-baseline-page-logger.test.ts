@@ -1,27 +1,27 @@
-import { createLogger, type LogEntry } from '@focusbuddy/logger'
+import { createLogger, type LogEntry } from '@focusbuddy/logger';
 
 import {
   createWebBaselinePageLogger,
   logWebBaselineButtonClicked,
   logWebBaselineNavigationCompleted,
   logWebBaselinePageViewed,
-} from '../src/lib/logging/web-baseline-page-logger'
+} from '../src/lib/logging/web-baseline-page-logger';
 
 describe('web baseline page logger', () => {
   it('keeps page request and session context on the shared client facade', () => {
-    const writes: LogEntry[] = []
+    const writes: LogEntry[] = [];
 
     const baseLogger = createLogger({
       adapter: {
         write(entry) {
-          writes.push(entry)
+          writes.push(entry);
         },
       },
       context: {
         surface: 'web-test',
       },
       now: () => new Date('2026-04-10T08:00:00.000Z'),
-    })
+    });
 
     const logger = createWebBaselinePageLogger(
       {
@@ -35,11 +35,11 @@ describe('web baseline page logger', () => {
         sessionId: 'session-77',
       },
       baseLogger,
-    )
+    );
 
     logger.info('Client page logger attached', {
       currentView: 'overview',
-    })
+    });
 
     expect(writes[0]).toMatchObject({
       level: 'info',
@@ -55,22 +55,22 @@ describe('web baseline page logger', () => {
         targetId: 'baseline-target',
       },
       timestamp: '2026-04-10T08:00:00.000Z',
-    })
-  })
+    });
+  });
 
   it('emits structured client events for initial view, clicks, and navigation', () => {
-    const writes: LogEntry[] = []
+    const writes: LogEntry[] = [];
 
     const baseLogger = createLogger({
       adapter: {
         write(entry) {
-          writes.push(entry)
+          writes.push(entry);
         },
       },
       context: {
         surface: 'web-test',
       },
-    })
+    });
 
     const request = {
       requestId: 'page-88',
@@ -78,10 +78,10 @@ describe('web baseline page logger', () => {
       route: 'home',
       targetId: 'baseline-target',
       traceId: 'trace-88',
-    }
+    };
     const user = {
       sessionId: 'session-88',
-    }
+    };
 
     logWebBaselinePageViewed(
       {
@@ -90,7 +90,7 @@ describe('web baseline page logger', () => {
         view: 'overview',
       },
       baseLogger,
-    )
+    );
     logWebBaselineButtonClicked(
       {
         action: 'navigate-baseline-page',
@@ -99,7 +99,7 @@ describe('web baseline page logger', () => {
         user,
       },
       baseLogger,
-    )
+    );
     logWebBaselineNavigationCompleted(
       {
         destination: '/?view=details',
@@ -111,9 +111,9 @@ describe('web baseline page logger', () => {
         user,
       },
       baseLogger,
-    )
+    );
 
-    expect(writes).toHaveLength(3)
+    expect(writes).toHaveLength(3);
     expect(writes[0]).toMatchObject({
       application: 'focusbuddy-web',
       category: 'WebBaselinePage',
@@ -128,10 +128,11 @@ describe('web baseline page logger', () => {
         targetId: 'baseline-target',
         view: 'overview',
       },
-    })
+    });
     expect(writes[1]).toMatchObject({
       logId: 'WEB_BASELINE_002',
-      message: 'Baseline page button clicked - Action: navigate-baseline-page Target: /?view=details',
+      message:
+        'Baseline page button clicked - Action: navigate-baseline-page Target: /?view=details',
       context: {
         action: 'navigate-baseline-page',
         actionTarget: '/?view=details',
@@ -139,7 +140,7 @@ describe('web baseline page logger', () => {
         surface: 'web-test',
         targetId: 'baseline-target',
       },
-    })
+    });
     expect(writes[2]).toMatchObject({
       logId: 'WEB_BASELINE_003',
       message: 'Baseline page navigation completed - Destination: /?view=details',
@@ -151,6 +152,6 @@ describe('web baseline page logger', () => {
         targetId: 'baseline-target',
         trigger: 'router.push',
       },
-    })
-  })
-})
+    });
+  });
+});

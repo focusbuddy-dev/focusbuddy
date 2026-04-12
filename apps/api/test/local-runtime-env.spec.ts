@@ -8,7 +8,7 @@ import {
   loadLocalRuntimeEnv,
   resolveTrackedDotenvPath,
   resolveLocalRuntimeDatabaseUrl,
-} from '../src/config/local-runtime-env';
+} from '../src/config/local-runtime-env.js';
 
 describe('local runtime env contract', () => {
   it('keeps an explicit DATABASE_URL unchanged', () => {
@@ -21,8 +21,12 @@ describe('local runtime env contract', () => {
 
     loadLocalRuntimeEnv(env);
 
-    expect(resolveLocalRuntimeDatabaseUrl(env)).toBe('postgresql://explicit-user:explicit-pass@db-host:5434/focusbuddy');
-    expect(env.DATABASE_URL).toBe('postgresql://explicit-user:explicit-pass@db-host:5434/focusbuddy');
+    expect(resolveLocalRuntimeDatabaseUrl(env)).toBe(
+      'postgresql://explicit-user:explicit-pass@db-host:5434/focusbuddy',
+    );
+    expect(env.DATABASE_URL).toBe(
+      'postgresql://explicit-user:explicit-pass@db-host:5434/focusbuddy',
+    );
   });
 
   it('derives a localhost DATABASE_URL from tracked PostgreSQL inputs', () => {
@@ -39,7 +43,9 @@ describe('local runtime env contract', () => {
 
     loadLocalRuntimeEnv(env);
 
-    expect(env.DATABASE_URL).toBe('postgresql://focusbuddy:local-pass@localhost:5544/focusbuddy-local');
+    expect(env.DATABASE_URL).toBe(
+      'postgresql://focusbuddy:local-pass@localhost:5544/focusbuddy-local',
+    );
   });
 
   it('reports missing tracked inputs in the startup error message', () => {
@@ -50,7 +56,9 @@ describe('local runtime env contract', () => {
     expect(message).toContain('API runtime requires DATABASE_URL.');
     expect(message).toContain('POSTGRES_PORT defaults to 5432 when omitted.');
     expect(message).toContain('Missing tracked local inputs: POSTGRES_DB, POSTGRES_PASSWORD.');
-    expect(message).toContain('Compose-based startup should continue to inject DATABASE_URL directly.');
+    expect(message).toContain(
+      'Compose-based startup should continue to inject DATABASE_URL directly.',
+    );
   });
 
   it('finds the workspace-root .env from an apps/api working directory', () => {

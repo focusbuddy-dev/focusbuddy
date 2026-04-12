@@ -8,10 +8,7 @@ export default async function HomePage() {
   const previewSummary = buildExamplePublicTargetSummary('baseline-target');
 
   return (
-    <WebBaselinePage
-      apiBaseUrl={getFocusBuddyApiBaseUrlLabel()}
-      previewSummary={previewSummary}
-    >
+    <WebBaselinePage apiBaseUrl={getFocusBuddyApiBaseUrlLabel()} previewSummary={previewSummary}>
       <WebRequestLoggingBoundary>
         <WebLoggingDemo targetId="baseline-target" />
       </WebRequestLoggingBoundary>

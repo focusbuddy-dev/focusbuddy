@@ -3,9 +3,9 @@ import {
   defineEvent,
   type Logger,
   type RequestLogContext,
-} from '@focusbuddy/logger'
+} from '@focusbuddy/logger';
 
-import { webServerRuntimeLogger } from './web-server-runtime-logger'
+import { webServerRuntimeLogger } from './web-server-runtime-logger';
 
 const webHealthRouteRespondedEvent = defineEvent<{ service: 'web'; status: number }>({
   logId: 'WEB_HEALTH_001',
@@ -13,16 +13,16 @@ const webHealthRouteRespondedEvent = defineEvent<{ service: 'web'; status: numbe
   category: 'Health',
   messageTemplate: 'Web health route responded - Status: {status}',
   requiredContext: ['service', 'status'],
-})
+});
 
 type WebHealthRouteRequestContext = RequestLogContext & {
-  traceId?: string
-}
+  traceId?: string;
+};
 
 type LogWebHealthRouteRespondedInput = {
-  request: WebHealthRouteRequestContext
-  status: number
-}
+  request: WebHealthRouteRequestContext;
+  status: number;
+};
 
 export function logWebHealthRouteResponded(
   { request, status }: LogWebHealthRouteRespondedInput,
@@ -34,5 +34,5 @@ export function logWebHealthRouteResponded(
   }).emit(webHealthRouteRespondedEvent, {
     service: 'web',
     status,
-  })
+  });
 }

@@ -1,32 +1,32 @@
-'use client'
+'use client';
 
-import { useEffect, useRef, useTransition } from 'react'
+import { useEffect, useRef, useTransition } from 'react';
 
-import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
 import {
   logWebBaselineButtonClicked,
   logWebBaselineNavigationCompleted,
   logWebBaselinePageViewed,
-} from '../lib/logging/web-baseline-page-logger'
-import { useWebRequestLogging } from '../lib/logging/web-request-logging-context'
-import styles from './web-baseline-page.module.css'
+} from '../lib/logging/web-baseline-page-logger';
+import { useWebRequestLogging } from '../lib/logging/web-request-logging-context';
+import styles from './web-baseline-page.module.css';
 
 type WebLoggingDemoProps = {
-  targetId: string
-}
+  targetId: string;
+};
 
 export function WebLoggingDemo({ targetId }: WebLoggingDemoProps) {
-  const [isPending, startTransition] = useTransition()
-  const pathname = usePathname()
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const { requestId, sessionId, traceId } = useWebRequestLogging()
-  const lastLocationRef = useRef<string | undefined>(undefined)
+  const [isPending, startTransition] = useTransition();
+  const pathname = usePathname();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const { requestId, sessionId, traceId } = useWebRequestLogging();
+  const lastLocationRef = useRef<string | undefined>(undefined);
 
-  const currentView = searchParams.get('view') ?? 'overview'
-  const currentQuery = searchParams.toString()
-  const currentLocation = currentQuery.length > 0 ? `${pathname}?${currentQuery}` : pathname
+  const currentView = searchParams.get('view') ?? 'overview';
+  const currentQuery = searchParams.toString();
+  const currentLocation = currentQuery.length > 0 ? `${pathname}?${currentQuery}` : pathname;
 
   useEffect(() => {
     const request = {
@@ -35,35 +35,31 @@ export function WebLoggingDemo({ targetId }: WebLoggingDemoProps) {
       route: 'home',
       targetId,
       traceId,
-    }
+    };
     const user = {
       sessionId,
-    }
+    };
 
     if (lastLocationRef.current === undefined) {
-      logWebBaselinePageViewed(
-        {
-          request,
-          user,
-          view: currentView,
-        },
-      )
-      lastLocationRef.current = currentLocation
-      return
+      logWebBaselinePageViewed({
+        request,
+        user,
+        view: currentView,
+      });
+      lastLocationRef.current = currentLocation;
+      return;
     }
 
     if (lastLocationRef.current !== currentLocation) {
-      logWebBaselineNavigationCompleted(
-        {
-          destination: currentLocation,
-          request,
-          trigger: 'router.push',
-          user,
-        },
-      )
-      lastLocationRef.current = currentLocation
+      logWebBaselineNavigationCompleted({
+        destination: currentLocation,
+        request,
+        trigger: 'router.push',
+        user,
+      });
+      lastLocationRef.current = currentLocation;
     }
-  }, [currentLocation, currentView, requestId, sessionId, targetId, traceId])
+  }, [currentLocation, currentView, requestId, sessionId, targetId, traceId]);
 
   const handleClientActionClick = () => {
     logWebBaselineButtonClicked({
@@ -79,12 +75,12 @@ export function WebLoggingDemo({ targetId }: WebLoggingDemoProps) {
       user: {
         sessionId,
       },
-    })
-  }
+    });
+  };
 
   const handleNavigateClick = () => {
-    const nextView = currentView === 'details' ? 'overview' : 'details'
-    const nextLocation = `/?view=${nextView}`
+    const nextView = currentView === 'details' ? 'overview' : 'details';
+    const nextLocation = `/?view=${nextView}`;
 
     logWebBaselineButtonClicked({
       action: 'navigate-baseline-page',
@@ -99,12 +95,12 @@ export function WebLoggingDemo({ targetId }: WebLoggingDemoProps) {
       user: {
         sessionId,
       },
-    })
+    });
 
     startTransition(() => {
-      router.push(nextLocation)
-    })
-  }
+      router.push(nextLocation);
+    });
+  };
 
   return (
     <div>
@@ -130,5 +126,5 @@ export function WebLoggingDemo({ targetId }: WebLoggingDemoProps) {
         {isPending ? 'Navigation log is pending...' : 'Client logging demo is idle.'}
       </p>
     </div>
-  )
+  );
 }
