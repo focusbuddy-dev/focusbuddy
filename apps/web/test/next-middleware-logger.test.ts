@@ -4,7 +4,7 @@ import {
   focusbuddyRequestIdHeader,
   focusbuddyTraceIdHeader,
   prepareNextMiddlewareLogger,
-} from '../src/lib/logging/next-middleware-logger';
+} from '@/lib/logging/next-middleware-logger';
 
 function createMiddlewareRequest(
   pathname: string,

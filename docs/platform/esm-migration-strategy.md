@@ -36,29 +36,19 @@ This document does not define a repository-wide app runtime conversion to pure E
 
 The repository currently has no documented file-level CommonJS exceptions.
 
-## Issue 57 resolved decisions
-
-- add `type: module` at the repository root so root-owned TypeScript and JavaScript tool configs load without typeless-package warnings
-- add `type: module` to `apps/api` and `apps/web` so app-owned TypeScript tooling files inherit the same ESM-first rule as the repository root
-- keep the API app on the NodeNext TypeScript baseline and use `.js` relative import specifiers in hand-written source so emitted runtime code stays valid under the package-level ESM rule
-- add `type: module` to `packages/config-jest` and `packages/config-oxlint` because those packages export raw TypeScript config modules and are now part of the verified ESM tool-config path
-- do not add `type: module` to `packages/config-typescript` because it only ships JSON config data and does not need JavaScript module interpretation
-- keep `commitlint.config.ts`, `prettier.config.mjs`, and `stylelint.config.mjs` as the repository root tool-config entrypoints
-- treat future `MODULE_TYPELESS_PACKAGE_JSON` warnings in CI as blocked regressions, not tolerated noise
-
 ## Package inventory and migration stance
 
-| Workspace                    | Current state                                                                                            | Migration stance                                                                                        | Notes                                                                                                                                          |
-| ---------------------------- | -------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| `packages/logger`            | explicit ESM runtime package                                                                             | keep as the repository's simplest runtime-package reference                                             | uses `type: module`, explicit ESM export entrypoints, and TypeScript-emitted build artifacts                                                   |
-| `packages/api-contract`      | explicit ESM runtime package with generated `.ts` source and built `.js` artifacts                       | continue tightening the build contract                                                                  | should keep moving toward built-artifact-first consumption and now points generator formatting at the root ESM Prettier entry                  |
-| `packages/config-typescript` | exports shared JSON config files                                                                         | keep current mode for now                                                                               | TypeScript config consumers do not benefit from package-level ESM and still depend on current tool loading behavior                            |
-| `packages/config-jest`       | `type: module` config package that exports raw `.ts` config modules with a shared ESM-consumption helper | keep as the shared Jest config source                                                                   | the shared baseline now owns `node_modules` allowlist rules and the package scope removes typeless-package warnings during Jest config loading |
-| `packages/config-oxlint`     | `type: module` config package that exports raw `.ts` config modules                                      | keep as the shared oxlint config source                                                                 | current consumers still depend on tool execution of TypeScript config files, but the package scope now removes typeless-package warnings       |
-| `packages/config-prettier`   | explicit `.mjs` tool config package                                                                      | keep as the shared Prettier reference                                                                   | the repository root and the API contract generator both consume the ESM entry                                                                  |
-| `apps/api`                   | `type: module` NodeNext TypeScript app consumer                                                          | keep the package-level ESM rule and validate runtime scripts through NodeNext-compatible source imports | the app remains on the existing NestJS-oriented TypeScript baseline and now uses `.js` relative specifiers in hand-written source              |
-| `apps/web`                   | `type: module` bundler-managed app consumer                                                              | keep the package-level ESM rule                                                                         | Next.js tooling already runs through ESM-safe config entrypoints and does not require CommonJS compatibility                                   |
-| `apps/mobile`                | placeholder workspace                                                                                    | no action now                                                                                           | revisit when the workspace has real runtime code                                                                                               |
+| Workspace                    | Current state                                                                      | Migration stance                                            | Notes                                                                                                                                                                                       |
+| ---------------------------- | ---------------------------------------------------------------------------------- | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `packages/logger`            | explicit ESM runtime package                                                       | keep as the repository's simplest runtime-package reference | uses `type: module`, explicit ESM export entrypoints, and TypeScript-emitted build artifacts                                                                                                |
+| `packages/api-contract`      | explicit ESM runtime package with generated `.ts` source and built `.js` artifacts | continue tightening the build contract                      | should keep moving toward built-artifact-first consumption and now points generator formatting at the root ESM Prettier entry                                                               |
+| `packages/config-typescript` | exports shared JSON config files                                                   | keep current mode for now                                   | TypeScript config consumers do not benefit from package-level ESM and still depend on current tool loading behavior                                                                         |
+| `packages/config-jest`       | exports raw `.ts` config modules with a shared ESM-consumption helper              | coordinated migration only                                  | the shared baseline now owns `node_modules` allowlist rules for ESM package consumption, but the package itself still relies on TypeScript config loading and Jest-specific loader behavior |
+| `packages/config-oxlint`     | exports raw `.ts` config modules                                                   | coordinated migration only                                  | current consumers depend on tool execution of TypeScript config files                                                                                                                       |
+| `packages/config-prettier`   | explicit `.mjs` tool config package                                                | keep as the shared Prettier reference                       | the repository root and the API contract generator both consume the ESM entry                                                                                                               |
+| `apps/api`                   | NodeNext TypeScript app consumer                                                   | not a package-conversion target in this issue               | app runtime strategy remains separate from package migration strategy                                                                                                                       |
+| `apps/web`                   | bundler-managed app consumer                                                       | not a package-conversion target in this issue               | can consume ESM packages without forcing repository-wide package conversion                                                                                                                 |
+| `apps/mobile`                | placeholder workspace                                                              | no action now                                               | revisit when the workspace has real runtime code                                                                                                                                            |
 
 ## Explicit ESM package contract
 
@@ -93,7 +83,7 @@ For this repository, the current Jest rule is:
 
 The shared config packages currently export raw `.ts`, `.json`, and `.mjs` files that are consumed directly by TypeScript, Jest, oxlint, and Prettier tooling entrypoints.
 
-Those packages still need coordinated loader decisions because their consumers are tools, not normal runtime imports. Issue #57 verifies the current Jest and oxlint paths well enough to mark `packages/config-jest` and `packages/config-oxlint` as `type: module`, but future config-package changes should still be validated as a repository-owned contract.
+Those packages should not be converted package-by-package without a coordinated loader decision because their consumers are tools, not normal runtime imports. A repository-wide loader break in config packages would block routine lint, test, and typecheck flows.
 
 The repository default is still ESM-first for tool configs. The current rule is:
 
@@ -103,9 +93,9 @@ The repository default is still ESM-first for tool configs. The current rule is:
 
 ### API runtime compatibility
 
-The API workspace uses the NodeNext TypeScript baseline with NestJS-oriented compiler settings. Under the issue #57 decision, the API package now declares `type: module` and keeps runtime compatibility by using NodeNext-safe `.js` relative import specifiers in hand-written source and config files that run directly under Node.
+The API workspace uses the NodeNext TypeScript baseline with NestJS-oriented compiler settings. That is compatible with consuming explicit ESM packages through a stable export contract, but it does not by itself justify converting the API app runtime to pure ESM.
 
-For this repository, the API package-level ESM rule is now decided, but broader runtime migration work should still stay focused on verified consumer and deployment behavior rather than ad hoc file-by-file churn.
+For this repository, package migration and app runtime migration remain separate decisions.
 
 ### Build orchestration
 

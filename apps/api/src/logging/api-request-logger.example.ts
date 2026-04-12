@@ -5,7 +5,7 @@ import {
   type RequestLogContext,
   type UserLogContext,
 } from '@focusbuddy/logger';
-import { apiRuntimeLogger } from './api-runtime-logger.js';
+import { apiRuntimeLogger } from '#api/logging/api-runtime-logger';
 
 const apiLogger = apiRuntimeLogger;
 

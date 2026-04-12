@@ -2,10 +2,10 @@ import * as reflectMetadata from 'reflect-metadata';
 
 import { NestFactory } from '@nestjs/core';
 
-import { AppModule } from './app.module.js';
-import { loadLocalRuntimeEnv } from './config/local-runtime-env.js';
-import { ApiRequestLoggingInterceptor } from './logging/api-request-logging.interceptor.js';
-import { createApiRuntimeLogger } from './logging/api-runtime-logger.js';
+import { AppModule } from '#api/app.module';
+import { loadLocalRuntimeEnv } from '#api/config/local-runtime-env';
+import { ApiRequestLoggingInterceptor } from '#api/logging/api-request-logging.interceptor';
+import { createApiRuntimeLogger } from '#api/logging/api-runtime-logger';
 
 async function bootstrap(): Promise<void> {
   void reflectMetadata;

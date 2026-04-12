@@ -1,10 +1,10 @@
 import { jest } from '@jest/globals';
 
-import { resolveWebRequestCorrelation } from '../src/lib/logging/web-request-correlation';
+import { resolveWebRequestCorrelation } from '@/lib/logging/web-request-correlation';
 import {
   focusbuddyRequestIdHeader,
   focusbuddyTraceIdHeader,
-} from '../src/lib/logging/next-middleware-logger';
+} from '@/lib/logging/next-middleware-logger';
 
 describe('web request correlation helper', () => {
   it('reuses incoming correlation headers', () => {

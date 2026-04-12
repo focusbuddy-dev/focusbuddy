@@ -7,7 +7,7 @@ import {
   buildDatabaseUrlRequirementMessage,
   loadLocalRuntimeEnv,
   resolveLocalRuntimeDatabaseUrl,
-} from './src/config/local-runtime-env.js';
+} from '#api/config/local-runtime-env';
 
 const configDirectory = dirname(fileURLToPath(import.meta.url));
 

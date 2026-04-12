@@ -3,7 +3,7 @@ import { jest } from '@jest/globals';
 import { focusbuddyRequestIdHeader, focusbuddyTraceIdHeader } from '@focusbuddy/logger';
 import { lastValueFrom, of } from 'rxjs';
 
-import { ApiRequestLoggingInterceptor } from '../src/logging/api-request-logging.interceptor.js';
+import { ApiRequestLoggingInterceptor } from '#api/logging/api-request-logging.interceptor';
 
 describe('ApiRequestLoggingInterceptor', () => {
   it('binds correlation headers and emits a handled request event', async () => {

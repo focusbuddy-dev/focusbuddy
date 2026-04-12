@@ -1,7 +1,7 @@
 import { jest } from '@jest/globals';
 import { fireEvent, render, screen } from '@testing-library/react';
 
-import { WebRequestLoggingProvider } from '../src/lib/logging/web-request-logging-context';
+import { WebRequestLoggingProvider } from '@/lib/logging/web-request-logging-context';
 
 const pushMock = jest.fn();
 
@@ -30,7 +30,7 @@ describe('WebLoggingDemo', () => {
   });
 
   it('logs initial display, button clicks, and route changes from the real client component', async () => {
-    const { WebLoggingDemo } = await import('../src/components/web-logging-demo');
+    const { WebLoggingDemo } = await import('@/components/web-logging-demo');
     const infoSpy = jest.mocked(console.info);
     const { rerender } = render(
       <WebRequestLoggingProvider requestId="request-100" traceId="trace-100">
@@ -128,7 +128,7 @@ describe('WebLoggingDemo', () => {
   });
 
   it('shows distributed request materials from the provider', async () => {
-    const { WebLoggingDemo } = await import('../src/components/web-logging-demo');
+    const { WebLoggingDemo } = await import('@/components/web-logging-demo');
     render(
       <WebRequestLoggingProvider requestId="request-100" traceId="trace-100">
         <WebLoggingDemo targetId="baseline-target" />

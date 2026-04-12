@@ -1,16 +1,17 @@
 /** @jest-config-loader ts-node */
 /** @jest-config-loader-options {"transpileOnly": true} */
 
-import { defineJestConfig, withEsmPackageSupport } from '../../packages/config-jest/define.ts';
-import sharedConfig from '../../packages/config-jest/api.ts';
+import { defineJestConfig, withEsmPackageSupport } from '@focusbuddy/config-jest/define';
+import sharedConfig from '@focusbuddy/config-jest/api';
 
 const config = withEsmPackageSupport(
   defineJestConfig({
     ...sharedConfig,
-    moduleFileExtensions: [...(sharedConfig.moduleFileExtensions ?? []), 'ts'],
     moduleNameMapper: {
+      '^#api/(.*)$': '<rootDir>/src/$1',
       '^(\\.{1,2}/.*)\\.js$': '$1',
     },
+    moduleFileExtensions: [...(sharedConfig.moduleFileExtensions ?? []), 'ts'],
     roots: ['<rootDir>/src', '<rootDir>/test'],
     testMatch: ['<rootDir>/test/**/*.spec.ts'],
     transform: {

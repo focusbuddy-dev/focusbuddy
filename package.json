@@ -10,12 +10,13 @@
     }
   },
   "scripts": {
-    "build": "turbo run build",
+    "build": "pnpm generate && turbo run build",
     "dev": "turbo run dev --parallel",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "generate": "turbo run generate",
-    "lint": "pnpm lint:repo && turbo run lint",
+    "lint": "pnpm lint:repo && pnpm lint:boundaries && turbo run lint",
+    "lint:boundaries": "node scripts/check-workspace-boundaries.mjs",
     "lint:repo": "oxlint .",
     "merge-gate": "pnpm merge-gate:generate && pnpm merge-gate:lint && pnpm merge-gate:typecheck && pnpm merge-gate:test",
     "merge-gate:generate": "pnpm generate",
@@ -24,8 +25,8 @@
     "merge-gate:typecheck": "pnpm typecheck",
     "preinstall": "node scripts/enforce-pnpm.mjs",
     "prepare": "husky",
-    "test": "node --test test/*.test.mjs && turbo run test",
-    "typecheck": "turbo run typecheck"
+    "test": "pnpm generate && node --test test/*.test.mjs && turbo run test",
+    "typecheck": "pnpm generate && turbo run typecheck"
   },
   "devDependencies": {
     "@commitlint/cli": "^20.5.0",

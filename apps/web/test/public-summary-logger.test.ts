@@ -3,7 +3,7 @@ import { createLogger, type LogEntry } from '@focusbuddy/logger';
 import {
   createPublicSummaryLogger,
   logPublicSummaryViewed,
-} from '../src/lib/logging/public-summary-logger';
+} from '@/lib/logging/public-summary-logger';
 
 describe('public summary logger example', () => {
   it('keeps request and user context on the shared browser facade', () => {

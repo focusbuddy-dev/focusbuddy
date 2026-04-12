@@ -51,12 +51,21 @@ This document does not define application code, end-to-end test strategy, or dep
 - the shared Jest baselines stay directory-agnostic until the real app source trees exist in follow-up issues
 - the shared Jest baselines do not enable TypeScript test execution until a real transform is chosen in follow-up app work
 
+## Shared config consumption rule
+
+- app workspaces must consume shared config packages through package names and exported subpaths such as `@focusbuddy/config-jest/web`
+- app workspaces must not reach into `packages/*` through relative filesystem paths such as `../../packages/config-jest/...`
+- when an app-level config or test file imports a shared config package, that app must declare the package in its own `devDependencies`
+- this rule also applies to TypeScript config inheritance when the shared config package exposes a stable package subpath
+- root-owned tool executables such as `jest`, `oxlint`, `ts-node`, and `stylelint` may stay at the repository root when package scripts intentionally invoke them through repository-owned command entrypoints
+
 ## Repository commands
 
 The repository root now exposes:
 
 - `pnpm format` to apply Prettier
 - `pnpm format:check` to verify formatting without writing changes
+- `pnpm lint:boundaries` to reject workspace-to-workspace imports and dependencies that break the monorepo boundary rules
 - `pnpm lint` to run root oxlint checks and then workspace lint tasks
 - `pnpm merge-gate` to run the initial merge validation sequence
 - `pnpm test` to keep the existing root test flow and workspace test flow
@@ -71,11 +80,26 @@ The initial merge gate sequence is:
 
 This keeps generated contract outputs available before downstream validation steps run.
 
+The root `turbo.json` task graph also keeps `generate` ahead of `build`, `typecheck`, and `test` so the same ordering applies when those root commands are invoked individually.
+
+The workspace boundary check currently enforces these minimum repository rules:
+
+- apps may depend on packages, but not on other apps
+- packages may depend on packages, but not on apps
+- workspace code must not reach into another workspace through relative filesystem imports
+- shared packages may be consumed through declared package names and exported subpaths
+- workspace imports and tsconfig package extends must have a matching declared workspace dependency in `package.json`
+- workspace package imports must stay within the target package's exported subpaths
+
 The repository now uses GitHub Actions to run the same merge gate on pull requests and pushes to `main`.
 
 Deploy-only checks remain outside this merge gate. Examples include deployed acceptance checks, deploy approval rules, and runtime-only validation in non-local environments.
 
 The repository-wide package ESM migration strategy is documented in `docs/platform/esm-migration-strategy.md` and must be consulted before converting additional workspace packages to explicit ESM.
+
+The current repository policy for app-local import paths and preferred function declaration style is documented in `docs/platform/import-and-function-style-policy.md`.
+
+The current `apps/api` module resolution contract across compile, startup, built runtime, Jest, and Prisma command paths is documented in `docs/platform/api-module-resolution-contract.md`.
 
 The repository default for hand-written JavaScript, TypeScript, and tool config files is now ESM-first. Remaining CommonJS files must be tracked as explicit file-level exceptions in that strategy document.
 
@@ -116,6 +140,7 @@ This keeps issue #21 and issue #22 focused on app implementation instead of re-d
 
 - keep the root command entrypoints aligned with the repository merge gate
 - keep generated outputs available before downstream validation tasks
+- keep `pnpm lint:boundaries` aligned with the documented workspace boundary rules when new workspaces are added
 
 ### For #71
 

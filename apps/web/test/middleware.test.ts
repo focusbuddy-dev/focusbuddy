@@ -3,11 +3,11 @@
 import { jest } from '@jest/globals';
 import { NextRequest } from 'next/server';
 
-import { middleware } from '../src/middleware';
+import { middleware } from '@/middleware';
 import {
   focusbuddyRequestIdHeader,
   focusbuddyTraceIdHeader,
-} from '../src/lib/logging/next-middleware-logger';
+} from '@/lib/logging/next-middleware-logger';
 
 describe('web middleware', () => {
   it('adds correlation headers to the response', () => {

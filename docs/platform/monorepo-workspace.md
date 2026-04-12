@@ -88,10 +88,17 @@ packages/
 
 - app code lives under `apps/*`
 - shared reusable code or configuration lives under `packages/*`
+- app workspaces must consume code and config from `packages/*` through package names and exported entrypoints, not through relative filesystem paths into package internals
+- app workspaces must not depend on other app workspaces directly
+- package workspaces must not depend on app workspaces directly
 - API contract ownership starts in `packages/api-contract`, not in the API app
 - Prisma and database access stay in the API boundary unless a later issue explicitly extracts a shared database package
 - generated contract outputs are expected to be consumed by apps, not edited manually inside apps
 - mobile remains reserved but should follow the same package boundary rules when implemented later
+
+The repository boundary check now enforces these rules from the root through `pnpm lint:boundaries`, and `pnpm lint` includes that check before workspace lint tasks run.
+
+That check also rejects workspace package imports or tsconfig package extends that are not declared in the importing workspace's `package.json`, and it rejects package subpaths that are outside the target workspace's published exports.
 
 ## Basic Turborepo task structure
 
@@ -103,11 +110,13 @@ The repository root exposes these first shared commands:
 - `pnpm test`
 - `pnpm typecheck`
 
-The initial `turbo.json` intentionally stays small.
+The current `turbo.json` intentionally stays small.
 
-- `build` depends on upstream workspace builds
+- `build` depends on local generate tasks, upstream generate tasks, and upstream workspace builds
 - `build` currently declares no outputs because the issue only creates placeholder workspaces, not real app artifacts yet
 - `dev` is uncached because later app dev servers will be long-running
+- `generate` keeps committed and required generated outputs aligned before downstream validation
+- `test` and `typecheck` depend on local generate tasks, upstream generate tasks, and upstream builds so root command ordering stays stable
 - `lint`, `test`, and `typecheck` are defined at the workspace level so the root can orchestrate them consistently
 
 The current workspace package scripts are placeholders so the monorepo structure can be validated before follow-up issues add real implementation.

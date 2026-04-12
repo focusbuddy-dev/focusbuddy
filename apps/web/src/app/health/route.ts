@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 
-import { resolveWebRequestCorrelation } from '../../lib/logging/web-request-correlation';
-import { logWebHealthRouteResponded } from '../../lib/logging/web-health-route-logger';
+import { logWebHealthRouteResponded } from '@/lib/logging/web-health-route-logger';
+import { resolveWebRequestCorrelation } from '@/lib/logging/web-request-correlation';
 
 export function GET(request: NextRequest) {
   const { requestId, traceId } = resolveWebRequestCorrelation(request.headers);

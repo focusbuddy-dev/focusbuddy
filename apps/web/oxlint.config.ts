@@ -1,5 +1,5 @@
 import { defineConfig } from 'oxlint';
-import webConfig from '../../packages/config-oxlint/web/oxlint.config.ts';
+import webConfig from '@focusbuddy/config-oxlint/web';
 
 export default defineConfig({
   extends: [webConfig],

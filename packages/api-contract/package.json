@@ -35,5 +35,8 @@
     "@zodios/core": "^10.9.6",
     "axios": "^1.14.0",
     "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@focusbuddy/config-typescript": "workspace:*"
   }
 }

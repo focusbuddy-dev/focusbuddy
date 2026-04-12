@@ -23,6 +23,9 @@
     "react-dom": "^19.2.4"
   },
   "devDependencies": {
+    "@focusbuddy/config-jest": "workspace:*",
+    "@focusbuddy/config-oxlint": "workspace:*",
+    "@focusbuddy/config-typescript": "workspace:*",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@types/jest": "^30.0.0",
