@@ -20,3 +20,9 @@ This workspace captures the first Next.js web baseline from issue #22.
 - component-scoped styling should live in `.module.css` files under `src`
 - `src/app/globals.css` is reserved for reset, design tokens, and page foundation styles only
 - style changes should pass `pnpm --filter @focusbuddy/web lint` before merge
+
+## Performance Baseline
+
+- issue #62 adds the first Web Vitals and Lighthouse measurement path for the web app
+- accepted baseline outputs are saved under `performance/baselines`
+- run `just parity`, then `pnpm --filter @focusbuddy/web measure:browser`, then `pnpm --filter @focusbuddy/web measure:baseline`
