@@ -378,6 +378,12 @@ This ordering keeps the first automation focused on review-time detection instea
 
 This document intentionally stops at policy. Implementation should restart from fresh follow-up issues instead of inheriting the older custom-measurement branch structure.
 
+### Scheduled monitoring follow-up issue
+
+- use issue #171 for the first scheduled baseline-performance lane and Slack notification flow
+- treat that lane as drift detection for the already-owned scenarios, separate from PR-review checks
+- keep detailed notification wording and presentation out of the initial implementation scope until the scheduled lane is running reliably
+
 ### Web follow-up issue
 
 - adopt LHCI as the default implementation path for `web.home.initial-load`
