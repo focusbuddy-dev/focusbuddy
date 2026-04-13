@@ -15,6 +15,8 @@ The first automation lane captures direct browser `TTFB`, `FCP`, and `CLS`, comp
 
 The LHCI command is intentionally local-first in this issue. CI wiring, artifact publication, and PR summary posting stay in follow-up workflow work.
 
+The LHCI wrapper checks the target URL before launch so host and port mistakes fail fast with a direct reachability error instead of a later Chrome interstitial.
+
 You can override the target URL and run count with these environment variables:
 
 - `FOCUSBUDDY_WEB_BASELINE_BASE_URL`

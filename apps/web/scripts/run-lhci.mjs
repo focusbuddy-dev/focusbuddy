@@ -13,6 +13,8 @@ const baseUrl = new URL(
   process.env.FOCUSBUDDY_WEB_BASELINE_BASE_URL ?? 'http://127.0.0.1:3000',
 ).toString();
 
+await assertBaseUrlReady(baseUrl);
+
 const child = spawn(
   process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm',
   [
@@ -42,3 +44,29 @@ child.on('exit', (code, signal) => {
 
   process.exit(code ?? 1);
 });
+
+async function assertBaseUrlReady(url) {
+  let response;
+
+  try {
+    response = await fetch(url, { redirect: 'manual' });
+  } catch (error) {
+    throw new Error(
+      `LHCI target URL is not reachable before launch: ${url}. ${formatError(error)}`,
+    );
+  }
+
+  if (!response.ok) {
+    throw new Error(
+      `LHCI target URL returned ${response.status} before launch: ${url}`,
+    );
+  }
+}
+
+function formatError(error) {
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  return String(error);
+}
