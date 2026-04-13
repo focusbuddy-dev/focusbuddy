@@ -9,6 +9,7 @@ import {
   logWebBaselineNavigationCompleted,
   logWebBaselinePageViewed,
 } from '@/lib/logging/web-baseline-page-logger';
+import { captureRouterTransitionStart } from '@/lib/performance/web-baseline-capture';
 import { useWebRequestLogging } from '@/lib/logging/web-request-logging-context';
 import styles from './web-baseline-page.module.css';
 
@@ -81,6 +82,11 @@ export function WebLoggingDemo({ targetId }: WebLoggingDemoProps) {
   const handleNavigateClick = () => {
     const nextView = currentView === 'details' ? 'overview' : 'details';
     const nextLocation = `/?view=${nextView}`;
+
+    captureRouterTransitionStart({
+      navigationType: 'push',
+      url: nextLocation,
+    });
 
     logWebBaselineButtonClicked({
       action: 'navigate-baseline-page',

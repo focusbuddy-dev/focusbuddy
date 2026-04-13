@@ -80,6 +80,8 @@ web_modules/
 # Next.js build output
 .next
 out
+.lighthouseci/
+apps/web/performance/reports/
 
 # Nuxt.js build / generate output
 .nuxt

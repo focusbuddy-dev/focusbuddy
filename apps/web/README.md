@@ -14,6 +14,7 @@ This workspace captures the first Next.js web baseline from issue #22.
 - this issue establishes the web baseline only; feature UI stays in follow-up work after issue #22
 - issue #22 created the Next.js baseline, while issue #106 wires that baseline into the local Docker Compose `web` service
 - the generated contract outputs remain outside git and are rebuilt locally or in CI through the workspace scripts
+- issue #62 adds the first repository-owned web baseline measurement path under `apps/web/performance`
 
 ## Styling Baseline
 

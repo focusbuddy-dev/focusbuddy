@@ -1,0 +1,64 @@
+{
+  "app": "web",
+  "capturedAt": "2026-04-13T14:05:48.858Z",
+  "environment": {
+    "baseUrl": "http://host.docker.internal:3000/",
+    "browser": "chromium",
+    "runtime": "parity",
+    "targetSearch": "?view=details"
+  },
+  "measurements": {
+    "runs": [
+      {
+        "routeChangeDurationMs": 3078.5,
+        "transitions": [
+          {
+            "capturedAt": "2026-04-13T14:05:56.513Z",
+            "navigationType": "push",
+            "url": "/?view=details"
+          }
+        ],
+        "webVitals": []
+      },
+      {
+        "routeChangeDurationMs": 3181.5999999046326,
+        "transitions": [
+          {
+            "capturedAt": "2026-04-13T14:06:21.521Z",
+            "navigationType": "push",
+            "url": "/?view=details"
+          }
+        ],
+        "webVitals": []
+      },
+      {
+        "routeChangeDurationMs": 3092,
+        "transitions": [
+          {
+            "capturedAt": "2026-04-13T14:06:46.227Z",
+            "navigationType": "push",
+            "url": "/?view=details"
+          }
+        ],
+        "webVitals": []
+      }
+    ]
+  },
+  "runMode": "local-parity",
+  "sampleSize": 3,
+  "scenarioId": "web.home.details-navigation",
+  "schemaVersion": 1,
+  "summary": {
+    "interactionMetricName": "ROUTE_CHANGE_DURATION",
+    "routerTransitions": {
+      "medianCount": 1,
+      "targetUrl": "?view=details"
+    },
+    "webVitals": {
+      "ROUTE_CHANGE_DURATION": {
+        "median": 3092,
+        "sampleCount": 3
+      }
+    }
+  }
+}
