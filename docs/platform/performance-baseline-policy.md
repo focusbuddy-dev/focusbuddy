@@ -22,6 +22,7 @@ That is why this policy deliberately splits web and API into different operation
 This document defines:
 
 - the role split between web and API performance checks
+- the execution split between local accepted baseline capture and CI regression checks
 - the first representative scenarios to measure
 - the local parity environment used for comparable reruns
 - the saved JSON format for accepted baseline snapshots
@@ -44,7 +45,9 @@ The important distinction is operational.
 
 They use different tools because they are trying to surface different kinds of failure.
 
-## Common measurement environment
+## Execution model
+
+### Local accepted baseline capture
 
 The first accepted baseline must be captured against the parity runtime lane.
 
@@ -56,6 +59,21 @@ The first accepted baseline must be captured against the parity runtime lane.
 - rerun the same scenario at least 3 times and compare medians for threshold review
 
 This keeps the first baseline close to the repository's production-oriented local path without making CI orchestration a prerequisite for the initial policy decision.
+
+### CI regression execution
+
+CI should treat runtime startup and measurement as separate steps.
+
+- start the target runtime first
+- wait for health before measurement starts
+- run the measurement tool against the already-running service URL
+- tear the runtime down after measurement completes
+
+For this repository, that means `just parity` is the clearest first setup step when the goal is a full-stack comparable CI lane. LHCI and k6 then run against the resulting URLs. They do not replace the stack startup step.
+
+In other words, LHCI in CI is not "run `just parity` inside LHCI". The workflow should start parity first, then run LHCI against `http://127.0.0.1:3000`. The same separation applies to k6 for `http://127.0.0.1:3001`.
+
+If a faster web-only CI lane is added later, it may use LHCI's own server startup support for the web app alone. That must be treated as a separate run mode from the full-stack parity lane until the repository explicitly adopts it as the new comparison reference.
 
 ## Web policy
 
@@ -98,6 +116,14 @@ This keeps the first interactive baseline tied to a real, already-implemented ro
 
 `web.home.initial-load` owns `TTFB`, `FCP`, and `CLS` as direct load metrics, while Lighthouse owns the first comparable `LCP` value in the automation lane. `web.home.details-navigation` owns the first interactive metric capture, preferring `INP` and falling back to `FID` when local automation does not emit `INP`.
 
+### Tool ownership by case
+
+| Case | Goal | Primary tool | Runtime expectation | Notes |
+| --- | --- | --- | --- | --- |
+| `web.home.initial-load` local accepted baseline capture | refresh the repository-owned comparison reference | temporary local browser plus Lighthouse capture under parity | full-stack parity | bootstrap path until the CI lane becomes the stable source of truth |
+| `web.home.initial-load` PR regression check in CI | detect initial-load regressions on review | LHCI | start runtime first, then measure `http://127.0.0.1:3000` | the first comparable CI lane should prefer parity startup as a workflow step |
+| `web.home.details-navigation` route-transition check | detect regressions in app navigation behavior | narrow custom capture or Playwright-assisted browser flow | start runtime first, then drive the navigation scenario | this scenario is not owned by LHCI unless the repository later decides otherwise |
+
 ### Why LHCI is the primary tool direction
 
 LHCI is the intended primary tool for the web initial-load lane because it already solves the parts that matter most for fast regression detection on PRs:
@@ -137,6 +163,13 @@ The current API runtime only exposes `/health`, and that endpoint already exerci
 - median latency in milliseconds
 - p95 latency in milliseconds
 - serialized response size in bytes
+
+### Tool ownership by case
+
+| Case | Goal | Primary tool | Runtime expectation | Notes |
+| --- | --- | --- | --- | --- |
+| `api.health.get` local accepted baseline capture | refresh the repository-owned comparison reference | the same scenario definition used for automation, executed against parity | full-stack parity | keep the saved output aligned with schema version 1 |
+| `api.health.get` PR regression check in CI | detect endpoint latency or status drift during review | k6 | start runtime first, then measure `http://127.0.0.1:3001/health` | parity startup is the clearest first lane while only `/health` is owned |
 
 ### Why k6 is the primary tool direction
 
@@ -261,15 +294,15 @@ The roadmap is intentionally small. Each step should improve detection speed or 
 
 ### Web roadmap: LHCI-centered
 
-1. Keep the current accepted baseline JSON and local parity capture as the bootstrap comparison source.
-2. Add an on-demand CI workflow that runs LHCI for `web.home.initial-load` and publishes a PR-visible summary.
-3. Keep `web.home.details-navigation` on the narrow custom capture path until there is a better tool fit for route-transition metrics.
-4. Add stronger assertions or history storage only after the CI lane proves repeatable enough to trust.
+1. Keep local parity capture only as the bootstrap path for accepted baseline refresh.
+2. Add an on-demand CI workflow that starts parity, then runs LHCI for `web.home.initial-load`, then publishes a PR-visible summary.
+3. Keep `web.home.details-navigation` on the narrow custom path until the repository decides on a better standard tool for route transitions.
+4. Add stronger assertions or history storage only after the LHCI lane proves repeatable enough to trust.
 
 ### API roadmap: k6-centered
 
 1. Add the first repository-owned k6 scenario for `api.health.get`, aligned with schema version 1 summary fields.
-2. Add an on-demand CI workflow that runs the k6 scenario and posts latency and status results into PR review.
+2. Add an on-demand CI workflow that starts parity, then runs the k6 scenario, then posts latency and status results into PR review.
 3. Expand beyond `/health` only after the first lane is stable and useful in review.
 4. Add scheduled runs or longer-term history only after the PR-triggered lane has shown real debugging value.
 
