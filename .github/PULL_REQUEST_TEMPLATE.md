@@ -23,6 +23,12 @@ Verification details:
 List the commands you ran, checks you performed, or reasons testing was not needed.
 ```
 
+## Performance Impact
+
+- [ ] This PR does not materially affect the owned performance scenarios
+- [ ] This PR materially affects runtime performance and I reran the relevant baseline measurement
+- [ ] This PR intentionally updates an accepted baseline and includes the regenerated JSON plus a short adoption note
+
 ## Notes
 
 - Add context, follow-up work, or known limitations if needed.
