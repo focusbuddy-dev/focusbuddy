@@ -136,7 +136,7 @@ console.log(
       ],
       runCount,
     },
-    null,
+    undefined,
     2,
   ),
 );
@@ -206,7 +206,6 @@ async function captureInitialLoadScenario({ baseUrl: origin, executablePath, pat
       const clsEntries = performance
         .getEntriesByType('layout-shift')
         .filter((entry) => !entry.hadRecentInput);
-      const lcpEntry = performance.getEntriesByType('largest-contentful-paint').at(-1);
 
       return {
         clsValue: clsEntries.reduce((total, entry) => total + entry.value, 0),
@@ -325,19 +324,16 @@ async function captureLighthouseRun({ auditIds, baseUrl: origin, executablePath,
         auditIds.map((auditId) => {
           const audit = result.lhr.audits[auditId];
 
-          return [
-            auditId,
-            {
-              displayValue: audit.displayValue ?? null,
-              numericUnit: audit.numericUnit ?? null,
-              numericValue: audit.numericValue ?? null,
-              score: audit.score ?? null,
-            },
-          ];
+          return [auditId, compactObject({
+            displayValue: audit.displayValue,
+            numericUnit: audit.numericUnit,
+            numericValue: audit.numericValue,
+            score: audit.score,
+          })];
         }),
       ),
       finalDisplayedUrl: result.lhr.finalDisplayedUrl,
-      performanceScore: result.lhr.categories.performance.score ?? null,
+      ...withDefinedValue('performanceScore', result.lhr.categories.performance.score),
     };
   } finally {
     await chrome.kill();
@@ -352,11 +348,11 @@ function buildBundleSummary(runs) {
 }
 
 function buildLighthouseSummary(runs, auditIds) {
-  return {
+  return compactObject({
     audits: Object.fromEntries(
       auditIds.map((auditId) => [
         auditId,
-        {
+        compactObject({
           numericValue: calculateMedian(
             runs
               .map((run) => run.audits[auditId].numericValue)
@@ -365,13 +361,13 @@ function buildLighthouseSummary(runs, auditIds) {
           score: calculateMedian(
             runs.map((run) => run.audits[auditId].score).filter((value) => typeof value === 'number'),
           ),
-        },
+        }),
       ]),
     ),
     performanceScore: calculateMedian(
       runs.map((run) => run.performanceScore).filter((value) => typeof value === 'number'),
     ),
-  };
+  });
 }
 
 function buildWebVitalSummary(metrics, expectedMetricNames) {
@@ -411,10 +407,10 @@ function pickInteractionMetricName(runs) {
 
 function calculateMedian(values) {
   if (values.length === 0) {
-    return null;
+    return undefined;
   }
 
-  const sortedValues = [...values].sort((left, right) => left - right);
+  const sortedValues = values.toSorted((left, right) => left - right);
   const middleIndex = Math.floor(sortedValues.length / 2);
 
   if (sortedValues.length % 2 === 1) {
@@ -437,7 +433,19 @@ function findWorstRating(ratings) {
     return 'good';
   }
 
-  return null;
+  return undefined;
+}
+
+function compactObject(value) {
+  return Object.fromEntries(Object.entries(value).filter(([, entry]) => entry !== undefined));
+}
+
+function withDefinedValue(key, value) {
+  if (value === undefined) {
+    return {};
+  }
+
+  return { [key]: value };
 }
 
 function rateCls(value) {
@@ -483,7 +491,7 @@ function roundNumber(value) {
 async function writeSnapshot(scenarioId, snapshot) {
   await writeFile(
     resolve(baselinesRoot, `${scenarioId}.json`),
-    `${JSON.stringify(snapshot, null, 2)}\n`,
+    `${JSON.stringify(snapshot, undefined, 2)}\n`,
     'utf8',
   );
 }
