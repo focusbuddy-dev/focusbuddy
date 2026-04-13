@@ -176,6 +176,7 @@ async function assertBaseUrlReady(url) {
   } catch (error) {
     throw new Error(
       `Baseline target URL is not reachable before measurement: ${url}. ${formatError(error)}`,
+      { cause: error },
     );
   }
 

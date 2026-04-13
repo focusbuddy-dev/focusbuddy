@@ -61,6 +61,7 @@ async function assertBaseUrlReady(url) {
   } catch (error) {
     throw new Error(
       `LHCI target URL is not reachable before launch: ${url}. ${formatError(error)}`,
+      { cause: error },
     );
   }
 

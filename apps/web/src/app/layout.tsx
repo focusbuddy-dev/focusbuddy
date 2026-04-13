@@ -18,7 +18,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="en">
       <body>
-        {isWebBaselineCaptureEnabled() ? <WebBaselineCaptureBootstrap /> : null}
+        {isWebBaselineCaptureEnabled() ? <WebBaselineCaptureBootstrap /> : undefined}
         {children}
       </body>
     </html>
