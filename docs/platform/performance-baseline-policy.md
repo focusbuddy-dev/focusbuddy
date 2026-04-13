@@ -75,6 +75,25 @@ In other words, LHCI in CI is not "run `just parity` inside LHCI". The workflow 
 
 If a faster web-only CI lane is added later, it may use LHCI's own server startup support for the web app alone. That must be treated as a separate run mode from the full-stack parity lane until the repository explicitly adopts it as the new comparison reference.
 
+### Database handling
+
+Database preparation is part of runtime setup, not part of LHCI or k6 themselves.
+
+For the current first API scenario, `api.health.get`, the owned check only requires PostgreSQL reachability. The current `/health` handler executes `SELECT 1`, so an empty PostgreSQL instance started by parity is acceptable for this specific scenario. No schema migration or seed step is required to make that health check meaningful today.
+
+That exemption is specific to `api.health.get`. It should not be generalized to later API performance scenarios.
+
+When a future API scenario touches Prisma-managed tables or depends on row shape, row count, or relational joins, the workflow must add an explicit database preparation step before measurement:
+
+- create or reset the database to a known state for the run mode
+- apply the repository-approved schema bootstrap step before the app is measured
+- seed deterministic fixture data only when the scenario depends on specific records or cardinality
+- start measurement only after schema and fixture preparation completes
+
+Once repository-owned migrations exist for those scenarios, CI should prefer a migration-based bootstrap such as `prisma migrate deploy` over ad hoc schema setup. Until then, any temporary bootstrap step must be documented as a bootstrap-only choice for comparability, not as the long-term contract.
+
+The important operational rule is that LHCI and k6 measure an already-prepared runtime. They are not the mechanism that defines database state.
+
 ## Web policy
 
 ### Role
@@ -169,7 +188,7 @@ The current API runtime only exposes `/health`, and that endpoint already exerci
 | Case | Goal | Primary tool | Runtime expectation | Notes |
 | --- | --- | --- | --- | --- |
 | `api.health.get` local accepted baseline capture | refresh the repository-owned comparison reference | the same scenario definition used for automation, executed against parity | full-stack parity | keep the saved output aligned with schema version 1 |
-| `api.health.get` PR regression check in CI | detect endpoint latency or status drift during review | k6 | start runtime first, then measure `http://127.0.0.1:3001/health` | parity startup is the clearest first lane while only `/health` is owned |
+| `api.health.get` PR regression check in CI | detect endpoint latency or status drift during review | k6 | start runtime first, then measure `http://127.0.0.1:3001/health` | parity startup is the clearest first lane while only `/health` is owned; empty DB is acceptable because `/health` only checks connectivity |
 
 ### Why k6 is the primary tool direction
 
