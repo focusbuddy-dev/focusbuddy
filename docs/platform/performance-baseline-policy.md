@@ -94,6 +94,52 @@ Once repository-owned migrations exist for those scenarios, CI should prefer a m
 
 The important operational rule is that LHCI and k6 measure an already-prepared runtime. They are not the mechanism that defines database state.
 
+### Fixed-value and mock-data handling
+
+Fixed values, mock responses, and contract-backed preview data are useful in this repository, but they answer a different question from the performance baseline.
+
+They are appropriate when the goal is to:
+
+- verify UI composition before the final backend exists
+- confirm contract shape, empty-state handling, and rendering behavior deterministically
+- keep day-to-day implementation review fast without waiting for full-stack runtime setup
+
+They are not sufficient when the goal is to claim a repository-owned performance baseline for an endpoint or page load.
+
+If a measurement runs only against fixed values, it can still be useful as a narrow implementation-time preview, but it fails to represent several effects that the baseline policy is meant to catch:
+
+- database connection establishment and pool behavior
+- ORM and serialization overhead on the real response path
+- cache misses, cold-path startup, and runtime dependency latency
+- payload growth caused by actual record shape or cardinality
+
+For that reason, this repository should treat mock-first preview and performance baseline as separate lanes:
+
+- preview or mock lanes may use fixed values to validate rendering and contract usage during implementation
+- accepted performance baselines must run against a real runtime dependency shape for the owned scenario
+- deterministic fixture data is required only when the owned performance scenario depends on specific row shape, row count, or relational behavior
+
+This keeps the earlier mock-first web rule valid without turning preview data into evidence for service or UX performance claims.
+
+### LHCI result storage
+
+LHCI storage should also be introduced in phases.
+
+For the first PR-review lane, the repository does not need a self-hosted LHCI server yet. The first useful outcome is a PR-visible Lighthouse summary and a reproducible collected report.
+
+That means the initial web lane may use either of these lightweight outputs:
+
+- temporary-public-storage when the repository accepts short-lived hosted report links for review
+- filesystem output saved as CI artifacts when the repository wants raw reports without introducing another always-on service yet
+
+A self-hosted LHCI server becomes necessary only when the repository wants durable historical comparisons, controlled access to reports, or a repository-owned trend dashboard. That is a later infrastructure decision, not a prerequisite for adopting LHCI as the first PR regression tool.
+
+The operational rule is therefore:
+
+- PR review summary first
+- durable history later
+- self-hosted LHCI server only when the repository decides that retained Lighthouse history is worth the extra service ownership
+
 ## Web policy
 
 ### Role
@@ -315,8 +361,9 @@ The roadmap is intentionally small. Each step should improve detection speed or 
 
 1. Keep local parity capture only as the bootstrap path for accepted baseline refresh.
 2. Add an on-demand CI workflow that starts parity, then runs LHCI for `web.home.initial-load`, then publishes a PR-visible summary.
-3. Keep `web.home.details-navigation` on the narrow custom path until the repository decides on a better standard tool for route transitions.
-4. Add stronger assertions or history storage only after the LHCI lane proves repeatable enough to trust.
+3. Use temporary-public-storage or CI artifacts first; do not require a self-hosted LHCI server before the first review lane is useful.
+4. Keep `web.home.details-navigation` on the narrow custom path until the repository decides on a better standard tool for route transitions.
+5. Add stronger assertions or long-lived LHCI history only after the initial lane proves repeatable enough to trust.
 
 ### API roadmap: k6-centered
 
