@@ -1,0 +1,95 @@
+{
+  "app": "web",
+  "capturedAt": "2026-04-13T01:17:55.464Z",
+  "environment": {
+    "baseUrl": "http://127.0.0.1:3100/",
+    "browser": "chromium",
+    "runtime": "parity",
+    "targetSearch": "?view=details"
+  },
+  "measurements": {
+    "runs": [
+      {
+        "transitions": [
+          {
+            "capturedAt": "2026-04-13T01:18:00.111Z",
+            "navigationType": "push",
+            "url": "/?view=details"
+          }
+        ],
+        "webVitals": [
+          {
+            "capturedAt": "2026-04-13T01:18:00.156Z",
+            "delta": 1.8000001907348633,
+            "id": "v4-1776043079583-2835966275409",
+            "name": "FID",
+            "path": "/?view=details",
+            "value": 1.8000001907348633,
+            "navigationType": "navigate",
+            "rating": "good"
+          }
+        ]
+      },
+      {
+        "transitions": [
+          {
+            "capturedAt": "2026-04-13T01:18:25.661Z",
+            "navigationType": "push",
+            "url": "/?view=details"
+          }
+        ],
+        "webVitals": [
+          {
+            "capturedAt": "2026-04-13T01:18:25.719Z",
+            "delta": 2,
+            "id": "v4-1776043105148-3846819532752",
+            "name": "FID",
+            "path": "/?view=details",
+            "value": 2,
+            "navigationType": "navigate",
+            "rating": "good"
+          }
+        ]
+      },
+      {
+        "transitions": [
+          {
+            "capturedAt": "2026-04-13T01:18:50.860Z",
+            "navigationType": "push",
+            "url": "/?view=details"
+          }
+        ],
+        "webVitals": [
+          {
+            "capturedAt": "2026-04-13T01:18:50.907Z",
+            "delta": 1.8999996185302734,
+            "id": "v4-1776043130346-4244362949276",
+            "name": "FID",
+            "path": "/?view=details",
+            "value": 1.8999996185302734,
+            "navigationType": "navigate",
+            "rating": "good"
+          }
+        ]
+      }
+    ]
+  },
+  "runMode": "local-parity",
+  "sampleSize": 3,
+  "scenarioId": "web.home.details-navigation",
+  "schemaVersion": 1,
+  "summary": {
+    "interactionMetricName": "FID",
+    "routerTransitions": {
+      "medianCount": 1,
+      "targetUrl": "?view=details"
+    },
+    "webVitals": {
+      "FID": {
+        "median": 1.9,
+        "rating": "good",
+        "sampleCount": 3
+      }
+    }
+  }
+}
