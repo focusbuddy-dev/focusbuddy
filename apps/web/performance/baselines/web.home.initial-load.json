@@ -1,0 +1,374 @@
+{
+  "app": "web",
+  "capturedAt": "2026-04-13T01:17:55.464Z",
+  "environment": {
+    "baseUrl": "http://127.0.0.1:3100/",
+    "browser": "chromium",
+    "formFactor": "desktop",
+    "runtime": "parity"
+  },
+  "measurements": {
+    "lighthouseRuns": [
+      {
+        "audits": {
+          "first-contentful-paint": {
+            "displayValue": "1.2 s",
+            "numericUnit": "millisecond",
+            "numericValue": 1242.182,
+            "score": 0.72
+          },
+          "largest-contentful-paint": {
+            "displayValue": "1.2 s",
+            "numericUnit": "millisecond",
+            "numericValue": 1242.182,
+            "score": 0.88
+          },
+          "speed-index": {
+            "displayValue": "1.2 s",
+            "numericUnit": "millisecond",
+            "numericValue": 1242,
+            "score": 0.92
+          },
+          "total-blocking-time": {
+            "displayValue": "20 ms",
+            "numericUnit": "millisecond",
+            "numericValue": 23.57600000000025,
+            "score": 1
+          },
+          "cumulative-layout-shift": {
+            "displayValue": "0",
+            "numericUnit": "unitless",
+            "numericValue": 0,
+            "score": 1
+          }
+        },
+        "finalDisplayedUrl": "http://127.0.0.1:3100/",
+        "performanceScore": 0.93
+      },
+      {
+        "audits": {
+          "first-contentful-paint": {
+            "displayValue": "1.2 s",
+            "numericUnit": "millisecond",
+            "numericValue": 1238.978,
+            "score": 0.72
+          },
+          "largest-contentful-paint": {
+            "displayValue": "1.2 s",
+            "numericUnit": "millisecond",
+            "numericValue": 1238.978,
+            "score": 0.88
+          },
+          "speed-index": {
+            "displayValue": "1.2 s",
+            "numericUnit": "millisecond",
+            "numericValue": 1239,
+            "score": 0.92
+          },
+          "total-blocking-time": {
+            "displayValue": "10 ms",
+            "numericUnit": "millisecond",
+            "numericValue": 12.300000000000182,
+            "score": 1
+          },
+          "cumulative-layout-shift": {
+            "displayValue": "0",
+            "numericUnit": "unitless",
+            "numericValue": 0,
+            "score": 1
+          }
+        },
+        "finalDisplayedUrl": "http://127.0.0.1:3100/",
+        "performanceScore": 0.93
+      },
+      {
+        "audits": {
+          "first-contentful-paint": {
+            "displayValue": "1.3 s",
+            "numericUnit": "millisecond",
+            "numericValue": 1262.595,
+            "score": 0.71
+          },
+          "largest-contentful-paint": {
+            "displayValue": "1.3 s",
+            "numericUnit": "millisecond",
+            "numericValue": 1262.595,
+            "score": 0.88
+          },
+          "speed-index": {
+            "displayValue": "1.3 s",
+            "numericUnit": "millisecond",
+            "numericValue": 1263,
+            "score": 0.91
+          },
+          "total-blocking-time": {
+            "displayValue": "10 ms",
+            "numericUnit": "millisecond",
+            "numericValue": 7.322000000000116,
+            "score": 1
+          },
+          "cumulative-layout-shift": {
+            "displayValue": "0",
+            "numericUnit": "unitless",
+            "numericValue": 0,
+            "score": 1
+          }
+        },
+        "finalDisplayedUrl": "http://127.0.0.1:3100/",
+        "performanceScore": 0.93
+      }
+    ],
+    "runs": [
+      {
+        "firstLoadJsBytes": 147840,
+        "scriptResources": [
+          {
+            "decodedBodySize": 53145,
+            "name": "http://127.0.0.1:3100/_next/static/chunks/0vcvix301bft4.js",
+            "transferSize": 11334
+          },
+          {
+            "decodedBodySize": 147102,
+            "name": "http://127.0.0.1:3100/_next/static/chunks/0wzmna.dq3w~l.js",
+            "transferSize": 40059
+          },
+          {
+            "decodedBodySize": 10580,
+            "name": "http://127.0.0.1:3100/_next/static/chunks/turbopack-00jvf_2tp37v0.js",
+            "transferSize": 4449
+          },
+          {
+            "decodedBodySize": 227810,
+            "name": "http://127.0.0.1:3100/_next/static/chunks/12e6566_wdi_s.js",
+            "transferSize": 71441
+          },
+          {
+            "decodedBodySize": 8697,
+            "name": "http://127.0.0.1:3100/_next/static/chunks/0vjbzf385s9jd.js",
+            "transferSize": 3534
+          },
+          {
+            "decodedBodySize": 57918,
+            "name": "http://127.0.0.1:3100/_next/static/chunks/0j6idwvfequqh.js",
+            "transferSize": 14136
+          },
+          {
+            "decodedBodySize": 7557,
+            "name": "http://127.0.0.1:3100/_next/static/chunks/05t8wusdq1~g..js",
+            "transferSize": 2887
+          }
+        ],
+        "webVitals": [
+          {
+            "delta": 8.300000190734863,
+            "id": "synthetic-ttfb",
+            "name": "TTFB",
+            "path": "/",
+            "rating": "good",
+            "value": 8.300000190734863
+          },
+          {
+            "delta": 112,
+            "id": "synthetic-fcp",
+            "name": "FCP",
+            "path": "/",
+            "rating": "good",
+            "value": 112
+          },
+          {
+            "delta": 0,
+            "id": "synthetic-cls",
+            "name": "CLS",
+            "path": "/",
+            "rating": "good",
+            "value": 0
+          }
+        ]
+      },
+      {
+        "firstLoadJsBytes": 147840,
+        "scriptResources": [
+          {
+            "decodedBodySize": 53145,
+            "name": "http://127.0.0.1:3100/_next/static/chunks/0vcvix301bft4.js",
+            "transferSize": 11334
+          },
+          {
+            "decodedBodySize": 147102,
+            "name": "http://127.0.0.1:3100/_next/static/chunks/0wzmna.dq3w~l.js",
+            "transferSize": 40059
+          },
+          {
+            "decodedBodySize": 227810,
+            "name": "http://127.0.0.1:3100/_next/static/chunks/12e6566_wdi_s.js",
+            "transferSize": 71441
+          },
+          {
+            "decodedBodySize": 10580,
+            "name": "http://127.0.0.1:3100/_next/static/chunks/turbopack-00jvf_2tp37v0.js",
+            "transferSize": 4449
+          },
+          {
+            "decodedBodySize": 8697,
+            "name": "http://127.0.0.1:3100/_next/static/chunks/0vjbzf385s9jd.js",
+            "transferSize": 3534
+          },
+          {
+            "decodedBodySize": 57918,
+            "name": "http://127.0.0.1:3100/_next/static/chunks/0j6idwvfequqh.js",
+            "transferSize": 14136
+          },
+          {
+            "decodedBodySize": 7557,
+            "name": "http://127.0.0.1:3100/_next/static/chunks/05t8wusdq1~g..js",
+            "transferSize": 2887
+          }
+        ],
+        "webVitals": [
+          {
+            "delta": 6.300000190734863,
+            "id": "synthetic-ttfb",
+            "name": "TTFB",
+            "path": "/",
+            "rating": "good",
+            "value": 6.300000190734863
+          },
+          {
+            "delta": 84,
+            "id": "synthetic-fcp",
+            "name": "FCP",
+            "path": "/",
+            "rating": "good",
+            "value": 84
+          },
+          {
+            "delta": 0,
+            "id": "synthetic-cls",
+            "name": "CLS",
+            "path": "/",
+            "rating": "good",
+            "value": 0
+          }
+        ]
+      },
+      {
+        "firstLoadJsBytes": 147840,
+        "scriptResources": [
+          {
+            "decodedBodySize": 53145,
+            "name": "http://127.0.0.1:3100/_next/static/chunks/0vcvix301bft4.js",
+            "transferSize": 11334
+          },
+          {
+            "decodedBodySize": 147102,
+            "name": "http://127.0.0.1:3100/_next/static/chunks/0wzmna.dq3w~l.js",
+            "transferSize": 40059
+          },
+          {
+            "decodedBodySize": 227810,
+            "name": "http://127.0.0.1:3100/_next/static/chunks/12e6566_wdi_s.js",
+            "transferSize": 71441
+          },
+          {
+            "decodedBodySize": 10580,
+            "name": "http://127.0.0.1:3100/_next/static/chunks/turbopack-00jvf_2tp37v0.js",
+            "transferSize": 4449
+          },
+          {
+            "decodedBodySize": 8697,
+            "name": "http://127.0.0.1:3100/_next/static/chunks/0vjbzf385s9jd.js",
+            "transferSize": 3534
+          },
+          {
+            "decodedBodySize": 57918,
+            "name": "http://127.0.0.1:3100/_next/static/chunks/0j6idwvfequqh.js",
+            "transferSize": 14136
+          },
+          {
+            "decodedBodySize": 7557,
+            "name": "http://127.0.0.1:3100/_next/static/chunks/05t8wusdq1~g..js",
+            "transferSize": 2887
+          }
+        ],
+        "webVitals": [
+          {
+            "delta": 6.299999713897705,
+            "id": "synthetic-ttfb",
+            "name": "TTFB",
+            "path": "/",
+            "rating": "good",
+            "value": 6.299999713897705
+          },
+          {
+            "delta": 84,
+            "id": "synthetic-fcp",
+            "name": "FCP",
+            "path": "/",
+            "rating": "good",
+            "value": 84
+          },
+          {
+            "delta": 0,
+            "id": "synthetic-cls",
+            "name": "CLS",
+            "path": "/",
+            "rating": "good",
+            "value": 0
+          }
+        ]
+      }
+    ]
+  },
+  "runMode": "local-parity",
+  "sampleSize": 3,
+  "scenarioId": "web.home.initial-load",
+  "schemaVersion": 1,
+  "summary": {
+    "bundle": {
+      "firstLoadJsBytes": 147840,
+      "resourceCount": 7
+    },
+    "lighthouse": {
+      "audits": {
+        "first-contentful-paint": {
+          "numericValue": 1242.182,
+          "score": 0.72
+        },
+        "largest-contentful-paint": {
+          "numericValue": 1242.182,
+          "score": 0.88
+        },
+        "speed-index": {
+          "numericValue": 1242,
+          "score": 0.92
+        },
+        "total-blocking-time": {
+          "numericValue": 12.3,
+          "score": 1
+        },
+        "cumulative-layout-shift": {
+          "numericValue": 0,
+          "score": 1
+        }
+      },
+      "performanceScore": 0.93
+    },
+    "webVitals": {
+      "CLS": {
+        "median": 0,
+        "rating": "good",
+        "sampleCount": 3
+      },
+      "FCP": {
+        "median": 84,
+        "rating": "good",
+        "sampleCount": 3
+      },
+      "TTFB": {
+        "median": 6.3,
+        "rating": "good",
+        "sampleCount": 3
+      }
+    }
+  }
+}

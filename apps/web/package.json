@@ -11,6 +11,8 @@
     "logger:build": "pnpm --dir ../.. --filter @focusbuddy/logger build",
     "lint": "pnpm lint:styles && pnpm --dir ../.. exec oxlint apps/web/src apps/web/test",
     "lint:styles": "pnpm --dir ../.. exec stylelint \"apps/web/src/**/*.css\"",
+    "measure:baseline": "node ./scripts/measure-web-baseline.mjs",
+    "measure:browser": "playwright install chromium",
     "parity": "pnpm build && next start --hostname 0.0.0.0 --port 3000",
     "test": "pnpm contract:build && pnpm logger:build && NODE_OPTIONS=--experimental-vm-modules pnpm --dir ../.. exec jest --config apps/web/jest.config.ts --runInBand",
     "typecheck": "pnpm contract:build && pnpm logger:build && pnpm --dir ../.. exec tsc --project apps/web/tsconfig.json --noEmit"
@@ -32,6 +34,9 @@
     "@types/node": "^25.5.2",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
-    "msw": "^1.3.5"
+    "chrome-launcher": "^1.2.1",
+    "lighthouse": "^13.1.0",
+    "msw": "^1.3.5",
+    "playwright": "^1.59.1"
   }
 }
