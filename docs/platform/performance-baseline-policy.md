@@ -69,12 +69,13 @@ The current API runtime only exposes `/health`, and that endpoint already exerci
 
 ### Web metrics
 
-- Web Vitals: `TTFB`, `FCP`, `LCP`, `CLS`, and `INP`
+- Web Vitals: direct browser capture for `TTFB`, `FCP`, and `CLS`
+- interaction metric: prefer `INP`, but accept `FID` in the first local automation lane when Chromium emits that metric instead
 - Web Vitals metadata: `id`, `navigationType`, `rating`, and `value`
-- Lighthouse: `performance` category score plus the selected audit values that explain score drift
+- Lighthouse: `performance` category score plus the selected audit values that explain score drift, including the first comparable `largest-contentful-paint` value
 - Bundle size: the first-load JavaScript byte count for the `/` route in the parity build output
 
-`web.home.initial-load` owns `TTFB`, `FCP`, `LCP`, and `CLS` as required load metrics. `web.home.details-navigation` owns the first interactive `INP` capture and any navigation-start markers needed to correlate the interaction.
+`web.home.initial-load` owns `TTFB`, `FCP`, and `CLS` as direct load metrics, while Lighthouse owns the first comparable `LCP` value in the automation lane. `web.home.details-navigation` owns the first interactive metric capture, preferring `INP` and falling back to `FID` when local automation does not emit `INP`.
 
 ### API metrics
 
@@ -134,6 +135,8 @@ Regression review is required when either of these happens:
 - any millisecond-based metric regresses by more than `max(100ms, 20%)` from the accepted baseline median
 - `CLS` regresses by more than `0.02` from the accepted baseline median
 
+When the first interactive baseline records `FID` instead of `INP`, apply the same review rule to that recorded interaction metric until the runtime emits `INP` consistently.
+
 ### Lighthouse
 
 Regression review is required when either of these happens:
@@ -162,6 +165,7 @@ Regression review is required when either of these happens:
 - implement the web measurement path for `web.home.initial-load` and `web.home.details-navigation`
 - save accepted frontend baselines under `apps/web/performance/baselines/`
 - make Lighthouse and bundle-size outputs conform to the schema in this document
+- keep `LCP` comparison owned by Lighthouse in the first local automation lane and record `FID` when `INP` is not emitted
 
 ### For later API baseline automation
 
