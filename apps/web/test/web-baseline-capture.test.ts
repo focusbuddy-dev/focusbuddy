@@ -3,13 +3,18 @@ import {
   captureWebVital,
   resetWebBaselineCapture,
 } from '@/lib/performance/web-baseline-capture';
-import { WEB_BASELINE_CAPTURE_ENABLED_ENV_NAME } from '@/lib/performance/web-baseline-capture-config';
+import {
+  WEB_BASELINE_CAPTURE_CONTEXT_ENV_NAME,
+  WEB_BASELINE_CAPTURE_ENABLED_ENV_NAME,
+} from '@/lib/performance/web-baseline-capture-config';
 
 describe('web baseline capture', () => {
   const previousCaptureEnabledValue = process.env[WEB_BASELINE_CAPTURE_ENABLED_ENV_NAME];
+  const previousCaptureContextValue = process.env[WEB_BASELINE_CAPTURE_CONTEXT_ENV_NAME];
 
   beforeEach(() => {
     process.env[WEB_BASELINE_CAPTURE_ENABLED_ENV_NAME] = 'true';
+    process.env[WEB_BASELINE_CAPTURE_CONTEXT_ENV_NAME] = 'parity';
     history.replaceState({}, '', '/');
     resetWebBaselineCapture();
   });
@@ -21,6 +26,13 @@ describe('web baseline capture', () => {
     }
 
     process.env[WEB_BASELINE_CAPTURE_ENABLED_ENV_NAME] = previousCaptureEnabledValue;
+
+    if (previousCaptureContextValue === undefined) {
+      delete process.env[WEB_BASELINE_CAPTURE_CONTEXT_ENV_NAME];
+      return;
+    }
+
+    process.env[WEB_BASELINE_CAPTURE_CONTEXT_ENV_NAME] = previousCaptureContextValue;
   });
 
   it('stores sanitized Web Vitals against the current location', () => {
@@ -68,6 +80,24 @@ describe('web baseline capture', () => {
     captureWebVital({
       delta: 0.12,
       id: 'metric-2',
+      name: 'LCP',
+      value: 123.456,
+    });
+    captureRouterTransitionStart({
+      navigationType: 'push',
+      url: '/?view=details',
+    });
+
+    expect(window.__FOCUSBUDDY_WEB_VITALS__).toEqual([]);
+    expect(window.__FOCUSBUDDY_ROUTER_TRANSITIONS__).toEqual([]);
+  });
+
+  it('does not store baseline capture for unsupported contexts', () => {
+    process.env[WEB_BASELINE_CAPTURE_CONTEXT_ENV_NAME] = 'production';
+
+    captureWebVital({
+      delta: 0.12,
+      id: 'metric-3',
       name: 'LCP',
       value: 123.456,
     });

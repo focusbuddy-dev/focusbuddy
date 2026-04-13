@@ -17,12 +17,15 @@ The LHCI command is intentionally local-first in this issue. CI wiring, artifact
 
 The LHCI wrapper checks the target URL before launch so host and port mistakes fail fast with a direct reachability error instead of a later Chrome interstitial.
 
-Browser-side Web Vitals capture is disabled by default. Enable it only for measurement runs by starting the web app with `NEXT_PUBLIC_FOCUSBUDDY_WEB_BASELINE_CAPTURE_ENABLED=true`.
+Browser-side Web Vitals capture is disabled by default. Enable it only for measurement runs, and only in explicit measurement contexts such as parity, preview, or a dedicated benchmark environment.
 
 You can override the target URL and run count with these environment variables:
 
 - `FOCUSBUDDY_WEB_BASELINE_BASE_URL`
 - `FOCUSBUDDY_WEB_BASELINE_RUNS`
 - `NEXT_PUBLIC_FOCUSBUDDY_WEB_BASELINE_CAPTURE_ENABLED`
+- `NEXT_PUBLIC_FOCUSBUDDY_WEB_BASELINE_CAPTURE_CONTEXT`
 
-Inside the repository dev container, use `NEXT_PUBLIC_FOCUSBUDDY_WEB_BASELINE_CAPTURE_ENABLED=true FOCUSBUDDY_WEB_BASELINE_BASE_URL=http://host.docker.internal:3000` when the parity stack is published on the Docker host. The LHCI command stays ESM-only by using a small `.mjs` wrapper that injects the runtime URL and Playwright Chromium path into the JSON LHCI config.
+Valid capture contexts are `parity`, `preview`, and `dedicated`. `production` is intentionally unsupported for this baseline-capture path.
+
+Inside the repository dev container, use `NEXT_PUBLIC_FOCUSBUDDY_WEB_BASELINE_CAPTURE_ENABLED=true NEXT_PUBLIC_FOCUSBUDDY_WEB_BASELINE_CAPTURE_CONTEXT=parity FOCUSBUDDY_WEB_BASELINE_BASE_URL=http://host.docker.internal:3000` when the parity stack is published on the Docker host. The LHCI command stays ESM-only by using a small `.mjs` wrapper that injects the runtime URL and Playwright Chromium path into the JSON LHCI config.
