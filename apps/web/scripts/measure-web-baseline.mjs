@@ -169,11 +169,27 @@ function resolveChromiumExecutablePath() {
 }
 
 async function assertBaseUrlReady(url) {
-  const response = await fetch(url, { redirect: 'manual' });
+  let response;
+
+  try {
+    response = await fetch(url, { redirect: 'manual' });
+  } catch (error) {
+    throw new Error(
+      `Baseline target URL is not reachable before measurement: ${url}. ${formatError(error)}`,
+    );
+  }
 
   if (!response.ok) {
     throw new Error(`Expected ${url} to be reachable before measurement, got ${response.status}.`);
   }
+}
+
+function formatError(error) {
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  return String(error);
 }
 
 async function captureInitialLoadScenario({ baseUrl: origin, executablePath, path }) {

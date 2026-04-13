@@ -1,3 +1,5 @@
+import { jest } from '@jest/globals';
+
 import {
   captureRouterTransitionStart,
   captureWebVital,
@@ -53,11 +55,36 @@ describe('web baseline capture', () => {
         id: 'metric-1',
         name: 'LCP',
         navigationType: 'navigate',
-        path: '/?view=overview',
+        path: '/',
         rating: 'good',
         value: 123.456,
       }),
     ]);
+  });
+
+  it('keeps capture in memory when localStorage persistence fails', () => {
+    const setItemSpy = jest
+      .spyOn(Storage.prototype, 'setItem')
+      .mockImplementation(() => {
+        throw new Error('storage unavailable');
+      });
+
+    expect(() => {
+      captureWebVital({
+        delta: 0.12,
+        id: 'metric-storage',
+        name: 'LCP',
+        value: 123.456,
+      });
+    }).not.toThrow();
+
+    expect(window.__FOCUSBUDDY_WEB_VITALS__).toEqual([
+      expect.objectContaining({
+        id: 'metric-storage',
+      }),
+    ]);
+
+    setItemSpy.mockRestore();
   });
 
   it('stores router transition markers for navigation capture', () => {

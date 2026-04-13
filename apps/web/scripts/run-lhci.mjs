@@ -46,6 +46,13 @@ child.on('exit', (code, signal) => {
   process.exit(code ?? 1);
 });
 
+child.on('error', (error) => {
+  console.error(
+    `Failed to start LHCI autorun from ${appRoot}: ${formatError(error)}`,
+  );
+  process.exit(1);
+});
+
 async function assertBaseUrlReady(url) {
   let response;
 

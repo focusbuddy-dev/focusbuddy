@@ -41,7 +41,7 @@ function getCurrentPath() {
     return '/';
   }
 
-  return `${window.location.pathname}${window.location.search}`;
+  return window.location.pathname;
 }
 
 function ensureWebVitalsStore() {
@@ -69,14 +69,18 @@ function persistBaselineCapture() {
     return;
   }
 
-  window.localStorage.setItem(
-    webVitalsStorageKey,
-    JSON.stringify(window.__FOCUSBUDDY_WEB_VITALS__ ?? []),
-  );
-  window.localStorage.setItem(
-    routerTransitionsStorageKey,
-    JSON.stringify(window.__FOCUSBUDDY_ROUTER_TRANSITIONS__ ?? []),
-  );
+  try {
+    window.localStorage.setItem(
+      webVitalsStorageKey,
+      JSON.stringify(window.__FOCUSBUDDY_WEB_VITALS__ ?? []),
+    );
+    window.localStorage.setItem(
+      routerTransitionsStorageKey,
+      JSON.stringify(window.__FOCUSBUDDY_ROUTER_TRANSITIONS__ ?? []),
+    );
+  } catch {
+    // Ignore storage failures during baseline capture and keep in-memory samples available.
+  }
 }
 
 export function captureWebVital(metric: WebVitalMetricInput) {
