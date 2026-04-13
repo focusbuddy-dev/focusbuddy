@@ -124,6 +124,45 @@ Required rules for this format:
 
 This keeps accepted baseline outputs diffable in git while still allowing raw detail to stay close to the summary numbers reviewers will actually compare.
 
+## Accepted baseline lifecycle
+
+An accepted baseline is the repository-owned comparison reference for a scenario and run mode. It is not a feature acceptance criterion and it is not a permanent performance promise. Its job is to give later measurements a stable point of comparison.
+
+Do not replace an accepted baseline on every measurement run. Replace it only when one of these is true:
+
+- the scenario is being accepted for the first time
+- an intentional product or architecture change shifts the expected steady-state performance envelope
+- a dependency, framework, build, or runtime upgrade intentionally changes the expected baseline
+- the measurement lane itself changes enough that older results are no longer comparable
+
+Do not replace an accepted baseline when the measurement shows an unexplained regression or when the team still expects to optimize further before adopting the new number.
+
+When a PR replaces an accepted baseline, that same PR must include:
+
+- the regenerated baseline JSON for the affected scenario
+- a short note explaining why the new result is being adopted
+- an explicit statement that the change is intentional, accepted, or required by the new runtime lane
+
+This keeps accepted baselines stable enough to be useful while still allowing intentional platform shifts to become the new comparison point.
+
+## When to measure
+
+Do not require baseline measurement for every pull request. Measure only when a PR is likely to change the owned scenario in a way that can materially affect performance, or when a reviewer explicitly asks for a rerun.
+
+Typical web PRs that should rerun the baseline include:
+
+- changes to the render path, data fetching, caching, prefetching, or navigation behavior used by the measured route
+- dependency or framework updates that can affect bundle size, hydration, routing, or browser runtime behavior
+- changes to assets, styling, fonts, scripts, or layout on the measured route that can affect paint, layout shift, or interaction timing
+- changes to build configuration, chunking, or runtime flags that can affect the parity output
+
+Typical API PRs that should rerun the baseline include:
+
+- changes to the `/health` path, Prisma boot path, database connectivity, or startup work that the health check exercises
+- dependency or runtime changes that can affect request latency or response size on the measured path
+
+PRs that usually do not need reruns include documentation-only changes, test-only changes, copy edits, and refactors that do not change shipped runtime behavior for the owned scenario.
+
 ## Minimum threshold rules
 
 The first threshold policy is review-oriented, not CI-enforced.
