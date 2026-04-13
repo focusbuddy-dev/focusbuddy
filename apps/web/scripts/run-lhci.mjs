@@ -1,3 +1,4 @@
+// Keep this wrapper zero-build for now; if the LHCI flow grows further, move it to TypeScript.
 import { spawn } from 'node:child_process';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';

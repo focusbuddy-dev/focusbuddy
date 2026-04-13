@@ -1,3 +1,4 @@
+// Keep this script zero-build for now; if the baseline flow grows further, move it to TypeScript.
 import { existsSync } from 'node:fs';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
