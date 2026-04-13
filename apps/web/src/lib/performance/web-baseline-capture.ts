@@ -1,3 +1,5 @@
+import { isWebBaselineCaptureEnabled } from '@/lib/performance/web-baseline-capture-config';
+
 export type CapturedWebVital = {
   capturedAt: string;
   delta: number;
@@ -78,7 +80,7 @@ function persistBaselineCapture() {
 }
 
 export function captureWebVital(metric: WebVitalMetricInput) {
-  if (typeof window === 'undefined') {
+  if (typeof window === 'undefined' || !isWebBaselineCaptureEnabled()) {
     return;
   }
 
@@ -98,7 +100,7 @@ export function captureWebVital(metric: WebVitalMetricInput) {
 export function captureRouterTransitionStart(
   transition: Pick<CapturedRouterTransition, 'navigationType' | 'url'>,
 ) {
-  if (typeof window === 'undefined') {
+  if (typeof window === 'undefined' || !isWebBaselineCaptureEnabled()) {
     return;
   }
 

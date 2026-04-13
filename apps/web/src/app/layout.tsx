@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 
-import { WebVitalsReporter } from '@/components/web-vitals-reporter';
+import { WebBaselineCaptureBootstrap } from '@/app/web-baseline-capture-bootstrap';
+import { isWebBaselineCaptureEnabled } from '@/lib/performance/web-baseline-capture-config';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -17,7 +18,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="en">
       <body>
-        <WebVitalsReporter />
+        {isWebBaselineCaptureEnabled() ? <WebBaselineCaptureBootstrap /> : null}
         {children}
       </body>
     </html>
