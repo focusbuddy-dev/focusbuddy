@@ -63,6 +63,8 @@ The first API baseline owns one scenario.
 - send 10 sequential `GET http://127.0.0.1:3001/health` requests
 - record status consistency, median latency, p95 latency, and response size in bytes
 
+For this scenario, one accepted baseline rerun still counts as one scenario sample. The 10 sequential requests belong to that rerun's internal measurement detail and should be recorded as a separate request count inside `measurements` rather than by changing the meaning of `sampleSize`.
+
 The current API runtime only exposes `/health`, and that endpoint already exercises the application boot path plus PostgreSQL connectivity through Prisma. The first API baseline should therefore measure the real health path instead of inventing a placeholder feature endpoint.
 
 ## Metrics owned by the first baseline
@@ -114,9 +116,10 @@ Each accepted snapshot must use schema version 1 and keep the top-level shape st
 Required rules for this format:
 
 - `schemaVersion`, `app`, `scenarioId`, `runMode`, `capturedAt`, and `sampleSize` are mandatory for every saved snapshot
+- `sampleSize` always means the number of full scenario reruns aggregated into the saved summary
 - `environment` must describe enough runtime context to rerun the same scenario without guessing
 - `summary` must contain the comparison-ready metric values used for regression review
-- `measurements` may contain raw per-run detail such as individual Web Vitals, Lighthouse audit values, or HTTP timings
+- `measurements` may contain raw per-run detail such as individual Web Vitals, Lighthouse audit values, HTTP timings, and scenario-internal counts such as `requestCount`
 - one JSON file maps to one accepted scenario baseline
 
 This keeps accepted baseline outputs diffable in git while still allowing raw detail to stay close to the summary numbers reviewers will actually compare.
@@ -129,7 +132,7 @@ Compare only runs that match both `scenarioId` and `runMode`. Threshold hits mea
 
 ### Web Vitals
 
-Regression review is required when either of these happens:
+Regression review is required when any of these happens:
 
 - any metric with a Web Vitals `rating` falls to `poor`
 - any millisecond-based metric regresses by more than `max(100ms, 20%)` from the accepted baseline median
@@ -139,7 +142,7 @@ When the first interactive baseline records `FID` instead of `INP`, apply the sa
 
 ### Lighthouse
 
-Regression review is required when either of these happens:
+Regression review is required when any of these happens:
 
 - the Lighthouse `performance` score falls by more than `0.05`
 - any selected explanatory audit regresses by more than `20%`
@@ -152,7 +155,7 @@ Regression review is required when the first-load JavaScript size for `/` grows 
 
 ### API
 
-Regression review is required when either of these happens:
+Regression review is required when any of these happens:
 
 - any `/health` sample returns a non-`200` response
 - p95 latency regresses by more than `max(50ms, 20%)`
