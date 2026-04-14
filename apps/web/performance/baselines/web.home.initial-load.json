@@ -1,6 +1,6 @@
 {
   "app": "web",
-  "capturedAt": "2026-04-13T14:05:48.858Z",
+  "capturedAt": "2026-04-14T03:39:17.490Z",
   "environment": {
     "baseUrl": "http://host.docker.internal:3000/",
     "browser": "chromium",
@@ -12,27 +12,27 @@
       {
         "audits": {
           "first-contentful-paint": {
-            "displayValue": "1.2 s",
+            "displayValue": "1.3 s",
             "numericUnit": "millisecond",
-            "numericValue": 1230.558,
-            "score": 0.73
+            "numericValue": 1270.154,
+            "score": 0.7
           },
           "largest-contentful-paint": {
-            "displayValue": "1.2 s",
+            "displayValue": "1.3 s",
             "numericUnit": "millisecond",
-            "numericValue": 1230.558,
-            "score": 0.89
+            "numericValue": 1270.154,
+            "score": 0.88
           },
           "speed-index": {
-            "displayValue": "1.2 s",
+            "displayValue": "1.3 s",
             "numericUnit": "millisecond",
-            "numericValue": 1249,
-            "score": 0.91
+            "numericValue": 1289,
+            "score": 0.9
           },
           "total-blocking-time": {
-            "displayValue": "10 ms",
+            "displayValue": "30 ms",
             "numericUnit": "millisecond",
-            "numericValue": 13.164000000000215,
+            "numericValue": 28.94100000000003,
             "score": 1
           },
           "cumulative-layout-shift": {
@@ -43,68 +43,68 @@
           }
         },
         "finalDisplayedUrl": "http://host.docker.internal:3000/",
-        "performanceScore": 0.94
+        "performanceScore": 0.93
       },
       {
         "audits": {
           "first-contentful-paint": {
             "displayValue": "1.2 s",
             "numericUnit": "millisecond",
-            "numericValue": 1232.243,
-            "score": 0.73
+            "numericValue": 1239.849,
+            "score": 0.72
           },
           "largest-contentful-paint": {
             "displayValue": "1.2 s",
             "numericUnit": "millisecond",
-            "numericValue": 1232.243,
-            "score": 0.89
+            "numericValue": 1239.849,
+            "score": 0.88
           },
           "speed-index": {
             "displayValue": "1.3 s",
             "numericUnit": "millisecond",
-            "numericValue": 1251,
-            "score": 0.91
-          },
-          "total-blocking-time": {
-            "displayValue": "10 ms",
-            "numericUnit": "millisecond",
-            "numericValue": 13.216000000000122,
-            "score": 1
-          },
-          "cumulative-layout-shift": {
-            "displayValue": "0",
-            "numericUnit": "unitless",
-            "numericValue": 0,
-            "score": 1
-          }
-        },
-        "finalDisplayedUrl": "http://host.docker.internal:3000/",
-        "performanceScore": 0.94
-      },
-      {
-        "audits": {
-          "first-contentful-paint": {
-            "displayValue": "1.2 s",
-            "numericUnit": "millisecond",
-            "numericValue": 1231.786,
-            "score": 0.73
-          },
-          "largest-contentful-paint": {
-            "displayValue": "1.2 s",
-            "numericUnit": "millisecond",
-            "numericValue": 1231.786,
-            "score": 0.89
-          },
-          "speed-index": {
-            "displayValue": "1.3 s",
-            "numericUnit": "millisecond",
-            "numericValue": 1250,
+            "numericValue": 1258,
             "score": 0.91
           },
           "total-blocking-time": {
             "displayValue": "30 ms",
             "numericUnit": "millisecond",
-            "numericValue": 28.774999999999864,
+            "numericValue": 26.30899999999997,
+            "score": 1
+          },
+          "cumulative-layout-shift": {
+            "displayValue": "0",
+            "numericUnit": "unitless",
+            "numericValue": 0,
+            "score": 1
+          }
+        },
+        "finalDisplayedUrl": "http://host.docker.internal:3000/",
+        "performanceScore": 0.93
+      },
+      {
+        "audits": {
+          "first-contentful-paint": {
+            "displayValue": "1.2 s",
+            "numericUnit": "millisecond",
+            "numericValue": 1234.526,
+            "score": 0.73
+          },
+          "largest-contentful-paint": {
+            "displayValue": "1.2 s",
+            "numericUnit": "millisecond",
+            "numericValue": 1234.526,
+            "score": 0.89
+          },
+          "speed-index": {
+            "displayValue": "1.3 s",
+            "numericUnit": "millisecond",
+            "numericValue": 1254,
+            "score": 0.91
+          },
+          "total-blocking-time": {
+            "displayValue": "30 ms",
+            "numericUnit": "millisecond",
+            "numericValue": 32.38099999999986,
             "score": 1
           },
           "cumulative-layout-shift": {
@@ -155,20 +155,20 @@
         ],
         "webVitals": [
           {
-            "delta": 7.300000190734863,
+            "delta": 23.399999618530273,
             "id": "synthetic-ttfb",
             "name": "TTFB",
             "path": "/",
             "rating": "good",
-            "value": 7.300000190734863
+            "value": 23.399999618530273
           },
           {
-            "delta": 84,
+            "delta": 144,
             "id": "synthetic-fcp",
             "name": "FCP",
             "path": "/",
             "rating": "good",
-            "value": 84
+            "value": 144
           },
           {
             "delta": 0,
@@ -189,11 +189,6 @@
             "transferSize": 4449
           },
           {
-            "decodedBodySize": 57896,
-            "name": "http://host.docker.internal:3000/_next/static/chunks/15k1xrfh8pcsr.js",
-            "transferSize": 14134
-          },
-          {
             "decodedBodySize": 53149,
             "name": "http://host.docker.internal:3000/_next/static/chunks/0acq.3lyl4w8~.js",
             "transferSize": 11348
@@ -202,6 +197,11 @@
             "decodedBodySize": 147098,
             "name": "http://host.docker.internal:3000/_next/static/chunks/0mbs4911otj2v.js",
             "transferSize": 40044
+          },
+          {
+            "decodedBodySize": 57896,
+            "name": "http://host.docker.internal:3000/_next/static/chunks/15k1xrfh8pcsr.js",
+            "transferSize": 14134
           },
           {
             "decodedBodySize": 7553,
@@ -216,12 +216,12 @@
         ],
         "webVitals": [
           {
-            "delta": 5.699999809265137,
+            "delta": 6.400000095367432,
             "id": "synthetic-ttfb",
             "name": "TTFB",
             "path": "/",
             "rating": "good",
-            "value": 5.699999809265137
+            "value": 6.400000095367432
           },
           {
             "delta": 68,
@@ -277,12 +277,12 @@
         ],
         "webVitals": [
           {
-            "delta": 6.699999809265137,
+            "delta": 5.800000190734863,
             "id": "synthetic-ttfb",
             "name": "TTFB",
             "path": "/",
             "rating": "good",
-            "value": 6.699999809265137
+            "value": 5.800000190734863
           },
           {
             "delta": 80,
@@ -316,19 +316,19 @@
     "lighthouse": {
       "audits": {
         "first-contentful-paint": {
-          "numericValue": 1231.786,
-          "score": 0.73
+          "numericValue": 1239.849,
+          "score": 0.72
         },
         "largest-contentful-paint": {
-          "numericValue": 1231.786,
-          "score": 0.89
+          "numericValue": 1239.849,
+          "score": 0.88
         },
         "speed-index": {
-          "numericValue": 1250,
+          "numericValue": 1258,
           "score": 0.91
         },
         "total-blocking-time": {
-          "numericValue": 13.216,
+          "numericValue": 28.941,
           "score": 1
         },
         "cumulative-layout-shift": {
@@ -336,7 +336,7 @@
           "score": 1
         }
       },
-      "performanceScore": 0.94
+      "performanceScore": 0.93
     },
     "webVitals": {
       "CLS": {
@@ -350,7 +350,7 @@
         "sampleCount": 3
       },
       "TTFB": {
-        "median": 6.7,
+        "median": 6.4,
         "rating": "good",
         "sampleCount": 3
       }

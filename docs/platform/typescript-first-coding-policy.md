@@ -113,6 +113,7 @@ This policy is intentionally separate from neighboring repository decisions:
 
 - `docs/platform/esm-migration-strategy.md` defines module format expectations such as ESM-first and file-level CommonJS exceptions
 - `docs/platform/import-and-function-style-policy.md` defines app-local import and function-style defaults
+- `docs/platform/module-structure-and-file-size-policy.md` defines responsibility-oriented file splitting and the repository's soft line-count guidance
 - `docs/platform/shared-tooling.md` defines the shared tooling baseline and should reference this document rather than restating the language decision ad hoc
 
 This separation matters because language choice is not the same decision as module format or lint style.

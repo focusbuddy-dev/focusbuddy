@@ -9,6 +9,8 @@ This directory contains the first repository-owned performance snapshots and sup
 3. Capture and save the baseline snapshots with `pnpm --filter @focusbuddy/web measure:baseline`.
 4. Run the first LHCI-compatible initial-load lane with `pnpm --filter @focusbuddy/web measure:lhci`.
 
+Implementation notes for the baseline capture script live in `apps/web/scripts/measure-web-baseline/README.md`.
+
 The baseline script writes accepted snapshots to `apps/web/performance/baselines/` using schema version 1 from `docs/platform/performance-baseline-policy.md`.
 
 ## Committed Baselines
