@@ -16,6 +16,12 @@ This workspace now contains the first NestJS API baseline for issue #21.
 - Jest uses the shared API baseline plus a local `ts-jest` transform for TypeScript tests
 - Prisma CLI uses `prisma.config.ts`, while runtime access uses the PostgreSQL driver adapter required by Prisma 7
 
+## Performance baseline
+
+- start the parity stack from the repository root with `just parity`
+- capture the repository-owned API baseline with `pnpm --filter @focusbuddy/api measure:baseline`
+- review committed baseline snapshots under `apps/api/performance/baselines/`
+
 The API workspace depends on `@focusbuddy/api-contract` and expects its generated outputs to be built before local compile or test commands run.
 
 The current repository-owned module resolution contract for this workspace uses `#api/*` for app-local imports and is documented in `docs/platform/api-module-resolution-contract.md`.

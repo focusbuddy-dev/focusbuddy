@@ -43,6 +43,14 @@ function readHeader(
   return directValue;
 }
 
+function roundDurationMs(durationMs: number) {
+  return Number(durationMs.toFixed(3));
+}
+
+/**
+ * Role: Adds correlation headers and emits handled-request logs for successful HTTP responses.
+ * Boundary: HTTP interceptor only. Must not decide error-shaping or exception logging policy.
+ */
 @Injectable()
 export class ApiRequestLoggingInterceptor implements NestInterceptor {
   constructor(private readonly baseLogger: Logger) {}
@@ -62,6 +70,7 @@ export class ApiRequestLoggingInterceptor implements NestInterceptor {
     const traceId = readHeader(request.headers, focusbuddyTraceIdHeader) ?? requestId;
     const requestPath = request.originalUrl ?? request.url ?? request.route?.path ?? 'unknown';
     const route = request.route?.path ?? requestPath;
+    const requestStartedAt = performance.now();
 
     response.setHeader(focusbuddyRequestIdHeader, requestId);
     response.setHeader(focusbuddyTraceIdHeader, traceId);
@@ -78,6 +87,7 @@ export class ApiRequestLoggingInterceptor implements NestInterceptor {
 
         logApiRequestHandled(
           {
+            durationMs: roundDurationMs(performance.now() - requestStartedAt),
             request: {
               requestId,
               requestMethod: request.method,

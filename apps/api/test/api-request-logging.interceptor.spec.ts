@@ -1,12 +1,16 @@
 import type { CallHandler, ExecutionContext } from '@nestjs/common';
 import { jest } from '@jest/globals';
 import { focusbuddyRequestIdHeader, focusbuddyTraceIdHeader } from '@focusbuddy/logger';
-import { lastValueFrom, of } from 'rxjs';
+import { lastValueFrom, of, throwError } from 'rxjs';
 
 import { ApiRequestLoggingInterceptor } from '#api/logging/api-request-logging.interceptor';
 
 describe('ApiRequestLoggingInterceptor', () => {
   it('binds correlation headers and emits a handled request event', async () => {
+    const performanceNowSpy = jest
+      .spyOn(performance, 'now')
+      .mockReturnValueOnce(100)
+      .mockReturnValueOnce(112.3456);
     const info = jest.fn();
     const requestLogger = {
       child: jest.fn(() => requestLogger),
@@ -44,7 +48,11 @@ describe('ApiRequestLoggingInterceptor', () => {
 
     const interceptor = new ApiRequestLoggingInterceptor(baseLogger as never);
 
-    await lastValueFrom(interceptor.intercept(context, next));
+    try {
+      await lastValueFrom(interceptor.intercept(context, next));
+    } finally {
+      performanceNowSpy.mockRestore();
+    }
 
     expect(response.setHeader).toHaveBeenCalledWith(focusbuddyRequestIdHeader, 'req-123');
     expect(response.setHeader).toHaveBeenCalledWith(focusbuddyTraceIdHeader, 'trace-123');
@@ -61,8 +69,48 @@ describe('ApiRequestLoggingInterceptor', () => {
     });
     expect(info).toHaveBeenCalledWith('API request handled - Status: 200', {
       category: 'Request',
+      durationMs: 12.346,
       logId: 'API_REQUEST_001',
       statusCode: 200,
     });
+  });
+
+  it('does not emit the handled request event when the handler errors', async () => {
+    const info = jest.fn();
+    const requestLogger = {
+      child: jest.fn(() => requestLogger),
+      info,
+    };
+    const baseLogger = {
+      child: jest.fn(() => requestLogger),
+    };
+
+    const response = {
+      setHeader: jest.fn(),
+      statusCode: 500,
+    };
+    const request = {
+      headers: {},
+      method: 'GET',
+      originalUrl: '/health',
+      route: {
+        path: '/health',
+      },
+    };
+    const context = {
+      getType: () => 'http',
+      switchToHttp: () => ({
+        getRequest: () => request,
+        getResponse: () => response,
+      }),
+    } as ExecutionContext;
+    const next = {
+      handle: () => throwError(() => new Error('boom')),
+    } satisfies CallHandler;
+
+    const interceptor = new ApiRequestLoggingInterceptor(baseLogger as never);
+
+    await expect(lastValueFrom(interceptor.intercept(context, next))).rejects.toThrow('boom');
+    expect(info).not.toHaveBeenCalled();
   });
 });

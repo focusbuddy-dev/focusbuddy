@@ -199,6 +199,7 @@ describe('api request logger example', () => {
 
     logApiRequestHandled(
       {
+        durationMs: 12.5,
         request: {
           requestId: 'req-501',
           requestMethod: 'GET',
@@ -225,6 +226,7 @@ describe('api request logger example', () => {
       requestPath: '/health',
       userId: 'user-501',
       context: {
+        durationMs: 12.5,
         route: 'health.read',
         service: 'api-test',
         statusCode: 200,
