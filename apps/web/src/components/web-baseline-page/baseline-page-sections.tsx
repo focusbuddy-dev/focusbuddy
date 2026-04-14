@@ -21,11 +21,15 @@ export function BaselinePageSections({
   children,
   previewSummary,
 }: BaselinePageSectionsProps) {
+  const hasLoggingIntegrationContent = children !== undefined;
+
   return (
     <>
       <HeroSection apiBaseUrl={apiBaseUrl} />
       <PreviewSummarySection previewSummary={previewSummary} />
-      <LoggingIntegrationSection>{children}</LoggingIntegrationSection>
+      {hasLoggingIntegrationContent ? (
+        <LoggingIntegrationSection>{children}</LoggingIntegrationSection>
+      ) : undefined}
     </>
   );
 }

@@ -18,6 +18,9 @@ describe('WebBaselinePage', () => {
     ).toBeInTheDocument();
     expect(screen.getByText('Next.js app router')).toBeInTheDocument();
     expect(screen.getByText('Focus target test-target')).toBeInTheDocument();
+    expect(
+      screen.queryByRole('heading', { name: /real logging integration points/i }),
+    ).not.toBeInTheDocument();
   });
 
   it('renders the optional real logging integration section', () => {

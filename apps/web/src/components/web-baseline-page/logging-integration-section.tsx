@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import styles from './styles.module.css';
 
 type LoggingIntegrationSectionProps = {
-  children?: ReactNode;
+  children: ReactNode;
 };
 
 /**
@@ -12,10 +12,6 @@ type LoggingIntegrationSectionProps = {
  * Ref: #179
  */
 export function LoggingIntegrationSection({ children }: LoggingIntegrationSectionProps) {
-  if (!children) {
-    return null;
-  }
-
   return (
     <section className={styles.card} aria-labelledby="logging-demo-title">
       <h2 className={styles.sectionTitle} id="logging-demo-title">
