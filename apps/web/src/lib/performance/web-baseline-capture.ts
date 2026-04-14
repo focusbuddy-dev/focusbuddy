@@ -128,6 +128,11 @@ export function resetWebBaselineCapture() {
 
   window.__FOCUSBUDDY_WEB_VITALS__ = [];
   window.__FOCUSBUDDY_ROUTER_TRANSITIONS__ = [];
-  window.localStorage.removeItem(webVitalsStorageKey);
-  window.localStorage.removeItem(routerTransitionsStorageKey);
+
+  try {
+    window.localStorage.removeItem(webVitalsStorageKey);
+    window.localStorage.removeItem(routerTransitionsStorageKey);
+  } catch {
+    // Ignore storage failures during reset and keep the in-memory stores cleared.
+  }
 }

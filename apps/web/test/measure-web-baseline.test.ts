@@ -46,6 +46,10 @@ describe('measure-web-baseline', () => {
     ).toThrow('Unsupported scenario id in apps/web/performance/baseline.config.json: web.unknown');
   });
 
+  it('rejects array values where config objects are required', () => {
+    expect(() => parseBaselineConfig([])).toThrow('Baseline config must be a JSON object.');
+  });
+
   it('fails fast when the base URL is unreachable', async () => {
     global.fetch = jest.fn<typeof fetch>().mockRejectedValue(new Error('connect ECONNREFUSED'));
 

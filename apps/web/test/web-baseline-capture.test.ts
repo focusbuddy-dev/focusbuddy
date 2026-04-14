@@ -24,17 +24,15 @@ describe('web baseline capture', () => {
   afterAll(() => {
     if (previousCaptureEnabledValue === undefined) {
       delete process.env[WEB_BASELINE_CAPTURE_ENABLED_ENV_NAME];
-      return;
+    } else {
+      process.env[WEB_BASELINE_CAPTURE_ENABLED_ENV_NAME] = previousCaptureEnabledValue;
     }
-
-    process.env[WEB_BASELINE_CAPTURE_ENABLED_ENV_NAME] = previousCaptureEnabledValue;
 
     if (previousCaptureContextValue === undefined) {
       delete process.env[WEB_BASELINE_CAPTURE_CONTEXT_ENV_NAME];
-      return;
+    } else {
+      process.env[WEB_BASELINE_CAPTURE_CONTEXT_ENV_NAME] = previousCaptureContextValue;
     }
-
-    process.env[WEB_BASELINE_CAPTURE_CONTEXT_ENV_NAME] = previousCaptureContextValue;
   });
 
   it('stores sanitized Web Vitals against the current location', () => {
@@ -85,6 +83,34 @@ describe('web baseline capture', () => {
     ]);
 
     setItemSpy.mockRestore();
+  });
+
+  it('keeps reset as a safe no-op when localStorage removal fails', () => {
+    captureWebVital({
+      delta: 0.12,
+      id: 'metric-reset',
+      name: 'LCP',
+      value: 123.456,
+    });
+    captureRouterTransitionStart({
+      navigationType: 'push',
+      url: '/?view=details',
+    });
+
+    const removeItemSpy = jest
+      .spyOn(Storage.prototype, 'removeItem')
+      .mockImplementation(() => {
+        throw new Error('storage unavailable');
+      });
+
+    expect(() => {
+      resetWebBaselineCapture();
+    }).not.toThrow();
+
+    expect(window.__FOCUSBUDDY_WEB_VITALS__).toEqual([]);
+    expect(window.__FOCUSBUDDY_ROUTER_TRANSITIONS__).toEqual([]);
+
+    removeItemSpy.mockRestore();
   });
 
   it('stores router transition markers for navigation capture', () => {

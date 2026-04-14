@@ -55,7 +55,12 @@ export async function runLhci() {
     });
 
     child.on('error', (error) => {
-      rejectPromise(new Error(`Failed to start LHCI autorun from ${appRoot}: ${formatError(error)}`, { cause: error }));
+      rejectPromise(
+        new Error(
+          `Failed to start LHCI autorun from ${appRoot}: ${formatError(error)}`,
+          { cause: error },
+        ),
+      );
     });
   });
 }
