@@ -43,7 +43,7 @@ This document does not define a repository-wide rule for every workspace, a mand
 - side effects should stay in explicit action, handler, hook, or adapter boundaries instead of being mixed into views or pure helpers
 - logs should be emitted at operational boundaries, while user-facing error decisions should be made near the UI boundary from typed error information
 - naming should use a small fixed vocabulary such as `is`, `has`, `build`, `create`, `resolve`, `fetch`, and `to` so export intent is visible from the symbol name alone
-- the repository should prefer strict automation for these rules; if oxlint cannot express one of them directly, a repository-owned boundary check should
+- the repository should prefer strict automation for these rules; if oxlint cannot express one of them directly, a repository-owned boundary check should be added
 - comments may point to Issues or Discussions when the implementation would otherwise look arbitrary, but detailed product reasoning should stay outside the code repository unless it directly constrains shipped behavior
 
 ## Current inconsistency audit
