@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "runMode": "local-parity",
+  "baseUrl": "http://127.0.0.1:3001",
+  "defaultRunCount": 1,
+  "requestCount": 10,
+  "scenarios": [
+    {
+      "id": "api.health.get",
+      "method": "GET",
+      "path": "/health",
+      "expectedStatus": 200
+    }
+  ]
+}

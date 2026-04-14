@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Inject } from '@nestjs/common';
 
 import { PrismaService } from '#api/prisma/prisma.service';
 
@@ -7,9 +7,13 @@ type HealthResponse = {
   database: 'up';
 };
 
+/**
+ * Role: Exposes the repository-owned API health route used by local runtime checks and baseline capture.
+ * Boundary: Transport health surface only. Must not absorb broader feature or readiness concerns.
+ */
 @Controller()
 export class HealthController {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(@Inject(PrismaService) private readonly prisma: PrismaService) {}
 
   @Get('health')
   async getHealth(): Promise<HealthResponse> {
