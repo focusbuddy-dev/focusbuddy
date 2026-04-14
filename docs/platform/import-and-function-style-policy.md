@@ -15,6 +15,7 @@ This document defines:
 - when a future alias rollout or stricter enforcement may be reconsidered
 
 This document does not define a repository-wide alias migration, a broad style-only refactor, or new lint enforcement for stylistic preferences.
+It also does not define responsibility-oriented file splitting or file-size guidance for feature modules.
 
 ## Decision summary
 
@@ -166,3 +167,5 @@ This document should be revisited when one of the following becomes true:
 - a future lint proposal can show concrete maintenance value beyond style preference alone
 
 Until then, the repository should keep the current low-churn rule: package-name imports across workspace boundaries, workspace-local import choices documented per app contract, and function declarations as the default shape for hand-written exported code without new style-only lint enforcement.
+
+For responsibility-oriented file splitting and soft file-size guidance, see `docs/platform/module-structure-and-file-size-policy.md`.
