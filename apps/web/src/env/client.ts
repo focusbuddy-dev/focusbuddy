@@ -22,13 +22,14 @@ type WebBaselineCaptureConfig = {
 };
 
 function getDefaultClientEnv(): ClientWebEnv {
-  const globalProcess = globalThis as typeof globalThis & {
-    process?: {
-      env?: ClientWebEnv;
-    };
+  return {
+    NEXT_PUBLIC_FOCUSBUDDY_API_BASE_URL: process.env.NEXT_PUBLIC_FOCUSBUDDY_API_BASE_URL,
+    NEXT_PUBLIC_FOCUSBUDDY_WEB_BASELINE_CAPTURE_CONTEXT:
+      process.env.NEXT_PUBLIC_FOCUSBUDDY_WEB_BASELINE_CAPTURE_CONTEXT,
+    NEXT_PUBLIC_FOCUSBUDDY_WEB_BASELINE_CAPTURE_ENABLED:
+      process.env.NEXT_PUBLIC_FOCUSBUDDY_WEB_BASELINE_CAPTURE_ENABLED,
+    NODE_ENV: process.env.NODE_ENV,
   };
-
-  return globalProcess.process?.env ?? {};
 }
 
 function isLocalApiFallbackEnabled(nodeEnv?: string): boolean {

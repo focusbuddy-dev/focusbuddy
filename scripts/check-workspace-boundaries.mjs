@@ -25,7 +25,7 @@ const ignoredDirectoryNames = new Set([
 const specifierPattern =
   /\b(?:import|export)\s+(?:[^'"`]*?\s+from\s+)?['"]([^'"`]+)['"]|\bimport\s*\(\s*['"]([^'"`]+)['"]\s*\)|\brequire\s*\(\s*['"]([^'"`]+)['"]\s*\)|\bjest\.(?:mock|unstable_mockModule)\s*\(\s*['"]([^'"`]+)['"]\s*/g;
 const tsconfigFilePattern = /^tsconfig(?:\.[^.]+)?\.json$/;
-const directProcessEnvPattern = /\bprocess\.env(?:\.[A-Za-z_$][\w$]*|\s*\[)/g;
+const directProcessEnvPattern = /\bprocess\.env(?:\.[A-Za-z_$][\w$]*|\s*\[)/;
 
 function normalizeForDisplay(targetPath, repoRoot) {
   return relative(repoRoot, targetPath).split(sep).join('/');

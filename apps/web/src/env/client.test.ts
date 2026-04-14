@@ -7,6 +7,12 @@ import {
 } from './client';
 
 describe('client env helpers', () => {
+  const originalProcessEnv = process.env;
+
+  afterEach(() => {
+    process.env = originalProcessEnv;
+  });
+
   it('returns the configured client API base URL when present', () => {
     expect(
       resolveClientApiBaseUrl({
@@ -76,5 +82,21 @@ describe('client env helpers', () => {
         NEXT_PUBLIC_FOCUSBUDDY_WEB_BASELINE_CAPTURE_ENABLED: '0',
       }),
     ).toBe(false);
+  });
+
+  it('reads default env values from direct process.env property access', () => {
+    process.env = {
+      ...originalProcessEnv,
+      NEXT_PUBLIC_FOCUSBUDDY_API_BASE_URL: 'https://api.focusbuddy.dev',
+      NEXT_PUBLIC_FOCUSBUDDY_WEB_BASELINE_CAPTURE_CONTEXT: 'dedicated',
+      NEXT_PUBLIC_FOCUSBUDDY_WEB_BASELINE_CAPTURE_ENABLED: 'true',
+      NODE_ENV: 'production',
+    };
+
+    expect(resolveClientApiBaseUrl()).toBe('https://api.focusbuddy.dev');
+    expect(resolveWebBaselineCaptureConfig()).toEqual({
+      context: 'dedicated',
+      enabled: true,
+    });
   });
 });

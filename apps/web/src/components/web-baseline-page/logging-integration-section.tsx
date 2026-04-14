@@ -13,7 +13,7 @@ type LoggingIntegrationSectionProps = {
  */
 export function LoggingIntegrationSection({ children }: LoggingIntegrationSectionProps) {
   if (!children) {
-    return undefined;
+    return null;
   }
 
   return (
