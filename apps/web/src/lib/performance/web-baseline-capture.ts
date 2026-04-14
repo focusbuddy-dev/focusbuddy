@@ -83,8 +83,13 @@ function persistBaselineCapture() {
   }
 }
 
+function canCaptureWebBaselineInBrowser() {
+  // Guard 2: keep these helpers as safe no-ops even if another caller bypasses the layout-level mount check.
+  return typeof window !== 'undefined' && isWebBaselineCaptureEnabled();
+}
+
 export function captureWebVital(metric: WebVitalMetricInput) {
-  if (typeof window === 'undefined' || !isWebBaselineCaptureEnabled()) {
+  if (!canCaptureWebBaselineInBrowser()) {
     return;
   }
 
@@ -104,7 +109,7 @@ export function captureWebVital(metric: WebVitalMetricInput) {
 export function captureRouterTransitionStart(
   transition: Pick<CapturedRouterTransition, 'navigationType' | 'url'>,
 ) {
-  if (typeof window === 'undefined' || !isWebBaselineCaptureEnabled()) {
+  if (!canCaptureWebBaselineInBrowser()) {
     return;
   }
 

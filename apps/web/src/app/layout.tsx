@@ -18,6 +18,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="en">
       <body>
+        {/* Guard 1: skip mounting the client listener unless the baseline lane explicitly opts in. */}
         {isWebBaselineCaptureEnabled() ? <WebBaselineCaptureBootstrap /> : undefined}
         {children}
       </body>
