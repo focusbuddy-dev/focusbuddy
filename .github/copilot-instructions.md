@@ -116,6 +116,20 @@
 - `push` 完了後は、ユーザーから別指定がない限り元のブランチへ戻る
 - PR 本文または先頭の明示で、AI エージェントが作成した PR であることが分かるようにする
 
+## Implementation Comment And Module Rule
+
+- hand-written exported code には、実装の役割や境界が分かる短い先行コメントを付ける
+- コメントは長文の背景説明ではなく、原則として `Role:`、必要なら `Boundary:`、必要な場合だけ `Ref:` を短く残す
+- pure re-export、generated code、または file-level comment で十分に役割が説明される framework 必須 export には重複コメントを要求しない
+- 1 file 1 primary responsibility を原則とし、runtime boundary、change reason、side effect family が混ざったら責務単位ディレクトリと薄い `index.ts` / `index.tsx` を優先する
+- module-local なテストは実装の近くに置くことを優先し、workspace-level setup や広域 integration だけを専用 test ディレクトリへ残す
+- integration test は feature 内なら近接、複数 feature や framework entrypoint をまたぐなら専用 test ディレクトリへ置く
+- `process.env` の直読みは env 専用 module に閉じ込め、`public`、`server`、`test` の layer をまたいで直接 import しない
+- browser code は server-only module や request-only helper を import せず、production code は `src/testing/**` を import しない
+- MSW や test fixture は明示的な non-production 境界に置き、preview data と fixture data を同じ module に混在させない
+- view や pure helper に side effect を混ぜず、navigation、logging、I/O は action、hook、handler、adapter に置く
+- export 名は `is`、`has`、`build`、`create`、`resolve`、`fetch`、`to` など役割が分かる語彙を優先する
+
 ## Responsibility Split
 
 - 依頼の入口整理と不足確認は `orchestrator-agent` が担う
