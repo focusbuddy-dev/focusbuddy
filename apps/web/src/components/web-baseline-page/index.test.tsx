@@ -2,8 +2,9 @@ import type { ComponentProps } from 'react';
 
 import { render, screen } from '@testing-library/react';
 
-import { WebBaselinePage } from '@/components/web-baseline-page';
 import { buildExamplePublicTargetSummary } from '@/lib/api/example-public-target-summary';
+
+import { WebBaselinePage } from './index';
 
 describe('WebBaselinePage', () => {
   it('renders the baseline guidance and contract-backed preview', () => {
@@ -17,6 +18,9 @@ describe('WebBaselinePage', () => {
     ).toBeInTheDocument();
     expect(screen.getByText('Next.js app router')).toBeInTheDocument();
     expect(screen.getByText('Focus target test-target')).toBeInTheDocument();
+    expect(
+      screen.queryByRole('heading', { name: /real logging integration points/i }),
+    ).not.toBeInTheDocument();
   });
 
   it('renders the optional real logging integration section', () => {

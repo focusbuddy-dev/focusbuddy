@@ -1,4 +1,4 @@
-import { fetchPublicTargetSummary, getFocusBuddyApiBaseUrl } from '@/lib/api/focusbuddy-client';
+import { fetchPublicTargetSummary, getFocusBuddyApiBaseUrl } from './focusbuddy-client';
 
 describe('fetchPublicTargetSummary', () => {
   it('loads a summary through the generated API client', async () => {

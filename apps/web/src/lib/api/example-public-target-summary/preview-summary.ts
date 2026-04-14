@@ -2,6 +2,11 @@ import type { components as ApiComponents } from '@focusbuddy/api-contract/gener
 
 type PublicTargetSummary = ApiComponents['schemas']['PublicTargetSummary'];
 
+/**
+ * Role: Builds runtime preview data for the baseline landing page contract demo.
+ * Boundary: Runtime preview only. Do not reuse this module for MSW fixtures or test support.
+ * Ref: #179
+ */
 export function buildExamplePublicTargetSummary(targetId: string): PublicTargetSummary {
   return {
     target: {

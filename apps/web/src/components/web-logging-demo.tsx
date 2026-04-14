@@ -11,7 +11,7 @@ import {
 } from '@/lib/logging/web-baseline-page-logger';
 import { captureRouterTransitionStart } from '@/lib/performance/web-baseline-capture';
 import { useWebRequestLogging } from '@/lib/logging/web-request-logging-context';
-import styles from './web-baseline-page.module.css';
+import styles from './web-baseline-page/styles.module.css';
 
 type WebLoggingDemoProps = {
   targetId: string;

@@ -9,7 +9,7 @@
     "dev": "pnpm contract:build && pnpm logger:build && next dev",
     "dev:compose": "pnpm contract:build && pnpm logger:build && next dev --hostname 0.0.0.0 --port 3000",
     "logger:build": "pnpm --dir ../.. --filter @focusbuddy/logger build",
-    "lint": "pnpm lint:styles && pnpm --dir ../.. exec oxlint apps/web/src apps/web/test",
+    "lint": "pnpm lint:styles && pnpm --dir ../.. exec oxlint apps/web/src apps/web/test && pnpm --dir ../.. lint:boundaries",
     "lint:styles": "pnpm --dir ../.. exec stylelint \"apps/web/src/**/*.css\"",
     "measure:baseline": "pnpm exec tsx ./scripts/measure-web-baseline/index.ts",
     "measure:browser": "playwright install chromium",

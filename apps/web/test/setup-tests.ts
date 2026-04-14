@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom';
 
-import { server } from './msw/server';
+import { server } from '@/testing/msw/server';
 
 beforeAll(() => {
   server.listen({ onUnhandledRequest: 'error' });

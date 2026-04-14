@@ -19,7 +19,12 @@ const config = withEsmPackageSupport(
       '^@/(.*)$': '<rootDir>/src/$1',
     },
     setupFilesAfterEnv: ['<rootDir>/test/setup-tests.ts'],
-    testMatch: ['<rootDir>/test/**/*.test.ts?(x)'],
+    testMatch: [
+      '<rootDir>/src/**/*.test.ts?(x)',
+      '<rootDir>/src/**/*.integration.test.ts?(x)',
+      '<rootDir>/test/**/*.test.ts?(x)',
+      '<rootDir>/test/**/*.integration.test.ts?(x)',
+    ],
   }),
   {
     packageNames: [
