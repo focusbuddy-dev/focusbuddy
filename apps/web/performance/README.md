@@ -11,6 +11,15 @@ This directory contains the first repository-owned performance snapshots and sup
 
 The baseline script writes accepted snapshots to `apps/web/performance/baselines/` using schema version 1 from `docs/platform/performance-baseline-policy.md`.
 
+## Committed Baselines
+
+The JSON files under `apps/web/performance/baselines/` are intentional repository-owned baseline snapshots, not temporary local artifacts.
+
+- `web.home.initial-load.json` is the accepted reference for the initial-load scenario on `/`
+- `web.home.details-navigation.json` is the accepted reference for the details-navigation scenario after the `Navigate to details demo` transition
+
+These files are committed so later measurement runs can compare against a stable, reviewable reference in git. They are used as baseline evidence during implementation and review, not served by the runtime and not treated as production assets.
+
 The first automation lane captures direct browser `TTFB`, `FCP`, and `CLS`, compares `LCP` through Lighthouse, and records `INP` when available or `FID` when Chromium only emits the first-input metric in local headless runs. When neither interaction Web Vital is emitted in this local automation environment, the saved navigation snapshot falls back to a custom `ROUTE_CHANGE_DURATION` metric so the scenario remains comparable.
 
 The LHCI command is intentionally local-first in this issue. CI wiring, artifact publication, and PR summary posting stay in follow-up workflow work.
