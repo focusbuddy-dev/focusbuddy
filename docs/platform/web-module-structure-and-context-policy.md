@@ -349,7 +349,7 @@ Place them under testing or preview-specific modules, not under `constants.ts`.
 
 Environment variables should be read through dedicated env modules, for example:
 
-- `env/public.ts`
+- `env/client.ts`
 - `env/server.ts`
 - `env/shared.ts`
 
@@ -366,14 +366,14 @@ This keeps runtime configuration reviewable and prevents environment-specific fa
 
 The default env layers are:
 
-- `src/env/public.ts` for values safe to expose to browser code
+- `src/env/client.ts` for values safe to expose to browser code
 - `src/env/server.ts` for server-only values
 - `src/env/test.ts` for test-only overrides or helpers
 
 Caller restrictions should be strict:
 
-- browser code may import only `public` env access
-- server code may import `public` and `server` env access
+- browser code may import only `client` env access
+- server code may import `client` and `server` env access
 - test files and setup code may import `test` env helpers
 - production code must not import `test` env helpers
 

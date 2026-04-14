@@ -7,7 +7,7 @@ import {
 
 import { webServerRuntimeLogger } from './web-server-runtime-logger';
 
-const webHealthRouteRespondedEvent = defineEvent<{ service: 'web'; status: number }>({
+const webHealthRouteRespondedEvent = defineEvent<{ service: string; status: number }>({
   logId: 'WEB_HEALTH_001',
   level: 'info',
   category: 'Health',
@@ -21,18 +21,19 @@ type WebHealthRouteRequestContext = RequestLogContext & {
 
 type LogWebHealthRouteRespondedInput = {
   request: WebHealthRouteRequestContext;
+  service: string;
   status: number;
 };
 
 export function logWebHealthRouteResponded(
-  { request, status }: LogWebHealthRouteRespondedInput,
+  { request, service, status }: LogWebHealthRouteRespondedInput,
   baseLogger: Logger = webServerRuntimeLogger,
 ): void {
   createEventLogger(baseLogger.child(request), {
     application: 'focusbuddy-web',
     layer: 'web-server',
   }).emit(webHealthRouteRespondedEvent, {
-    service: 'web',
+    service,
     status,
   });
 }

@@ -25,6 +25,7 @@ const ignoredDirectoryNames = new Set([
 const specifierPattern =
   /\b(?:import|export)\s+(?:[^'"`]*?\s+from\s+)?['"]([^'"`]+)['"]|\bimport\s*\(\s*['"]([^'"`]+)['"]\s*\)|\brequire\s*\(\s*['"]([^'"`]+)['"]\s*\)|\bjest\.(?:mock|unstable_mockModule)\s*\(\s*['"]([^'"`]+)['"]\s*/g;
 const tsconfigFilePattern = /^tsconfig(?:\.[^.]+)?\.json$/;
+const directProcessEnvPattern = /\bprocess\.env(?:\.[A-Za-z_$][\w$]*|\s*\[)/g;
 
 function normalizeForDisplay(targetPath, repoRoot) {
   return relative(repoRoot, targetPath).split(sep).join('/');
@@ -379,12 +380,40 @@ async function checkWorkspaceReferences(workspaces, repoRoot) {
   return violations;
 }
 
+async function checkWebEnvBoundaries(repoRoot) {
+  const violations = [];
+  const webSourceRoot = resolve(repoRoot, 'apps', 'web', 'src');
+  const webEnvRoot = resolve(webSourceRoot, 'env');
+  const files = await collectWorkspaceFiles(webSourceRoot);
+
+  for (const filePath of files) {
+    const extension = filePath.includes('.') ? filePath.slice(filePath.lastIndexOf('.')) : '';
+
+    if (!codeFileExtensions.has(extension) || isInsidePath(filePath, webEnvRoot)) {
+      continue;
+    }
+
+    const sourceText = await readFile(filePath, 'utf8');
+
+    if (!directProcessEnvPattern.test(sourceText)) {
+      continue;
+    }
+
+    violations.push(
+      `${normalizeForDisplay(filePath, repoRoot)}: direct process.env access is only allowed under apps/web/src/env/**. Import from src/env/client or src/env/server instead.`,
+    );
+  }
+
+  return violations;
+}
+
 export async function checkWorkspaceBoundaries(repoRoot = defaultRepoRoot) {
   const workspaces = await discoverWorkspaces(repoRoot);
   const packageViolations = await checkPackageJsonDependencies(workspaces, repoRoot);
   const referenceViolations = await checkWorkspaceReferences(workspaces, repoRoot);
+  const webEnvViolations = await checkWebEnvBoundaries(repoRoot);
 
-  return [...packageViolations, ...referenceViolations];
+  return [...packageViolations, ...referenceViolations, ...webEnvViolations];
 }
 
 async function main() {

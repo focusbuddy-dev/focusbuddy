@@ -3,6 +3,7 @@
 import { jest } from '@jest/globals';
 
 import { GET } from '@/app/health/route';
+import { getWebServerServiceName } from '@/env/server';
 import {
   focusbuddyRequestIdHeader,
   focusbuddyTraceIdHeader,
@@ -11,6 +12,7 @@ import {
 describe('web health route', () => {
   it('returns the expected health payload', async () => {
     const infoSpy = jest.spyOn(console, 'info').mockImplementation(() => undefined);
+    const service = getWebServerServiceName({});
 
     const response = GET({
       headers: new Headers({
@@ -24,11 +26,15 @@ describe('web health route', () => {
     } as never);
 
     expect(response.status).toBe(200);
-    await expect(response.json()).resolves.toEqual({ ok: true, service: 'web' });
+    await expect(response.json()).resolves.toEqual({ ok: true, service });
     expect(infoSpy).toHaveBeenCalledWith(
       expect.objectContaining({
         application: 'focusbuddy-web',
         category: 'Health',
+        context: {
+          service,
+          status: 200,
+        },
         layer: 'web-server',
         logId: 'WEB_HEALTH_001',
         requestId: 'request-201',
@@ -45,6 +51,7 @@ describe('web health route', () => {
 
   it('mints a unique fallback request id when correlation headers are missing', async () => {
     const infoSpy = jest.spyOn(console, 'info').mockImplementation(() => undefined);
+    const service = getWebServerServiceName({});
     const randomUuidSpy = jest
       .spyOn(globalThis.crypto, 'randomUUID')
       .mockReturnValue('generated-web-health-id');
@@ -58,9 +65,13 @@ describe('web health route', () => {
     } as never);
 
     expect(response.status).toBe(200);
-    await expect(response.json()).resolves.toEqual({ ok: true, service: 'web' });
+    await expect(response.json()).resolves.toEqual({ ok: true, service });
     expect(infoSpy).toHaveBeenCalledWith(
       expect.objectContaining({
+        context: {
+          service,
+          status: 200,
+        },
         requestId: 'generated-web-health-id',
         traceId: 'generated-web-health-id',
       }),
