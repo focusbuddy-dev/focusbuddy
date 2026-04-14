@@ -31,7 +31,21 @@ test('allows when current workspace is invalid but target issue worktree is vali
     shouldBypassIssueRequirement: false,
   });
 
-  assert.equal(result, null);
+  assert.equal(result, undefined);
+});
+
+test('allows worktree preparation commands when current workspace is invalid', () => {
+  const result = buildIssueWorktreePermissionDecision({
+    gitContext: createGitContext({
+      valid: false,
+      reasons: ['current branch は別 worktree に割り当て済みです'],
+    }),
+    targetGitContexts: [],
+    referencedIssueNumbers: ['183'],
+    shouldBypassIssueRequirement: true,
+  });
+
+  assert.equal(result, undefined);
 });
 
 test('denies when current workspace is invalid and target issue worktree is also invalid', () => {

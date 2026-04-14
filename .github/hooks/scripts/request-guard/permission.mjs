@@ -49,7 +49,12 @@ export function buildIssueWorktreePermissionDecision({
     referencedIssueNumbers,
   );
 
-  if (gitContext.isGitRepo && !gitContext.valid && !hasValidIssueWorktreeTarget) {
+  if (
+    gitContext.isGitRepo &&
+    !gitContext.valid &&
+    !hasValidIssueWorktreeTarget &&
+    !shouldBypassIssueRequirement
+  ) {
     return {
       hookSpecificOutput: {
         hookEventName: 'PreToolUse',
@@ -78,7 +83,7 @@ export function buildIssueWorktreePermissionDecision({
     };
   }
 
-  return null;
+  return undefined;
 }
 
 export function buildPreToolPermissionOutput(cwd, event, state) {
