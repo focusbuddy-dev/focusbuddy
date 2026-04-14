@@ -22,14 +22,29 @@ type WebBaselineCaptureConfig = {
 };
 
 function getDefaultClientEnv(): ClientWebEnv {
-  return {
-    NEXT_PUBLIC_FOCUSBUDDY_API_BASE_URL: process.env.NEXT_PUBLIC_FOCUSBUDDY_API_BASE_URL,
-    NEXT_PUBLIC_FOCUSBUDDY_WEB_BASELINE_CAPTURE_CONTEXT:
-      process.env.NEXT_PUBLIC_FOCUSBUDDY_WEB_BASELINE_CAPTURE_CONTEXT,
-    NEXT_PUBLIC_FOCUSBUDDY_WEB_BASELINE_CAPTURE_ENABLED:
-      process.env.NEXT_PUBLIC_FOCUSBUDDY_WEB_BASELINE_CAPTURE_ENABLED,
-    NODE_ENV: process.env.NODE_ENV,
-  };
+  const env: ClientWebEnv = {};
+  const apiBaseUrl = process.env.NEXT_PUBLIC_FOCUSBUDDY_API_BASE_URL;
+  const webBaselineCaptureContext = process.env.NEXT_PUBLIC_FOCUSBUDDY_WEB_BASELINE_CAPTURE_CONTEXT;
+  const webBaselineCaptureEnabled = process.env.NEXT_PUBLIC_FOCUSBUDDY_WEB_BASELINE_CAPTURE_ENABLED;
+  const nodeEnv = process.env.NODE_ENV;
+
+  if (apiBaseUrl !== undefined) {
+    env.NEXT_PUBLIC_FOCUSBUDDY_API_BASE_URL = apiBaseUrl;
+  }
+
+  if (webBaselineCaptureContext !== undefined) {
+    env.NEXT_PUBLIC_FOCUSBUDDY_WEB_BASELINE_CAPTURE_CONTEXT = webBaselineCaptureContext;
+  }
+
+  if (webBaselineCaptureEnabled !== undefined) {
+    env.NEXT_PUBLIC_FOCUSBUDDY_WEB_BASELINE_CAPTURE_ENABLED = webBaselineCaptureEnabled;
+  }
+
+  if (nodeEnv !== undefined) {
+    env.NODE_ENV = nodeEnv;
+  }
+
+  return env;
 }
 
 function isLocalApiFallbackEnabled(nodeEnv?: string): boolean {
