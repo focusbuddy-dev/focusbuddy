@@ -1,0 +1,93 @@
+{
+  "app": "api",
+  "capturedAt": "2026-04-14T09:10:20.850Z",
+  "environment": {
+    "baseUrl": "http://127.0.0.1:3011",
+    "method": "GET",
+    "path": "/health",
+    "runtime": "parity"
+  },
+  "measurements": {
+    "requestCount": 10,
+    "runs": [
+      {
+        "capturedAt": "2026-04-14T09:10:20.849Z",
+        "requestCount": 10,
+        "requests": [
+          {
+            "durationMs": 3.622,
+            "responseBytes": 31,
+            "statusCode": 200
+          },
+          {
+            "durationMs": 2.197,
+            "responseBytes": 31,
+            "statusCode": 200
+          },
+          {
+            "durationMs": 2.235,
+            "responseBytes": 31,
+            "statusCode": 200
+          },
+          {
+            "durationMs": 2.209,
+            "responseBytes": 31,
+            "statusCode": 200
+          },
+          {
+            "durationMs": 1.923,
+            "responseBytes": 31,
+            "statusCode": 200
+          },
+          {
+            "durationMs": 1.478,
+            "responseBytes": 31,
+            "statusCode": 200
+          },
+          {
+            "durationMs": 3.533,
+            "responseBytes": 31,
+            "statusCode": 200
+          },
+          {
+            "durationMs": 2.419,
+            "responseBytes": 31,
+            "statusCode": 200
+          },
+          {
+            "durationMs": 1.421,
+            "responseBytes": 31,
+            "statusCode": 200
+          },
+          {
+            "durationMs": 1.199,
+            "responseBytes": 31,
+            "statusCode": 200
+          }
+        ],
+        "statusConsistent": true
+      }
+    ]
+  },
+  "runMode": "local-parity",
+  "sampleSize": 1,
+  "scenarioId": "api.health.get",
+  "schemaVersion": 1,
+  "summary": {
+    "latencyMs": {
+      "median": 2.203,
+      "p95": 3.622
+    },
+    "responseBytes": {
+      "median": 31
+    },
+    "status": {
+      "allExpected": true,
+      "expectedStatus": 200,
+      "observedStatusCodes": [
+        200
+      ],
+      "sampleCount": 10
+    }
+  }
+}

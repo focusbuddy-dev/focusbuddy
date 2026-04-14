@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import type { Logger } from '@focusbuddy/logger';
 import { focusbuddyRequestIdHeader, focusbuddyTraceIdHeader } from '@focusbuddy/logger';
-import { Observable, tap } from 'rxjs';
+import { finalize, Observable } from 'rxjs';
 
 import { logApiRequestHandled } from '#api/logging/api-request-logger.example';
 
@@ -43,6 +43,10 @@ function readHeader(
   return directValue;
 }
 
+function roundDurationMs(durationMs: number) {
+  return Number(durationMs.toFixed(3));
+}
+
 @Injectable()
 export class ApiRequestLoggingInterceptor implements NestInterceptor {
   constructor(private readonly baseLogger: Logger) {}
@@ -62,12 +66,13 @@ export class ApiRequestLoggingInterceptor implements NestInterceptor {
     const traceId = readHeader(request.headers, focusbuddyTraceIdHeader) ?? requestId;
     const requestPath = request.originalUrl ?? request.url ?? request.route?.path ?? 'unknown';
     const route = request.route?.path ?? requestPath;
+    const requestStartedAt = performance.now();
 
     response.setHeader(focusbuddyRequestIdHeader, requestId);
     response.setHeader(focusbuddyTraceIdHeader, traceId);
 
     return next.handle().pipe(
-      tap(() => {
+      finalize(() => {
         const user = request.user
           ? {
               ...(request.user.id ? { userId: request.user.id } : {}),
@@ -78,6 +83,7 @@ export class ApiRequestLoggingInterceptor implements NestInterceptor {
 
         logApiRequestHandled(
           {
+            durationMs: roundDurationMs(performance.now() - requestStartedAt),
             request: {
               requestId,
               requestMethod: request.method,

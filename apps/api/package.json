@@ -17,6 +17,7 @@
     "dev": "pnpm contract:build && pnpm logger:build && pnpm prisma:generate && NODE_OPTIONS=--conditions=development pnpm exec tsx watch src/main.ts",
     "logger:build": "pnpm --dir ../.. --filter @focusbuddy/logger build",
     "lint": "pnpm --dir ../.. exec oxlint apps/api/src apps/api/test apps/api/prisma",
+    "measure:baseline": "pnpm exec tsx ./scripts/measure-api-baseline/index.ts",
     "parity": "pnpm build && node dist/main.js",
     "prisma:generate": "NODE_OPTIONS=--conditions=development prisma generate --config prisma.config.ts",
     "prisma:migrate:dev": "NODE_OPTIONS=--conditions=development prisma migrate dev --config prisma.config.ts",

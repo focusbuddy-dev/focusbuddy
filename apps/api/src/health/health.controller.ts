@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Inject } from '@nestjs/common';
 
 import { PrismaService } from '#api/prisma/prisma.service';
 
@@ -9,7 +9,7 @@ type HealthResponse = {
 
 @Controller()
 export class HealthController {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(@Inject(PrismaService) private readonly prisma: PrismaService) {}
 
   @Get('health')
   async getHealth(): Promise<HealthResponse> {
