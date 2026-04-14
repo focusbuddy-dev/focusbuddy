@@ -33,6 +33,10 @@ type LogApiRequestHandledInput = {
   statusCode: number;
 };
 
+/**
+ * Role: Builds the shared request-scoped logger facade for API request logs.
+ * Boundary: Logging adapter only. Must not own request timing or response policy.
+ */
 export function createApiRequestLogger(
   request: ApiRequestContext,
   user?: ApiUserContext,
@@ -44,6 +48,10 @@ export function createApiRequestLogger(
   });
 }
 
+/**
+ * Role: Emits the handled-request event with the normalized API request log context.
+ * Boundary: Success-path request logging only. Must not infer exception outcomes.
+ */
 export function logApiRequestHandled(
   { durationMs, request, user, statusCode }: LogApiRequestHandledInput,
   baseLogger: Logger = apiLogger,

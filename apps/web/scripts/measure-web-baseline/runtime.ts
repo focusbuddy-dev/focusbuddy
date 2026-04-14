@@ -41,6 +41,10 @@ const performanceRoot = resolve(appRoot, 'performance');
 const baselinesRoot = resolve(performanceRoot, 'baselines');
 const configPath = resolve(performanceRoot, 'baseline.config.json');
 
+/**
+ * Role: Executes the repository-owned web baseline capture flow and persists the saved snapshots.
+ * Boundary: Local measurement entrypoint only. Must not own review-threshold policy.
+ */
 export async function runMeasureWebBaseline() {
   const config = await readBaselineConfig(configPath);
   const runCount = parseRunCount(
@@ -126,6 +130,10 @@ export async function runMeasureWebBaseline() {
   );
 }
 
+/**
+ * Role: Resolves the local Playwright Chromium binary used by the baseline capture flow.
+ * Boundary: Browser tooling only. Must fail fast when Chromium is not installed.
+ */
 export function resolveChromiumExecutablePath() {
   let executablePath: string;
 
@@ -144,6 +152,10 @@ export function resolveChromiumExecutablePath() {
   return executablePath;
 }
 
+/**
+ * Role: Verifies that the target web baseline URL is reachable before browser work starts.
+ * Boundary: Reachability preflight only. Must not execute measurement scenarios.
+ */
 export async function assertBaseUrlReady(url: string) {
   const response = await fetch(url, { redirect: 'manual' }).catch((error: unknown) => {
     throw new Error(
@@ -157,6 +169,10 @@ export async function assertBaseUrlReady(url: string) {
   }
 }
 
+/**
+ * Role: Converts unknown web baseline failures into readable CLI error text.
+ * Boundary: Error formatting only. Must not suppress the original failure path.
+ */
 export function formatError(error: unknown) {
   if (error instanceof Error) {
     return error.message;

@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import type { Logger } from '@focusbuddy/logger';
 import { focusbuddyRequestIdHeader, focusbuddyTraceIdHeader } from '@focusbuddy/logger';
-import { finalize, Observable } from 'rxjs';
+import { Observable, tap } from 'rxjs';
 
 import { logApiRequestHandled } from '#api/logging/api-request-logger.example';
 
@@ -47,6 +47,10 @@ function roundDurationMs(durationMs: number) {
   return Number(durationMs.toFixed(3));
 }
 
+/**
+ * Role: Adds correlation headers and emits handled-request logs for successful HTTP responses.
+ * Boundary: HTTP interceptor only. Must not decide error-shaping or exception logging policy.
+ */
 @Injectable()
 export class ApiRequestLoggingInterceptor implements NestInterceptor {
   constructor(private readonly baseLogger: Logger) {}
@@ -72,7 +76,7 @@ export class ApiRequestLoggingInterceptor implements NestInterceptor {
     response.setHeader(focusbuddyTraceIdHeader, traceId);
 
     return next.handle().pipe(
-      finalize(() => {
+      tap(() => {
         const user = request.user
           ? {
               ...(request.user.id ? { userId: request.user.id } : {}),

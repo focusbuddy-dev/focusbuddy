@@ -1,5 +1,9 @@
 import { type BaselineConfig, type HealthRun, type HealthScenario, type HealthSnapshot } from './types';
 
+/**
+ * Role: Builds the committed API baseline snapshot from captured health-check runs.
+ * Boundary: Summary shaping only. Must not perform network requests or file writes.
+ */
 export function createHealthSnapshot({
   baseUrl,
   capturedAt,
@@ -45,7 +49,9 @@ export function createHealthSnapshot({
       status: {
         allExpected: requests.every((request) => request.statusCode === healthScenario.expectedStatus),
         expectedStatus: healthScenario.expectedStatus,
-        observedStatusCodes: [...new Set(requests.map((request) => request.statusCode))].sort((a, b) => a - b),
+        observedStatusCodes: [...new Set(requests.map((request) => request.statusCode))].toSorted(
+          (left, right) => left - right,
+        ),
         sampleCount: requests.length,
       },
     },
@@ -56,12 +62,16 @@ function healthScenarioRequests(healthRuns: HealthRun[]) {
   return healthRuns.reduce((total, run) => total + run.requestCount, 0);
 }
 
+/**
+ * Role: Computes a stable median for saved API baseline metrics.
+ * Boundary: Numeric summary helper only. Must not mutate caller-provided arrays.
+ */
 export function calculateMedian(values: number[]) {
   if (values.length === 0) {
     return undefined;
   }
 
-  const sortedValues = [...values].sort((left, right) => left - right);
+  const sortedValues = values.toSorted((left, right) => left - right);
   const middleIndex = Math.floor(sortedValues.length / 2);
   const middleValue = sortedValues[middleIndex];
 
@@ -82,12 +92,16 @@ export function calculateMedian(values: number[]) {
   return roundNumber((previousValue + middleValue) / 2);
 }
 
+/**
+ * Role: Computes percentile values for API baseline latency summaries.
+ * Boundary: Numeric summary helper only. Must not mutate caller-provided arrays.
+ */
 export function calculatePercentile(values: number[], percentile: number) {
   if (values.length === 0) {
     return undefined;
   }
 
-  const sortedValues = [...values].sort((left, right) => left - right);
+  const sortedValues = values.toSorted((left, right) => left - right);
   const rank = Math.max(0, Math.ceil((percentile / 100) * sortedValues.length) - 1);
   const percentileValue = sortedValues[rank];
 

@@ -1,7 +1,7 @@
 import type { CallHandler, ExecutionContext } from '@nestjs/common';
 import { jest } from '@jest/globals';
 import { focusbuddyRequestIdHeader, focusbuddyTraceIdHeader } from '@focusbuddy/logger';
-import { lastValueFrom, of } from 'rxjs';
+import { lastValueFrom, of, throwError } from 'rxjs';
 
 import { ApiRequestLoggingInterceptor } from '#api/logging/api-request-logging.interceptor';
 
@@ -73,5 +73,44 @@ describe('ApiRequestLoggingInterceptor', () => {
       logId: 'API_REQUEST_001',
       statusCode: 200,
     });
+  });
+
+  it('does not emit the handled request event when the handler errors', async () => {
+    const info = jest.fn();
+    const requestLogger = {
+      child: jest.fn(() => requestLogger),
+      info,
+    };
+    const baseLogger = {
+      child: jest.fn(() => requestLogger),
+    };
+
+    const response = {
+      setHeader: jest.fn(),
+      statusCode: 500,
+    };
+    const request = {
+      headers: {},
+      method: 'GET',
+      originalUrl: '/health',
+      route: {
+        path: '/health',
+      },
+    };
+    const context = {
+      getType: () => 'http',
+      switchToHttp: () => ({
+        getRequest: () => request,
+        getResponse: () => response,
+      }),
+    } as ExecutionContext;
+    const next = {
+      handle: () => throwError(() => new Error('boom')),
+    } satisfies CallHandler;
+
+    const interceptor = new ApiRequestLoggingInterceptor(baseLogger as never);
+
+    await expect(lastValueFrom(interceptor.intercept(context, next))).rejects.toThrow('boom');
+    expect(info).not.toHaveBeenCalled();
   });
 });

@@ -7,6 +7,10 @@ type HealthResponse = {
   database: 'up';
 };
 
+/**
+ * Role: Exposes the repository-owned API health route used by local runtime checks and baseline capture.
+ * Boundary: Transport health surface only. Must not absorb broader feature or readiness concerns.
+ */
 @Controller()
 export class HealthController {
   constructor(@Inject(PrismaService) private readonly prisma: PrismaService) {}

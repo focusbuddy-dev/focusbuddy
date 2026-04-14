@@ -2,12 +2,20 @@ import { readFile } from 'node:fs/promises';
 
 import { type BaselineConfig, type BaselineScenario, healthScenarioId, type HealthScenario } from './types';
 
+/**
+ * Role: Loads the API baseline config file and returns the validated config shape.
+ * Boundary: File-backed config entrypoint only. Must not execute measurement logic.
+ */
 export async function readBaselineConfig(filePath: string) {
   const rawConfig = JSON.parse(await readFile(filePath, 'utf8')) as unknown;
 
   return parseBaselineConfig(rawConfig);
 }
 
+/**
+ * Role: Validates the repository-owned API baseline config shape.
+ * Boundary: Config parsing only. Must fail fast on unsupported scenario definitions.
+ */
 export function parseBaselineConfig(rawConfig: unknown): BaselineConfig {
   if (!isRecord(rawConfig)) {
     throw new Error('Baseline config must be a JSON object.');
@@ -54,14 +62,26 @@ export function parseBaselineConfig(rawConfig: unknown): BaselineConfig {
   };
 }
 
+/**
+ * Role: Parses the rerun count override for API baseline capture.
+ * Boundary: Environment parsing only. Must reject non-positive integers.
+ */
 export function parseRunCount(rawValue: string) {
   return parsePositiveInteger(rawValue, 'FOCUSBUDDY_API_BASELINE_RUNS');
 }
 
+/**
+ * Role: Parses the sequential request-count override for API baseline capture.
+ * Boundary: Environment parsing only. Must reject non-positive integers.
+ */
 export function parseRequestCount(rawValue: string) {
   return parsePositiveInteger(rawValue, 'FOCUSBUDDY_API_BASELINE_REQUESTS');
 }
 
+/**
+ * Role: Resolves the required api.health.get scenario from the parsed baseline config.
+ * Boundary: Scenario selection only. Must not silently invent fallback scenarios.
+ */
 export function getRequiredScenario(config: BaselineConfig) {
   const healthScenario = config.scenarios.find(
     (scenario): scenario is HealthScenario => scenario.id === healthScenarioId,

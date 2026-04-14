@@ -15,6 +15,10 @@ const currentDirectory = dirname(fileURLToPath(import.meta.url));
 const baselineConfigPath = resolve(currentDirectory, '../../performance/baseline.config.json');
 const baselinesRoot = resolve(currentDirectory, '../../performance/baselines');
 
+/**
+ * Role: Executes the repository-owned API baseline capture flow and persists the snapshot.
+ * Boundary: Local measurement entrypoint only. Must not decide CI threshold policy.
+ */
 export async function runMeasureApiBaseline(): Promise<HealthSnapshot> {
   const config = await readBaselineConfig(baselineConfigPath);
   const healthScenario = getRequiredScenario(config);
@@ -44,6 +48,10 @@ export async function runMeasureApiBaseline(): Promise<HealthSnapshot> {
   return snapshot;
 }
 
+/**
+ * Role: Verifies that the configured API scenario is reachable before measurement starts.
+ * Boundary: Preflight only. Must fail fast on status drift or connectivity errors.
+ */
 export async function assertScenarioReady(baseUrl: string, healthScenario: HealthScenario) {
   const requestUrl = buildScenarioUrl(baseUrl, healthScenario.path);
 
@@ -56,10 +64,14 @@ export async function assertScenarioReady(baseUrl: string, healthScenario: Healt
       );
     }
   } catch (error) {
-    throw new Error(`Failed to reach ${requestUrl}: ${formatError(error)}`);
+    throw new Error(`Failed to reach ${requestUrl}: ${formatError(error)}`, { cause: error });
   }
 }
 
+/**
+ * Role: Converts unknown runtime failures into readable baseline-capture error text.
+ * Boundary: Error formatting only. Must not swallow underlying failure causes.
+ */
 export function formatError(error: unknown) {
   if (error instanceof Error) {
     return error.stack ?? error.message;
@@ -104,13 +116,17 @@ async function executeMeasuredRequest(requestUrl: string, healthScenario: Health
       statusCode: response.status,
     } satisfies HealthRequestMeasurement;
   } catch (error) {
-    throw new Error(`Measured request failed for ${requestUrl}: ${formatError(error)}`);
+    throw new Error(`Measured request failed for ${requestUrl}: ${formatError(error)}`, { cause: error });
   }
 }
 
 async function writeSnapshot(scenarioId: string, snapshot: HealthSnapshot) {
   await mkdir(baselinesRoot, { recursive: true });
-  await writeFile(resolve(baselinesRoot, `${scenarioId}.json`), `${JSON.stringify(snapshot, null, 2)}\n`, 'utf8');
+  await writeFile(
+    resolve(baselinesRoot, `${scenarioId}.json`),
+    `${JSON.stringify(snapshot, undefined, 2)}\n`,
+    'utf8',
+  );
 }
 
 function buildScenarioUrl(baseUrl: string, path: string) {
