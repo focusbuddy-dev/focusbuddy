@@ -1,6 +1,5 @@
 import { existsSync } from 'node:fs';
 import { mkdir, writeFile } from 'node:fs/promises';
-import { createRequire } from 'node:module';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -34,12 +33,14 @@ type ChromeLauncherModule = {
 };
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const require = createRequire(import.meta.url);
-const chromeLauncher = require('chrome-launcher') as ChromeLauncherModule;
 const appRoot = resolve(__dirname, '..', '..');
 const performanceRoot = resolve(appRoot, 'performance');
 const baselinesRoot = resolve(performanceRoot, 'baselines');
 const configPath = resolve(performanceRoot, 'baseline.config.json');
+
+async function loadChromeLauncher(): Promise<ChromeLauncherModule> {
+  return (await import('chrome-launcher')) as ChromeLauncherModule;
+}
 
 /**
  * Role: Executes the repository-owned web baseline capture flow and persists the saved snapshots.
@@ -336,6 +337,7 @@ async function captureLighthouseRun({
   executablePath: string;
   path: string;
 }): Promise<LighthouseRun> {
+  const chromeLauncher = await loadChromeLauncher();
   const chrome = await chromeLauncher.launch({
     chromeFlags: ['--headless', '--no-sandbox', '--disable-dev-shm-usage'],
     chromePath: executablePath,
