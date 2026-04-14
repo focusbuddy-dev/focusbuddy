@@ -1,9 +1,9 @@
 import { existsSync } from 'node:fs';
 import { mkdir, writeFile } from 'node:fs/promises';
+import { createRequire } from 'node:module';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import * as chromeLauncher from 'chrome-launcher';
 import lighthouse from 'lighthouse';
 import { chromium } from 'playwright';
 
@@ -26,7 +26,16 @@ import {
   type NavigationSnapshot,
 } from './types';
 
+type ChromeLauncherModule = {
+  launch(options: { chromeFlags?: string[]; chromePath?: string }): Promise<{
+    kill(): Promise<void>;
+    port: number;
+  }>;
+};
+
 const __dirname = dirname(fileURLToPath(import.meta.url));
+const require = createRequire(import.meta.url);
+const chromeLauncher = require('chrome-launcher') as ChromeLauncherModule;
 const appRoot = resolve(__dirname, '..', '..');
 const performanceRoot = resolve(appRoot, 'performance');
 const baselinesRoot = resolve(performanceRoot, 'baselines');
