@@ -80,13 +80,13 @@
 - `git rev-parse --show-toplevel` で現在の作業ルートを確認する
 - `git branch --show-current` で現在 branch を確認する
 - `git worktree list --porcelain` で現在 branch と worktree path の対応を確認する
-- current branch が detached、current worktree が一覧に存在しない、current branch が別 worktree に割り当て済み、のどれかに当たる場合は作業を止めて確認する
+- current branch が detached、current worktree が一覧に存在しない、current branch が別 worktree に割り当て済み、のどれかに当たる場合は、まず不整合を確認する。ただし、更新対象が有効な Issue 専用 worktree 配下の絶対パスに明示的に限定され、その target 側の Git 文脈が整合している場合は、current workspace が main のままでも target 側を基準に続行してよい
 - worktree を使わないリポジトリでも、少なくとも current branch と作業ルートの確認は省略しない
 - Issue が確定した更新系作業は、main の current workspace では進めず、main から切った Issue 専用 worktree 上でだけ進める
 - Issue 専用 worktree の配置先は必ず `.worktrees/` 配下に限定する
 - `.worktrees/` 配下以外のトップレベルや任意ディレクトリに Issue 専用 worktree を新設してはならない
 - Agent は `.worktrees/<issue-or-purpose>/` 以外の場所にある新規 worktree 作成や利用を提案せず、既存の逸脱配置がある場合も cleanup や退避のための最小操作以外では使わない
-- チャットの current workspace が main のままでも、編集対象や実行対象が Issue 専用 worktree 配下の絶対パスに限定されている場合だけ更新を許容する
+- チャットの current workspace が main のままでも、編集対象や実行対象が Issue 専用 worktree 配下の絶対パスに限定されている場合だけ更新を許容する。このときは current workspace の branch ではなく、target 側 worktree の branch と worktree path の整合を優先して判定する
 - Issue 作成、Issue 確認、git preflight、git worktree add のような準備操作だけは main 上で行ってよい
 
 ## Tool Preference Rule
