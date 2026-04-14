@@ -190,7 +190,7 @@ Server entry code may import:
 
 Server entry code must not import:
 
-- `src/testing/**`
+- `apps/web/src/testing/**`
 - test fixtures
 - browser-only runtime helpers that assume DOM globals
 
@@ -209,7 +209,7 @@ Browser entry code must not import:
 - server-only env modules
 - request-only helpers such as code built on `next/headers` or `next/cookies`
 - Node built-ins and server-only runtime adapters
-- `src/testing/**`
+- `apps/web/src/testing/**`
 
 ### Shared pure code
 
@@ -220,14 +220,14 @@ Shared pure code must not import:
 - `next/headers`, `next/cookies`, or other request-only APIs
 - DOM globals or browser-only modules
 - Node built-ins
-- `src/testing/**`
+- `apps/web/src/testing/**`
 - env modules other than a deliberately shared typed value module
 
 If a helper needs any of those imports, it is not shared pure code and should move to a server, browser, or testing boundary.
 
 ### Testing-only code
 
-Testing-only code lives under boundaries such as `src/testing/**` and `apps/web/test/**`.
+Testing-only code lives under boundaries such as `apps/web/src/testing/**` and `apps/web/test/**`.
 
 Testing-only code may import production modules in order to verify them.
 
@@ -593,8 +593,8 @@ In practice:
 
 - user-facing code decides redirect, inline feedback, retry, not-found, or route-fatal behavior
 - operational logging keeps request IDs, boundary context, and sanitized technical detail
-- recovery decisions should reference `docs/platform/web-error-handling-policy.md`
-- logging placement should stay consistent with `docs/platform/logging-and-audit-boundaries.md`
+- recovery decisions should reference [the web error handling policy](./web-error-handling-policy.md)
+- logging placement should stay consistent with [the logging and audit boundaries policy](./logging-and-audit-boundaries.md)
 
 ## Naming rules
 
@@ -630,7 +630,7 @@ The repository should prefer strict automation and fail fast when a new change c
 The highest-value checks to automate are:
 
 - ban direct `process.env` access outside `src/env/**`
-- ban production imports from `src/testing/**`
+- ban production imports from `apps/web/src/testing/**`
 - ban browser entry code from importing server-only env or request-only helpers
 - enforce test naming for `*.test.*` and `*.integration.test.*`
 - ban broad convenience barrels outside allowed `index.ts` and `index.tsx` boundaries
