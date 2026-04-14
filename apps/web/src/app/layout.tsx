@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 
+import { WebBaselineCaptureBootstrap } from '@/app/web-baseline-capture-bootstrap';
+import { isWebBaselineCaptureEnabled } from '@/lib/performance/web-baseline-capture-config';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -15,7 +17,11 @@ type RootLayoutProps = {
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        {/* Guard 1: skip mounting the client listener unless the baseline lane explicitly opts in. */}
+        {isWebBaselineCaptureEnabled() ? <WebBaselineCaptureBootstrap /> : undefined}
+        {children}
+      </body>
     </html>
   );
 }

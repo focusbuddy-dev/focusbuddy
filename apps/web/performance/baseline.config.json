@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "runMode": "local-parity",
+  "baseUrl": "http://127.0.0.1:3000",
+  "defaultRunCount": 3,
+  "browser": "chromium",
+  "lighthouse": {
+    "formFactor": "desktop",
+    "onlyAudits": [
+      "first-contentful-paint",
+      "largest-contentful-paint",
+      "speed-index",
+      "total-blocking-time",
+      "cumulative-layout-shift"
+    ]
+  },
+  "scenarios": [
+    {
+      "id": "web.home.initial-load",
+      "path": "/"
+    },
+    {
+      "id": "web.home.details-navigation",
+      "path": "/",
+      "targetSearch": "?view=details",
+      "triggerButtonText": "Navigate to details demo"
+    }
+  ]
+}
