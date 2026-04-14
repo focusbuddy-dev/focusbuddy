@@ -384,6 +384,17 @@ async function checkWebEnvBoundaries(repoRoot) {
   const violations = [];
   const webSourceRoot = resolve(repoRoot, 'apps', 'web', 'src');
   const webEnvRoot = resolve(webSourceRoot, 'env');
+
+  try {
+    await readdir(webSourceRoot);
+  } catch (error) {
+    if (error && typeof error === 'object' && 'code' in error && error.code === 'ENOENT') {
+      return violations;
+    }
+
+    throw error;
+  }
+
   const files = await collectWorkspaceFiles(webSourceRoot);
 
   for (const filePath of files) {
