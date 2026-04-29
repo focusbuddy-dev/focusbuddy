@@ -19,5 +19,3 @@ export function createApiRuntimeLogger(options: CreateApiRuntimeLoggerOptions = 
     runtime: options.runtime ?? 'api',
   });
 }
-
-export const apiRuntimeLogger = createApiRuntimeLogger();

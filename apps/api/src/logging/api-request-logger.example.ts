@@ -5,9 +5,6 @@ import {
   type RequestLogContext,
   type UserLogContext,
 } from '@focusbuddy/logger';
-import { apiRuntimeLogger } from '#api/logging/api-runtime-logger';
-
-const apiLogger = apiRuntimeLogger;
 
 const apiRequestHandledEvent = defineEvent<{ durationMs: number; statusCode: number }>({
   logId: 'API_REQUEST_001',
@@ -39,8 +36,8 @@ type LogApiRequestHandledInput = {
  */
 export function createApiRequestLogger(
   request: ApiRequestContext,
-  user?: ApiUserContext,
-  baseLogger: Logger = apiLogger,
+  user: ApiUserContext | undefined,
+  baseLogger: Logger,
 ): Logger {
   return baseLogger.child({
     ...request,
@@ -54,7 +51,7 @@ export function createApiRequestLogger(
  */
 export function logApiRequestHandled(
   { durationMs, request, user, statusCode }: LogApiRequestHandledInput,
-  baseLogger: Logger = apiLogger,
+  baseLogger: Logger,
 ): void {
   createEventLogger(createApiRequestLogger(request, user, baseLogger), {
     application: 'focusbuddy-api',

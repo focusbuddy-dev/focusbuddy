@@ -35,19 +35,6 @@ jest.mock('@focusbuddy/logger', () => {
   };
 });
 
-jest.mock('#api/logging/api-runtime-logger', () => {
-  const noOpLogger = {
-    child() {
-      return noOpLogger;
-    },
-    info() {},
-  };
-
-  return {
-    apiRuntimeLogger: noOpLogger,
-  };
-});
-
 import {
   createApiRequestLogger,
   logApiRequestHandled,
