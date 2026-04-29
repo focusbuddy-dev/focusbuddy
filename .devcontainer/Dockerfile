@@ -15,6 +15,12 @@ RUN apt-get update \
         > /etc/sudoers.d/node \
     && chmod 0440 /etc/sudoers.d/node
 
+# Enable corepack so the `pnpm` / `yarn` shims live in /usr/local/bin and the
+# version pinned in package.json (`packageManager`) is auto-resolved.
+# The official `node:` image bundles corepack but leaves it disabled by default,
+# unlike the MS `typescript-node` image we used previously.
+RUN corepack enable
+
 # User-writable npm prefix (sudo-free global install) — used for Claude Code, ccusage, just
 ENV NPM_CONFIG_PREFIX=/home/node/.npm-global
 ENV PATH="${NPM_CONFIG_PREFIX}/bin:${PATH}"
