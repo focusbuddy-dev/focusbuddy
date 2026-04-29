@@ -30,7 +30,28 @@ if [ -n "${GH_TOKEN:-}" ]; then
     gh auth setup-git
     echo "[post-create] gh auth setup-git complete"
 else
-    echo "[post-create] WARNING: GH_TOKEN not set. gh auth will not be configured." >&2
+    cat >&2 <<'EOF'
+
+################################################################################
+# !! GH_TOKEN IS NOT SET !!
+#
+# `gh auth setup-git` was skipped. `git push` over HTTPS, `gh pr create`,
+# `gh issue ...` etc. WILL FAIL inside this container until you fix it.
+#
+# How to fix:
+#   1. On the host, edit `.devcontainer/.devcontainer.env` and add a line:
+#        GH_TOKEN=<your fine-grained PAT for focusbuddy-dev/focusbuddy>
+#   2. Rebuild the container (`Dev Containers: Rebuild Container`).
+#
+# The fine-grained PAT needs:
+#   - Resource owner: focusbuddy-dev
+#   - Repository: focusbuddy
+#   - Permissions: Issues / Pull requests / Contents = Read and write
+#
+# `.devcontainer/.devcontainer.env` is gitignored — your token is not committed.
+################################################################################
+
+EOF
 fi
 
 # 2. Install Claude Code CLI
