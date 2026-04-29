@@ -2,6 +2,8 @@ import type { Logger, LoggerRuntime } from '@focusbuddy/logger';
 import { createServerLogger, type ServerLogWriter } from '@focusbuddy/logger/server';
 import pino from 'pino';
 
+import { getApiServerLogLevel } from '#api/env/server';
+
 export type CreateApiRuntimeLoggerOptions = {
   logger?: ServerLogWriter;
   runtime?: LoggerRuntime;
@@ -12,7 +14,7 @@ export function createApiRuntimeLogger(options: CreateApiRuntimeLoggerOptions = 
     logger:
       options.logger ??
       pino({
-        level: process.env.LOG_LEVEL ?? 'info',
+        level: getApiServerLogLevel(),
       }),
     runtime: options.runtime ?? 'api',
   });
