@@ -80,10 +80,10 @@ Currently allowlisted hosts:
 To reload the allowlist without rebuilding the container:
 
 ```bash
-sudo kill -HUP "$(pgrep -x tinyproxy)"
+pkill -HUP tinyproxy
 ```
 
-Adding a host requires a Pull Request that updates `allowlist.txt`.
+tinyproxy runs as the `node` user inside the container, so signaling it does not require `sudo`. Adding a host requires a Pull Request that updates `allowlist.txt`.
 
 ## Claude Code Authentication Volume
 
@@ -204,7 +204,7 @@ Or rebuild. If sudoers is misconfigured, the script logs the failure to stderr.
 Add the host to `.devcontainer/allowlist.txt` (POSIX extended regex), then:
 
 ```bash
-sudo kill -HUP "$(pgrep -x tinyproxy)"
+pkill -HUP tinyproxy
 ```
 
 The change is bind-mounted, no rebuild required for the running session, but commit the change so future rebuilds inherit it.
