@@ -18,9 +18,12 @@ This repository is currently being prepared with:
 
 Dev container setup details are documented in [.devcontainer/README.md](.devcontainer/README.md), including:
 
-- SSH-based Git commit signing inside the container
-- `gh` authentication with a fine-grained personal access token
+- `gh` authentication with a fine-grained personal access token (via `.devcontainer/.devcontainer.env`)
+- outbound network allowlist via tinyproxy
+- Claude Code CLI install with persisted authentication volume
 - verification and troubleshooting steps for local development
+
+Development happens inside the dev container. Host-side direct `pnpm` / `just` execution is no longer the supported workflow.
 
 The Docker-based local development environment is documented in [docs/platform/local-development.md](docs/platform/local-development.md).
 
@@ -28,11 +31,9 @@ The supported local execution modes and env contract are documented in [docs/pla
 
 The repository-level local environment drift policy is documented in [docs/platform/local-environment-drift-policy.md](docs/platform/local-environment-drift-policy.md).
 
-For routine full-stack local development, use `just dev`.
+For routine full-stack local development, use `just dev` from inside the dev container.
 
-For production-oriented local validation with built runtimes and health waits, use `just parity`.
-
-Low-level host-side commands such as `pnpm dev` remain available for narrow debugging, but they are not the primary documented full-stack workflow.
+For production-oriented local validation with built runtimes and health waits, use `just parity` from inside the dev container.
 
 ### Commit Message Tooling Demo
 
@@ -42,7 +43,7 @@ Initial setup is wrapped in the Justfile recipe below. `pnpm` is the only suppor
 
 `npm install` is rejected by the repository configuration on supported npm versions before dependency resolution starts, so setup mistakes fail fast with an explicit package-manager error instead of drifting into npm-specific install behavior.
 
-Inside the dev container, `just` is installed automatically. If you work outside the dev container, install `just` before running repository tasks.
+Inside the dev container, `just` is installed automatically as part of `postCreateCommand`.
 
 Run this command after cloning the repository:
 

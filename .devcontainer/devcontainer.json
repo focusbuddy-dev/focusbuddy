@@ -1,16 +1,39 @@
 {
   "name": "focusbuddy",
-  "image": "mcr.microsoft.com/devcontainers/typescript-node:24-bookworm",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
   "features": {
+    "ghcr.io/devcontainers/features/python:1": {
+      "version": "3.14"
+    },
     "ghcr.io/devcontainers/features/github-cli:1": {},
     "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {}
   },
-  "remoteEnv": {
-    "GH_TOKEN": "${localEnv:GH_TOKEN}",
+  "runArgs": ["--name", "${localWorkspaceFolderBasename}-dev", "--env-file", ".devcontainer/.devcontainer.env"],
+  "initializeCommand": "bash .devcontainer/initialize.sh",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/focusbuddy,type=bind,consistency=cached",
+  "workspaceFolder": "/workspaces/focusbuddy",
+  "containerEnv": {
+    "CLAUDE_CONFIG_DIR": "/home/node/.claude",
+    "GIT_PAGER": "cat",
     "FOCUSBUDDY_WORKSPACE_MOUNT": "${localWorkspaceFolder}"
   },
-  "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/focusbuddy,type=bind",
-  "workspaceFolder": "/workspaces/focusbuddy",
+  "remoteEnv": {
+    "http_proxy": "http://127.0.0.1:8888",
+    "https_proxy": "http://127.0.0.1:8888",
+    "HTTP_PROXY": "http://127.0.0.1:8888",
+    "HTTPS_PROXY": "http://127.0.0.1:8888",
+    "no_proxy": "localhost,127.0.0.1",
+    "NO_PROXY": "localhost,127.0.0.1"
+  },
+  "mounts": [
+    "source=focusbuddy-claude-auth,target=/home/node/.claude,type=volume",
+    "source=${localWorkspaceFolder}/.devcontainer/allowlist.txt,target=/etc/tinyproxy/allowlist.txt,type=bind,consistency=cached"
+  ],
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
+  "postStartCommand": "bash .devcontainer/start-proxy.sh",
+  "remoteUser": "node",
   "customizations": {
     "vscode": {
       "settings": {
@@ -20,14 +43,10 @@
       "extensions": [
         "dbaeumer.vscode-eslint",
         "esbenp.prettier-vscode",
-        "graphql.vscode-graphql",
         "prisma.prisma",
         "orta.vscode-jest",
         "stylelint.vscode-stylelint"
       ]
     }
-  },
-  "postCreateCommand": "bash .devcontainer/post-create.sh",
-  "postStartCommand": "bash .devcontainer/setup-git-signing.sh",
-  "remoteUser": "node"
+  }
 }

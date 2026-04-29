@@ -1,0 +1,35 @@
+# Level 1 network restriction (intentionally best-effort via proxy env vars).
+# Personal dev container threat model: sufficient.
+
+# GitHub
+^github\.com$
+^api\.github\.com$
+^.*\.githubusercontent\.com$
+^objects\.githubusercontent\.com$
+
+# npm
+^registry\.npmjs\.org$
+^.*\.npmjs\.org$
+
+# Claude Code / Anthropic
+^api\.anthropic\.com$
+^.*\.anthropic\.com$
+^.*\.claude\.com$
+
+# Slack
+^hooks\.slack\.com$
+
+# Python packages
+^pypi\.org$
+^files\.pythonhosted\.org$
+
+# devcontainer features (GitHub Container Registry)
+^ghcr\.io$
+^.*\.ghcr\.io$
+
+# Docker registry (for `just dev` / docker compose image pulls)
+^registry-1\.docker\.io$
+^auth\.docker\.io$
+^production\.cloudflare\.docker\.com$
+^.*\.docker\.com$
+^mcr\.microsoft\.com$

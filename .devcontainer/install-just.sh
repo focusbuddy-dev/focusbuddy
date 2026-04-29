@@ -50,8 +50,10 @@ curl -fsSL -o "$tmp_dir/SHA256SUMS" "$base_url/SHA256SUMS"
 
 tar -xzf "$tmp_dir/$archive" -C "$tmp_dir"
 
-if command -v sudo >/dev/null 2>&1; then
-	sudo -n install -m 0755 "$tmp_dir/just" /usr/local/bin/just
-else
-	install -m 0755 "$tmp_dir/just" /usr/local/bin/just
-fi
+# Install to a user-writable directory so we don't need sudo.
+# Inside the devcontainer, NPM_CONFIG_PREFIX=/home/node/.npm-global is set in
+# the Dockerfile and ${NPM_CONFIG_PREFIX}/bin is on PATH, so just lands next to
+# Claude Code / ccusage. Outside the devcontainer this falls back to /usr/local/bin.
+install_dir="${NPM_CONFIG_PREFIX:-/usr/local}/bin"
+mkdir -p "$install_dir"
+install -m 0755 "$tmp_dir/just" "$install_dir/just"
