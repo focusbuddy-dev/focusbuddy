@@ -155,3 +155,6 @@ vite.config.ts.timestamp-*
 
 # Husky runtime files created during install
 .husky/_
+
+# Local notes / scratch (kyogo, plan drafts, etc.)
+.works/
