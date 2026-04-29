@@ -27,6 +27,16 @@
     "no_proxy": "localhost,127.0.0.1",
     "NO_PROXY": "localhost,127.0.0.1"
   },
+  // The third mount intentionally uses a host path for both `source` and `target`.
+  // When VS Code opens a worktree directly (`<repo>/.worktrees/<N>/`), the
+  // worktree's `.git` is a pointer file whose body looks like:
+  //   gitdir: /Users/<you>/workspace/focusbuddy/.git/worktrees/<N>
+  // That host absolute path is baked into the file by `git worktree add` and
+  // git inside the container reads it verbatim. Mounting the main repo's
+  // `.git` at the same host path makes the pointer resolve. Picking a
+  // conventional container target (e.g. `/workspaces/.git`) would not work
+  // because git would still try to follow the host path written in `.git` and
+  // find nothing there.
   "mounts": [
     "source=focusbuddy-claude-auth,target=/home/node/.claude,type=volume",
     "source=${localWorkspaceFolder}/.devcontainer/allowlist.txt,target=/etc/tinyproxy/allowlist.txt,type=bind,consistency=cached",
