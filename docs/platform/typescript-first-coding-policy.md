@@ -1,129 +1,129 @@
-# TypeScript-first Coding Policy
+# TypeScript 先行のコーディングポリシー
 
-This document captures the output of issue #148.
+本ドキュメントは Issue #148 の成果物である。
 
-Its purpose is to define TypeScript as the repository default for new hand-written application, package, and test code, while allowing JavaScript only as an explicit exception when the current tool or runtime contract makes JavaScript the lower-friction and better-verified choice.
+目的は、新規の手書きコード（アプリ・パッケージ・テスト）の既定言語を TypeScript とし、現状のツール / ランタイム契約上、JavaScript の方が摩擦が小さく検証されている場合に限り JavaScript を明示的な例外として認める方針を定めることである。
 
-## Scope
+## スコープ
 
-This document defines:
+本ドキュメントが定めるもの:
 
-- the default language for new hand-written code in apps, packages, and tests
-- what kinds of current constraints justify keeping a file in JavaScript
-- the current JavaScript exception categories for this repository
-- how existing JavaScript files should be treated over time
-- where follow-up implementation and enforcement work should reference the rule
+- アプリ / パッケージ / テストの新規手書きコードの既定言語
+- 現状の制約として JavaScript を残してよい場合
+- このリポジトリにおける現行の JavaScript 例外カテゴリ
+- 既存 JavaScript ファイルを時間をかけてどう扱うか
+- 後続実装 / 強制作業がこのルールをどこから参照するか
 
-This document does not define the repository ESM versus CommonJS strategy, import-path style, function-declaration style, or a mandatory repository-wide migration schedule for all existing JavaScript files.
+本ドキュメントが定めないもの: ESM vs CommonJS 戦略、import パススタイル、関数宣言スタイル、既存 JavaScript ファイル全体への必須移行スケジュール。
 
-## Decision summary
+## 決定サマリ
 
-- hand-written application code should default to `.ts` and `.tsx`
-- hand-written package code should default to `.ts` and `.tsx`
-- hand-written test code should default to TypeScript when the current runner and transform path already support it without adding one-off loader or build wiring
-- JavaScript is allowed only when there is a concrete current tooling, runtime, loader, or compatibility reason to keep the file as JavaScript
-- existing JavaScript files are documented exceptions, not an equal alternative baseline for new hand-written code
-- new JavaScript files should stay rare and should point to the exact current constraint that justifies the exception
-- existing JavaScript exceptions should be revisited when the file is already being touched for related work and the current execution path can be verified under TypeScript with reasonable churn
-- this repository rule lives in `docs/platform/typescript-first-coding-policy.md` so future tooling, lint, and migration issues can reference one stable policy instead of re-deciding the language baseline
+- 手書きアプリケーションコードは既定で `.ts` / `.tsx` とする
+- 手書きパッケージコードは既定で `.ts` / `.tsx` とする
+- 手書きテストコードは、現行のランナーおよびトランスフォーム経路がすでに TypeScript を安定対応しており、追加のローダ / ビルド結線無しで動く場合に TypeScript を既定とする
+- JavaScript は、当該ファイルを JavaScript で残す具体的なツール / ランタイム / ローダ / 互換上の理由がある場合にのみ許容する
+- 既存の JavaScript ファイルは「文書化された例外」であり、新規手書きコードにとって対等な代替ベースラインではない
+- 新規 JavaScript ファイルは稀に保ち、例外を正当化する具体的な現行制約を指し示す
+- 関連作業で当該ファイルに触れる際、現行の実行経路が妥当なリファクタ量で TypeScript 下に検証可能なら、既存例外を見直す
+- 言語ベースラインを今後再決定せずに済むよう、本ルールは `docs/platform/typescript-first-coding-policy.md` に集約し、今後のツーリング / lint / 移行 Issue から参照させる
 
-## Default language rule
+## 既定言語ルール
 
-### Application and package code
+### アプリ / パッケージコード
 
-For new hand-written code under application and package source trees, the repository default is TypeScript.
+アプリおよびパッケージのソースツリー配下の新規手書きコードは、既定で TypeScript とする。
 
-That means:
+具体的には:
 
-- use `.ts` for non-React or non-JSX source files by default
-- use `.tsx` where JSX is part of the hand-written source contract
-- do not introduce new `.js` or `.jsx` files in app or package source trees merely because JavaScript would also run there
-- do not treat a nearby JavaScript helper, script, or legacy test as permission to author new app or package code in JavaScript
+- React / JSX を持たないソースは既定で `.ts` を使う
+- JSX を含む手書きソースは `.tsx` を使う
+- JavaScript でも動くからという理由で、アプリ / パッケージのソースツリーに新規 `.js` / `.jsx` ファイルを増やさない
+- 近接する JavaScript ヘルパ・スクリプト・レガシーテストの存在を、新規アプリ / パッケージコードを JavaScript で書く許可と見なさない
 
-Generated outputs are outside this policy's hand-written default. Generated code should follow the tool-specific contract that produces it.
+生成出力は本ポリシーの手書き既定の対象外である。生成コードは生成元のツール固有契約に従う。
 
-### Test code
+### テストコード
 
-Test code should also default to TypeScript when the current runner path already supports it in a stable way.
+テストコードも、現行のランナー経路が安定対応している限り TypeScript を既定とする。
 
-For this repository, the practical rule is:
+このリポジトリでの実務ルール:
 
-- prefer `.ts` or `.tsx` tests when the workspace already has an approved transform and execution path for that test class
-- keep a test in JavaScript only when the current test runner or direct Node invocation would otherwise need disproportionate extra loader or compile wiring
-- do not force a repository-wide test migration just to satisfy the baseline language preference
+- 当該テストクラスに対し承認済みのトランスフォームと実行経路を既にワークスペースが備える場合、`.ts` / `.tsx` テストを優先する
+- 現行のテストランナーまたは Node 直接実行が、相応のローダ / コンパイル結線増を強いるとき限り、テストを JavaScript のまま残す
+- ベースライン優先の理由のみでリポジトリ全体のテスト移行を強制しない
 
-## What counts as a valid JavaScript exception
+## 妥当な JavaScript 例外とは
 
-JavaScript is allowed only when the file has a concrete current reason such as one of the following:
+JavaScript は、ファイルが以下のような具体的な現行理由を持つ場合にのみ許容する:
 
-- the file is executed directly by an external tool or runtime path that is already verified in JavaScript and not yet verified in TypeScript
-- the file is a small repository automation or local-development helper where TypeScript would add extra compile or loader setup with little maintenance benefit
-- the file is a direct Node-executed test or tiny test helper whose current execution model intentionally avoids a TypeScript transform
-- the file belongs to a tool-owned config or hook entrypoint where the repository benefits more from a simple direct-execution contract than from TypeScript authoring for that path
+- 当該ファイルが、TypeScript で未検証だが JavaScript で検証済みの外部ツール / ランタイムから直接実行されている
+- 当該ファイルが、リポジトリの小さな自動化やローカル開発ヘルパで、TypeScript 化により追加のコンパイル / ローダ準備が増え、メンテナンス上の利益が薄い
+- 当該ファイルが、Node 直接実行のテスト / 小さなテストヘルパで、現行の実行モデルが意図的に TypeScript トランスフォームを避けている
+- 当該ファイルが、ツール所有の config / hook エントリポイントで、その経路は TypeScript 記述よりも単純な直接実行契約の方がリポジトリ的に有益
 
-These are exceptions, not a second default. A JavaScript file should be able to answer two questions clearly:
+これらは例外であり、第二の既定ではない。JavaScript ファイルは次の 2 つの問いに明確に答えられる必要がある:
 
-1. Why is JavaScript still needed for this exact current path?
-2. What future verification or tooling change would make a TypeScript migration reasonable?
+1. なぜ当該経路に JavaScript がいま必要なのか
+2. 将来どんな検証 / ツーリング変更があれば TypeScript 移行が妥当になるのか
 
-## Current repository exception categories
+## 現行のリポジトリ例外カテゴリ
 
-The current repository has a small set of JavaScript-by-exception areas.
+現状、本リポジトリには小さな JavaScript 例外領域がある。
 
-| Category | Current paths | Why JavaScript remains allowed now | Current migration decision in issue #148 | Revisit when |
-| --- | --- | --- | --- | --- |
-| Tool-owned direct ESM config entrypoints | `prettier.config.mjs`, `stylelint.config.mjs`, `packages/config-prettier/index.mjs` | these files are consumed directly by tool entrypoints and already have a simple ESM execution contract without extra TypeScript loader wiring | keep as valid long-term JavaScript exceptions by default; do not target for proactive TypeScript migration | the exact tool invocation path is verified to accept TypeScript with clear repository benefit |
-| GitHub hook and request-guard entrypoints | `.github/hooks/scripts/request-guard.mjs`, `.github/hooks/scripts/request-guard/*.mjs` | these scripts are direct Node-owned hook helpers where keeping execution simple matters more than authoring them in TypeScript today | keep as JavaScript for now; do not migrate unless the repository adopts one stable TypeScript hook execution contract | the repository adopts a verified TypeScript execution contract for hook scripts without adding brittle bootstrap overhead |
-| Repository automation scripts | `scripts/check-workspace-boundaries.mjs`, `scripts/demo-commitlint.mjs`, `scripts/enforce-pnpm.mjs`, `scripts/verify-setup.mjs`, `scripts/workspace-task.mjs` | these are small direct-run repository scripts whose maintenance value currently comes from low-friction execution rather than TypeScript-specific authoring features | treat as selective migration candidates, not a blanket migration target; convert only when a script grows, shares typed logic, or the TypeScript path is already verified | the script grows enough, shares enough typed logic, or gains a verified TypeScript execution path that makes migration clearly worthwhile |
-| Local-development helper scripts | `scripts/local-dev/*.mjs` | these helpers are lightweight local stubs and placeholder processes where direct execution is currently the simpler contract | keep as JavaScript for now; reconsider only if the local-dev stack standardizes a TypeScript runtime path | the local-dev stack gains a stable TypeScript runtime path that removes the current friction |
-| Direct Node-executed tests | `test/*.mjs`, `packages/logger/test/logger.test.mjs`, `packages/api-contract/test/public-contract.test.mjs` | these tests currently rely on direct JavaScript execution paths, and the repository does not treat that as sufficient reason to widen TypeScript test transforms everywhere immediately | treat as eventual TypeScript candidates only after a stable runner path exists for that exact test surface; no immediate migration is required by this issue | the relevant test path gets a verified TypeScript runner or transform and the file is being touched for related work |
+| カテゴリ                                       | 現行パス                                                                                                                | なぜ JavaScript 許容か                                                                                                                                                                       | Issue #148 時点の現行移行判断                                                                                                                          | 見直し条件                                                                                                                            |
+| ---------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| ツール所有の直接 ESM config エントリポイント   | `prettier.config.mjs` / `stylelint.config.mjs` / `packages/config-prettier/index.mjs`                                   | これらはツールが直接利用し、追加の TypeScript ローダ結線無しに単純な ESM 実行契約で動く                                                                                                     | 既定で長期的な JavaScript 例外として維持。先回り移行の対象とはしない                                                                                  | 該当ツールの起動経路が、明確なリポジトリ利益と共に TypeScript 受け入れを検証した場合                                                  |
+| GitHub hook / request-guard エントリポイント | `.github/hooks/scripts/request-guard.mjs` / `.github/hooks/scripts/request-guard/*.mjs`                                 | これらは Node 所有の hook ヘルパで、TypeScript 化より実行の単純さの方が現状価値が高い                                                                                                       | 当面 JavaScript で維持。脆い起動オーバーヘッドを増やさずに hook 用の安定 TypeScript 実行契約をリポジトリが採用するまで移行しない                       | hook スクリプト用に検証済みの TypeScript 実行契約をリポジトリが採用した場合                                                          |
+| リポジトリ自動化スクリプト                     | `scripts/check-workspace-boundaries.mjs` / `scripts/demo-commitlint.mjs` / `scripts/enforce-pnpm.mjs` / `scripts/verify-setup.mjs` / `scripts/workspace-task.mjs` | 小規模な直接実行スクリプトで、現状のメンテ価値は低摩擦実行に由来し、TypeScript 固有の記述機能ではない                                                                                       | 一括移行対象ではない。スクリプトが成長したり、型付きロジックを共有したり、TypeScript 経路が既に検証済みになった場合に限り個別変換                       | スクリプトが十分成長 / 型付きロジック共有 / 検証済み TypeScript 実行経路を獲得し、移行が明確に妥当となった場合                       |
+| ローカル開発ヘルパスクリプト                   | `scripts/local-dev/*.mjs`                                                                                               | 軽量なローカルスタブやプレースホルダプロセスで、直接実行の方が現状単純な契約                                                                                                                  | 当面 JavaScript で維持。ローカル開発スタックが安定した TypeScript ランタイム経路を標準化した場合のみ再検討                                              | ローカル開発スタックが現状の摩擦を解消する安定 TypeScript ランタイム経路を獲得した場合                                                |
+| Node 直接実行のテスト                          | `test/*.mjs` / `packages/logger/test/logger.test.mjs` / `packages/api-contract/test/public-contract.test.mjs`           | 直接 JavaScript 実行に依存しており、リポジトリは TypeScript テストトランスフォームを直ちに広げる十分な理由とは見ない                                                                       | 該当テスト面の安定したランナー経路ができた後で TypeScript 候補とする。本 Issue では即時移行を要求しない                                                | 当該テスト経路が検証済み TypeScript ランナー / トランスフォームを獲得し、関連作業でファイルに触れる場合                              |
 
-The presence of these exceptions does not change the baseline for new hand-written app, package, or test code elsewhere in the repository.
+これらの例外の存在は、リポジトリ他箇所の新規手書きアプリ / パッケージ / テストコードのベースラインを変えない。
 
-## Current migration conclusions
+## 現行の移行結論
 
-Issue #148 resolves the language-baseline question and also records the current migration posture for the known JavaScript exceptions so the repository does not need a second decision issue just to restate the same tradeoff.
+Issue #148 は言語ベースラインの問いを解決するとともに、既知の JavaScript 例外の現行移行スタンスを記録する。同じトレードオフを再決定するための第二の Issue が要らないようにするためである。
 
-The current conclusions are:
+現行の結論:
 
-- direct tool-owned ESM config entrypoints are legitimate long-term JavaScript exceptions unless a concrete tool-path benefit for TypeScript is verified later
-- GitHub hook helpers and lightweight local-development helpers should stay JavaScript until the repository has one stable TypeScript execution contract for those paths
-- repository automation scripts are not approved for a broad conversion campaign, but an individual script may move to TypeScript when its maintenance needs justify that change
-- direct Node-run tests are future TypeScript candidates only when the exact runner path is ready; the repository should not widen test transforms just to satisfy a style preference
+- ツール所有の直接 ESM config エントリポイントは、後で TypeScript 化により具体的なツール経路の利益が検証されない限り、長期的に妥当な JavaScript 例外である
+- GitHub hook ヘルパおよび軽量ローカル開発ヘルパは、これらの経路に対するリポジトリ統一の TypeScript 実行契約が整うまで JavaScript で維持する
+- リポジトリ自動化スクリプトは大規模変換キャンペーンの対象外。各スクリプトのメンテ需要が十分なときに個別に TypeScript 化してよい
+- Node 直接実行のテストは、当該ランナー経路が整ったときのみ将来の TypeScript 候補。スタイル選好だけでテストトランスフォームを広げない
 
-In other words, this issue does not approve a repository-wide JavaScript cleanup campaign. It approves a TypeScript-first default while explicitly deciding that the current JavaScript exceptions are mostly intentional execution-path exceptions, with only selective future migration where the maintenance case is real.
+つまり本 Issue は、リポジトリ全体の JavaScript 一掃キャンペーンを承認しない。TypeScript 先行の既定を承認しつつ、現行の JavaScript 例外は意図的な実行経路上の例外であり、メンテ妥当性が実在するときのみ選択的に移行する、という立場を明示する。
 
-## Migration stance for existing JavaScript files
+## 既存 JavaScript ファイルへの移行スタンス
 
-The repository should treat current JavaScript files as explicit exceptions that stay on a short leash.
+既存 JavaScript ファイルは明示的な例外として扱い、緩やかには許容するが緩めない。
 
-That means:
+具体的には:
 
-- no broad style-only migration is required immediately
-- existing JavaScript files may remain in place while their current execution path still makes JavaScript the simpler verified contract
-- when an exception file is touched for related work, the change should re-evaluate whether TypeScript is now practical for that exact path
-- if the blocker still exists, the file may stay JavaScript without apology, because the exception is documented and intentional
-- new feature work should not choose JavaScript just to match an older exception file nearby
+- 直ちに広範なスタイル目的の移行は要求しない
+- 当該ファイルの現行実行経路で JavaScript が単純な検証済み契約である間は、そのまま残してよい
+- 例外ファイルに関連作業で触れた際、当該経路で TypeScript が現実的になっているか再評価する
+- ブロッカが残っているなら、文書化された意図的な例外として JavaScript のまま残してよい
+- 近くに古い例外があるからといって、新規機能作業で JavaScript を選ばない
 
-This keeps the policy practical: TypeScript is the repository default, while JavaScript remains available for narrow cases that are still genuinely tool-driven.
+これは現実的なポリシーである: TypeScript はリポジトリ既定で、JavaScript は依然として真にツール由来の狭いケースで利用可能とする。
 
-## Relationship to adjacent policies
+## 隣接ポリシーとの関係
 
-This policy is intentionally separate from neighboring repository decisions:
+本ポリシーは隣接するリポジトリ判断と意図的に分離している:
 
-- `docs/platform/esm-migration-strategy.md` defines module format expectations such as ESM-first and file-level CommonJS exceptions
-- `docs/platform/import-and-function-style-policy.md` defines app-local import and function-style defaults
-- `docs/platform/module-structure-and-file-size-policy.md` defines responsibility-oriented file splitting and the repository's soft line-count guidance
-- `docs/platform/shared-tooling.md` defines the shared tooling baseline and should reference this document rather than restating the language decision ad hoc
+- `docs/platform/esm-migration-strategy.md`: モジュール形式（ESM 先行 / ファイル単位 CommonJS 例外）を扱う
+- `docs/platform/import-and-function-style-policy.md`: アプリローカルの import / 関数宣言スタイルを扱う
+- `docs/platform/module-structure-and-file-size-policy.md`: 責務指向のファイル分割とリポジトリのソフトな行数ガイドを扱う
+- `docs/platform/shared-tooling.md`: 共有ツーリングのベースラインを扱い、言語選定は本ドキュメントを参照する
 
-This separation matters because language choice is not the same decision as module format or lint style.
+この分離が重要なのは、言語選定がモジュール形式や lint スタイルの判断と同一ではないからである。
 
-## Review triggers
+## 見直しトリガ
 
-This document should be revisited when one of the following becomes true:
+次のいずれかが真になったら見直す:
 
-- a current JavaScript exception path gains a verified TypeScript execution contract with low enough churn to justify migration
-- the repository standardizes a stronger TypeScript test execution path for the direct Node-run test areas that still use `.mjs`
-- a future enforcement issue can show that narrow lint or repository checks would prevent real drift without forcing exception-heavy configuration
+- 現行の JavaScript 例外経路が、移行を妥当化するに足る低リファクタ量の TypeScript 実行契約を獲得した
+- `.mjs` のままの Node 直接実行テスト領域に対して、より強い TypeScript テスト実行経路を標準化できた
+- 例外設定を増やさずに実ドリフトを防ぐ狭い lint / リポジトリチェックの導入が示せた
 
-Until then, the repository should keep the simple rule: TypeScript by default for hand-written code, JavaScript only by explicit and concrete exception.
+それまでは単純なルールを保つ: 手書きコードは既定で TypeScript、JavaScript は明示的かつ具体的な例外でのみ。

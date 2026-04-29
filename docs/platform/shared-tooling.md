@@ -1,127 +1,127 @@
-# Shared Tooling Baselines
+# 共有ツーリングのベースライン
 
-This document captures the output of issue #19.
+本ドキュメントは Issue #19 の成果物である。
 
-Its purpose is to define the first shared TypeScript, oxlint, Prettier, and Jest baselines for FocusBuddy.
+目的は、FocusBuddy における TypeScript / oxlint / Prettier / Jest の最初の共有ベースラインを定義することである。
 
-## Scope
+## スコープ
 
-This document defines:
+本ドキュメントが定めるもの:
 
-- the shared config packages under `packages/config-*`
-- the first runtime split between API and web tooling
-- the repository-level formatting and lint commands
-- the default handling rule for generated files
+- `packages/config-*` 配下の共有 config パッケージ
+- API と Web ツーリングの最初のランタイム分割
+- リポジトリレベルのフォーマット / lint コマンド
+- 生成ファイルの既定取り扱いルール
 
-This document does not define application code, end-to-end test strategy, or deployed-environment workflow wiring beyond the initial merge gate handoff.
+本ドキュメントが定めないもの: アプリケーションコード、E2E テスト戦略、初期マージゲート以降のデプロイ環境向けワークフロー結線。
 
-## Shared config packages
+## 共有 config パッケージ
 
 ### `packages/config-typescript`
 
-- `base.json` provides strict TypeScript defaults that are safe for the whole monorepo
-- `api.json` extends the base config with Node-oriented module settings for the future NestJS API
-- `web.json` extends the base config with browser and bundler settings for the future Next.js web app
-- browser-oriented web code should not inherit shared Node globals; if a future web workspace needs Node types for tooling, it should opt in through a separate tooling tsconfig
+- `base.json` はモノレポ全体に安全な strict な TypeScript デフォルトを提供する
+- `api.json` は base を継承し、NestJS API 用の Node 指向のモジュール設定を加える
+- `web.json` は base を継承し、Next.js Web アプリ用のブラウザ / バンドラ設定を加える
+- ブラウザ向けの Web コードは共有 Node グローバルを継承しない。将来の Web ワークスペースがツーリング目的で Node 型を必要とする場合、別のツーリング tsconfig からオプトインする
 
 ### `packages/config-oxlint`
 
-- `base/oxlint.config.ts` defines the shared lint baseline and generated-file ignore rules
-- the shared base is strict by default for hand-written code and enforces the repository's `undefined`-first and no-non-null-assertion policy
-- `repository/oxlint.config.ts` is the root repository config for scripts and config files in this repo
-- the repository config carries narrow overrides for script and GitHub helper paths instead of weakening the shared base for all code
-- `api/oxlint.config.ts` extends the base config with a Node runtime
-- `web/oxlint.config.ts` extends the base config with a browser runtime
-- the oxlint baselines are written in TypeScript because that is one of the reasons this repository chose oxlint over a JSON-only lint configuration path
+- `base/oxlint.config.ts` は共有 lint ベースラインと生成ファイル無視ルールを定義する
+- 共有 base は手書きコードに対し既定で strict であり、リポジトリの「`undefined` 優先 / non-null assertion 禁止」ポリシーを強制する
+- `repository/oxlint.config.ts` は本リポジトリのスクリプトおよび設定ファイル向けのルートリポジトリ config である
+- リポジトリ config は、共有 base を全コードで弱めるのではなく、スクリプトや GitHub ヘルパパスに対する狭い override を持つ
+- `api/oxlint.config.ts` は base を継承し Node ランタイムを設定する
+- `web/oxlint.config.ts` は base を継承しブラウザランタイムを設定する
+- oxlint ベースラインを TypeScript で書いているのは、本リポジトリが JSON 専用の lint 設定経路ではなく oxlint を選択した理由のひとつである
 
 ### `packages/config-prettier`
 
-- `index.mjs` is the single source of truth for formatting decisions
-- quote style is defined here so style comments do not need to be repeated in reviews
-- the repository root consumes this package through `prettier.config.mjs`
+- `index.mjs` がフォーマット決定の単一の真実源である
+- 引用符スタイルはここで定義され、レビューでスタイルコメントを繰り返す必要がない
+- リポジトリルートは `prettier.config.mjs` 経由で本パッケージを利用する
 
 ### `packages/config-jest`
 
-- `base.ts` defines the shared Jest defaults
-- `api.ts` sets the API test environment to Node
-- `web.ts` sets the web test environment to jsdom
-- `define.ts` owns the shared Jest config type contract for tooling files in this repo
-- the repository uses `ts-node` as the Jest config loader for TypeScript-based config files
-- app-level Jest config files should consume the shared config typing helper instead of importing low-level Jest type packages directly
-- the shared Jest baselines stay directory-agnostic until the real app source trees exist in follow-up issues
-- the shared Jest baselines do not enable TypeScript test execution until a real transform is chosen in follow-up app work
+- `base.ts` は共有 Jest デフォルトを定義する
+- `api.ts` は API テスト環境を Node に設定する
+- `web.ts` は Web テスト環境を jsdom に設定する
+- `define.ts` はツーリングファイル向けの共有 Jest config 型契約を所有する
+- リポジトリは TypeScript 製 config ファイルの Jest ローダとして `ts-node` を使用する
+- アプリレベルの Jest config は、低レベルの Jest 型パッケージを直接 import せず、共有の Jest 型ヘルパを利用する
+- 共有 Jest ベースラインは、後続 Issue で実アプリのソースツリーが揃うまでディレクトリ非依存で保たれる
+- 共有 Jest ベースラインは、後続のアプリ作業で実トランスフォームを選択するまで TypeScript テスト実行を有効化しない
 
-## Shared config consumption rule
+## 共有 config 利用ルール
 
-- app workspaces must consume shared config packages through package names and exported subpaths such as `@focusbuddy/config-jest/web`
-- app workspaces must not reach into `packages/*` through relative filesystem paths such as `../../packages/config-jest/...`
-- when an app-level config or test file imports a shared config package, that app must declare the package in its own `devDependencies`
-- this rule also applies to TypeScript config inheritance when the shared config package exposes a stable package subpath
-- root-owned tool executables such as `jest`, `oxlint`, `ts-node`, and `stylelint` may stay at the repository root when package scripts intentionally invoke them through repository-owned command entrypoints
+- アプリワークスペースは、`@focusbuddy/config-jest/web` のようにパッケージ名と公開サブパス経由で共有 config パッケージを利用する
+- アプリワークスペースは `../../packages/config-jest/...` のような相対パスで `packages/*` に直接アクセスしない
+- アプリレベルの config / テストファイルが共有 config パッケージを import する場合、当該アプリは自身の `devDependencies` でそのパッケージを宣言する
+- 共有 config パッケージが安定したサブパスを公開している限り、TypeScript の config 継承にも本ルールを適用する
+- `jest` / `oxlint` / `ts-node` / `stylelint` のようなルート所有のツール実行は、リポジトリ所有のコマンドエントリポイント経由で意図的に呼び出される場合、引き続きリポジトリルートに置いてよい
 
-## Repository commands
+## リポジトリコマンド
 
-The repository root now exposes:
+リポジトリルートは現在以下を公開する:
 
-- `pnpm format` to apply Prettier
-- `pnpm format:check` to verify formatting without writing changes
-- `pnpm lint:boundaries` to reject workspace-to-workspace imports and dependencies that break the monorepo boundary rules
-- `pnpm lint` to run root oxlint checks and then workspace lint tasks
-- `pnpm merge-gate` to run the initial merge validation sequence
-- `pnpm test` to keep the existing root test flow and workspace test flow
-- `pnpm typecheck` to keep the existing workspace typecheck flow
+- `pnpm format`: Prettier を適用する
+- `pnpm format:check`: 書き換えなしでフォーマットを検証する
+- `pnpm lint:boundaries`: モノレポ境界ルールを破るワークスペース間 import / 依存を拒否する
+- `pnpm lint`: ルート oxlint チェックの後にワークスペース lint タスクを実行する
+- `pnpm merge-gate`: 初期マージ検証のシーケンスを実行する
+- `pnpm test`: 既存のルート / ワークスペーステストフローを維持する
+- `pnpm typecheck`: 既存のワークスペース typecheck フローを維持する
 
-The initial merge gate sequence is:
+初期マージゲートのシーケンス:
 
 - `pnpm generate`
 - `pnpm lint`
 - `pnpm typecheck`
 - `pnpm test`
 
-This keeps generated contract outputs available before downstream validation steps run.
+これにより、下流の検証ステップ前に生成された契約出力が利用可能になる。
 
-The root `turbo.json` task graph also keeps `generate` ahead of `build`, `typecheck`, and `test` so the same ordering applies when those root commands are invoked individually.
+ルートの `turbo.json` のタスクグラフも `generate` を `build` / `typecheck` / `test` の前に置いており、これらのルートコマンドを個別に呼んだときも同じ順序が保たれる。
 
-The workspace boundary check currently enforces these minimum repository rules:
+ワークスペース境界チェックは現状以下のリポジトリ最低ルールを強制する:
 
-- apps may depend on packages, but not on other apps
-- packages may depend on packages, but not on apps
-- workspace code must not reach into another workspace through relative filesystem imports
-- shared packages may be consumed through declared package names and exported subpaths
-- workspace imports and tsconfig package extends must have a matching declared workspace dependency in `package.json`
-- workspace package imports must stay within the target package's exported subpaths
+- apps は packages に依存できるが、他の apps には依存できない
+- packages は packages に依存できるが、apps には依存できない
+- ワークスペースコードは相対パス import で他ワークスペースに踏み込まない
+- 共有パッケージは宣言済みのパッケージ名と公開サブパス経由でのみ利用する
+- ワークスペースの import および tsconfig の extends は、`package.json` で対応するワークスペース依存を宣言済みでなければならない
+- ワークスペースのパッケージ import は対象パッケージの公開サブパス内に留める
 
-The repository now uses GitHub Actions to run the same merge gate on pull requests and pushes to `main`.
+リポジトリは GitHub Actions により、プルリクエストおよび `main` への push に対して同じマージゲートを実行する。
 
-Deploy-only checks remain outside this merge gate. Examples include deployed acceptance checks, deploy approval rules, and runtime-only validation in non-local environments.
+デプロイ専用のチェックは本マージゲートの外に残す。例: デプロイ後の受入チェック、デプロイ承認ルール、非ローカル環境でのみ実行する検証。
 
-The repository-wide package ESM migration strategy is documented in `docs/platform/esm-migration-strategy.md` and must be consulted before converting additional workspace packages to explicit ESM.
+リポジトリ全体のパッケージ ESM 移行戦略は `docs/platform/esm-migration-strategy.md` に文書化されている。追加のワークスペースパッケージを明示的 ESM へ変換する前にこれを参照する。
 
-The repository-wide language baseline for new hand-written code is documented in `docs/platform/typescript-first-coding-policy.md`.
+新規手書きコードのリポジトリ全体の言語ベースラインは `docs/platform/typescript-first-coding-policy.md` に文書化されている。
 
-The current repository policy for app-local import paths and preferred function declaration style is documented in `docs/platform/import-and-function-style-policy.md`.
+アプリローカルの import パスと推奨される関数宣言スタイルに関する現行ポリシーは `docs/platform/import-and-function-style-policy.md` に文書化されている。
 
-The current `apps/api` module resolution contract across compile, startup, built runtime, Jest, and Prisma command paths is documented in `docs/platform/api-module-resolution-contract.md`.
+`apps/api` のコンパイル / 起動 / ビルド済みランタイム / Jest / Prisma コマンドにまたがるモジュール解決契約は `docs/platform/api-module-resolution-contract.md` に文書化されている。
 
-The repository default for hand-written JavaScript, TypeScript, and tool config files is now ESM-first. Remaining CommonJS files must be tracked as explicit file-level exceptions in that strategy document.
+新規手書きの JavaScript / TypeScript / ツール config ファイルにおけるリポジトリの既定は ESM 先行である。残存する CommonJS ファイルは、ESM 戦略文書のファイル単位の例外として明示追跡する。
 
-That language-baseline policy is intentionally separate from the ESM strategy so future issues do not conflate file authoring language with module format.
+言語ベースラインのポリシーは ESM 戦略から意図的に分離している。「ファイル記述言語」と「モジュール形式」を後の Issue が混同しないようにするためである。
 
-## Generated files rule
+## 生成ファイルのルール
 
-Generated outputs should live under a `generated` or `__generated__` directory whenever possible.
+生成出力は可能な限り `generated` / `__generated__` ディレクトリ配下に置く。
 
-The shared Prettier and oxlint baselines ignore those directories by default.
+共有 Prettier / oxlint のベースラインは、これらのディレクトリを既定で無視する。
 
-If a future issue needs committed generated files outside those directories, that issue must update the shared tooling config at the same time.
+将来の Issue がそれら以外の場所にコミット済み生成ファイルを必要とする場合、その Issue で同時に共有ツーリング config を更新する。
 
-Hand-written wrapper code should stay outside generated directories so it still receives full lint and format checks.
+手書きのラッパコードは生成ディレクトリの外に置き、フル lint / format チェックを受けさせる。
 
-Hand-written application and package code should also prefer `undefined` over `null` unless a boundary or tool-specific path has a documented exception.
+手書きのアプリ / パッケージコードは、境界やツール固有の経路に文書化された例外がある場合を除き、`null` より `undefined` を優先する。
 
-## Runtime-specific usage
+## ランタイム別の利用
 
-The API and web workspaces now include local config entry files that point to the shared baselines:
+API / Web のワークスペースには、共有ベースラインを指す以下のローカル config ファイルが含まれる:
 
 - `apps/api/tsconfig.json`
 - `apps/api/oxlint.config.ts`
@@ -130,23 +130,8 @@ The API and web workspaces now include local config entry files that point to th
 - `apps/web/oxlint.config.ts`
 - `apps/web/jest.config.ts`
 
-This keeps issue #21 and issue #22 focused on app implementation instead of re-deciding tool defaults.
+これにより Issue #21 / #22 はツール既定の再決定ではなくアプリ実装に集中できる。
 
-## Handoff to follow-up issues
+## 関連 Issue へのハンドオフ
 
-### For #21 and #22
-
-- wire the real source and test files into the shared TypeScript, Jest, and oxlint configs
-- add app-specific overrides only when the shared baseline is not enough
-- choose a real TypeScript test transform before enabling `ts` or `tsx` test execution in Jest
-
-### For #24
-
-- keep the root command entrypoints aligned with the repository merge gate
-- keep generated outputs available before downstream validation tasks
-- keep `pnpm lint:boundaries` aligned with the documented workspace boundary rules when new workspaces are added
-
-### For #71
-
-- keep the root merge-gate entrypoint and the GitHub Actions workflow in sync
-- update this document if merge validation adds or removes required checks
+本ドキュメントが想定する後続作業は Issue #21 / #22（実アプリ統合）、Issue #24（ルートコマンド整備）、Issue #71（GitHub Actions マージゲート整合）であり、いずれも完了している。歴史的な経緯としてのみ参照する。

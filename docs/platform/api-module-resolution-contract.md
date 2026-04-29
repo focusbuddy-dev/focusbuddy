@@ -1,168 +1,166 @@
-# API Module Resolution Contract
+# API モジュール解決契約
 
-This document captures the output of issue #158.
+本ドキュメントは Issue #158 の成果物である。
 
-Its purpose is to define one repository-owned module resolution contract for `apps/api` across TypeScript compile-time checks, Nest local startup, emitted runtime execution from `dist`, Jest execution, and Prisma command paths.
+目的は、`apps/api` におけるモジュール解決契約をリポジトリ所有として 1 本に揃え、TypeScript のコンパイル時チェック / Nest のローカル起動 / `dist` からの emit ランタイム実行 / Jest 実行 / Prisma コマンド経路で同一の意味を保つことを定めることである。
 
-## Scope
+## スコープ
 
-This document defines:
+本ドキュメントが定めるもの:
 
-- the currently supported import specifier forms for `apps/api`
-- the current app-local import rule for hand-written API code
-- how the same rule is expected to hold across compile, local startup, `dist` runtime, Jest, and Prisma command execution
-- which specifier forms are intentionally unsupported today
-- what a future API-local alias proposal would need to verify before it becomes supported
+- `apps/api` で現状サポートする import 識別子の形
+- 手書き API コードに対する現行のアプリローカル import ルール
+- 同一ルールが compile / ローカル起動 / `dist` ランタイム / Jest / Prisma コマンドに渡って成立すること
+- 現状で意図的に未サポートの形
+- 将来 API ローカルエイリアスの提案がサポートされる前に検証すべき項目
 
-This document does not define a repository-wide alias rollout, a package-boundary policy change, or an application runtime migration to pure ESM.
+本ドキュメントが定めないもの: リポジトリ全体のエイリアス導入、パッケージ境界ポリシーの変更、アプリランタイムの純 ESM 化。
 
-## Contract summary
+## 契約サマリ
 
-The current supported module resolution contract for `apps/api` is:
+`apps/api` の現行モジュール解決契約:
 
-- app-local imports use `#api/*` as the repository-owned internal specifier rooted at `apps/api`
-- workspace package imports use declared package names and exported subpaths only
-- external dependencies use their published package specifiers only
-- app-local runtime code, tests, and Prisma config all resolve the same `#api/*` specifier family
+- アプリローカル import は `#api/*` を使用する。`apps/api` を起点とするリポジトリ所有の内部識別子
+- ワークスペースパッケージ import は宣言済みパッケージ名と公開サブパスのみを使用する
+- 外部依存は公開されたパッケージ識別子のみを使用する
+- アプリローカルなランタイムコード / テスト / Prisma config はすべて同一の `#api/*` 識別子族を解決する
 
-This contract is intentionally narrow. `apps/api` owns one internal specifier family and wires every execution path to the same meaning instead of allowing tool-specific aliases to drift.
+この契約は意図的に狭い。`apps/api` は内部識別子族を 1 つだけ所有し、ツール固有のエイリアスがドリフトしないよう、すべての実行経路を同じ意味に結線する。
 
-## Supported specifier forms
+## サポートされる識別子の形
 
-### App-local runtime code under `apps/api/src`
+### `apps/api/src` 配下のアプリローカルランタイムコード
 
-Use `#api/*` for app-local code.
+アプリローカルコードには `#api/*` を使う。
 
-Examples:
+例:
 
 - `#api/health/health.module`
 - `#api/config/local-runtime-env`
 - `#api/prisma/prisma.service`
 
-Current hand-written API source intentionally uses this pattern in runtime entrypoints, modules, services, and adapters.
+現行の手書き API ソースは、ランタイムエントリポイント / モジュール / サービス / アダプタで意図的にこのパターンを採用する。
 
-### API test files under `apps/api/test`
+### `apps/api/test` 配下の API テストファイル
 
-Use the same `#api/*` specifiers for API source imports from tests.
+テストから API ソースを import する際にも同じ `#api/*` 識別子を使う。
 
-Examples:
+例:
 
 - `#api/health/health.controller`
 - `#api/logging/api-request-logging.interceptor`
 
-This keeps Jest on the same import vocabulary as the runtime paths.
+これにより Jest はランタイムと同じ import 語彙に揃う。
 
-### Workspace package imports
+### ワークスペースパッケージ import
 
-Use declared package names and exported subpaths.
+宣言済みのパッケージ名と公開サブパスを使う。
 
-Examples:
+例:
 
 - `@focusbuddy/api-contract`
 - `@focusbuddy/logger`
 - `@focusbuddy/config-jest/api`
 
-This follows the repository-wide workspace boundary rules.
+これはリポジトリ全体のワークスペース境界ルールに従う。
 
-### Prisma config imports
+### Prisma config の import
 
-Use the same `#api/*` imports from `prisma.config.ts` into API runtime helpers.
+`prisma.config.ts` から API ランタイムヘルパへも同じ `#api/*` 経由で import する。
 
-Example:
+例:
 
 - `#api/config/local-runtime-env`
 
-This keeps the Prisma CLI path aligned with the same app-local contract used by compile, source startup, tests, and emitted runtime.
+これにより Prisma CLI 経路は、コンパイル / ソース起動 / テスト / emit ランタイムが使うアプリローカル契約と整合する。
 
-## Execution-path contract
+## 実行経路ごとの契約
 
-### TypeScript compile-time resolution
+### TypeScript のコンパイル時解決
 
-`apps/api/tsconfig.json` extends the shared API baseline with `module` and `moduleResolution` set to `NodeNext`.
+`apps/api/tsconfig.json` は共有 API ベースラインを継承し、`module` と `moduleResolution` を `NodeNext` に設定する。
 
-The current repository-owned compile-time contract is:
+現行のリポジトリ所有のコンパイル時契約:
 
-- `#api/*` app-local imports inside `src`, `test`, and `prisma.config.ts`
-- declared package imports for workspace packages and external dependencies
-- `package.json#imports` as the runtime contract plus `customConditions: ["development"]` for source-side resolution
+- `src` / `test` / `prisma.config.ts` 内のアプリローカル import に `#api/*`
+- ワークスペースパッケージおよび外部依存は宣言済みパッケージ import
+- ランタイム契約は `package.json#imports`、ソース側解決は `customConditions: ["development"]` を併用
 
-### Nest local startup
+### Nest のローカル起動
 
-The API local dev command boots the Nest application directly from the hand-written TypeScript source tree.
+API のローカル dev コマンドは、手書き TypeScript ソースツリーから直接 Nest を起動する。
 
-The supported contract for that path is:
-
-- `NODE_OPTIONS=--conditions=development`
-- `tsx` executes `src/main.ts`
-- `#api/*` resolves to `./src/*.ts` through the package `imports` contract
-
-The repository explicitly does not rely on a Nest-only alias hook. Source startup uses the same package `imports` contract as the other paths and only swaps the TypeScript executor.
-
-### Emitted runtime execution from `dist`
-
-The parity and built-runtime path executes the emitted output from `dist/main.js`.
-
-The supported contract for that path is:
-
-- TypeScript preserves `#api/*` specifiers in emitted output
-- Node resolves the same `#api/*` specifiers through package `imports`
-- the default package `imports` target resolves those specifiers to `./dist/*.js`
-
-This is one reason the contract is owned in `package.json#imports` rather than in TypeScript-only `paths` metadata.
-
-### Jest execution
-
-The API workspace uses `ts-jest` with the local TypeScript config and a Jest mapper for `#api/*`.
-
-The supported test-resolution contract is:
-
-- tests import API source through `#api/*`
-- package imports keep using package names
-- Jest mirrors the same repository-owned `#api/*` contract instead of inventing a different test-only vocabulary
-
-### Prisma command execution
-
-The Prisma CLI path is configured through `apps/api/prisma.config.ts`, which imports API runtime env helpers through `#api/*`.
-
-The supported Prisma contract is:
+サポート契約:
 
 - `NODE_OPTIONS=--conditions=development`
-- `#api/*` resolves to `./src/*.ts` through package `imports`
-- the same source files used by runtime env loading stay reachable without adding a Prisma-only alias rule
+- `tsx` が `src/main.ts` を実行
+- `#api/*` はパッケージ `imports` 契約により `./src/*.ts` に解決される
 
-## Unsupported contract shapes today
+リポジトリは Nest 専用のエイリアスフックには依存しない。ソース起動も他経路と同じパッケージ `imports` 契約を使い、TypeScript 実行系のみ差し替える。
 
-The following are intentionally unsupported for `apps/api` today:
+### `dist` からの emit ランタイム実行
 
-- app-local aliases such as `@/`, `~/`, or bare `src/*`
-- a second app-local alias family alongside `#api/*`
-- a Jest-only alias that runtime and Prisma paths do not also share
-- a Nest-only alias hook that `dist` runtime does not share
-- a Prisma-config-only alias that differs from the main API contract
+parity / ビルド済みランタイム経路は emit 出力 `dist/main.js` を実行する。
 
-These are unsupported because they would create multiple resolution contracts for the same workspace instead of one repository-owned contract.
+サポート契約:
 
-## Why the current contract is acceptable now
+- TypeScript は emit 出力で `#api/*` 識別子を温存する
+- Node はパッケージ `imports` を介して同じ `#api/*` を解決する
+- 既定のパッケージ `imports` ターゲットは識別子を `./dist/*.js` に解決する
 
-The current contract is not the shortest to read, but it is explicit and reproducible.
+これが、契約を TypeScript の `paths` メタデータではなく `package.json#imports` に持たせている理由のひとつである。
 
-Its advantages are:
+### Jest 実行
 
-- one app-local rule works across compile, startup, built runtime, tests, and Prisma config
-- emitted runtime code uses the same specifiers as the source tree
-- tests do not need a second source-import vocabulary that runtime code lacks
-- Prisma config does not need a config-only relative import exception
-- the repository avoids tool-specific resolution drift while keeping NodeNext-compatible runtime behavior
+API ワークスペースは `ts-jest` とローカル TypeScript config、加えて `#api/*` 用の Jest mapper を使う。
 
-## Future alias prerequisite checklist
+テスト解決契約:
 
-Any future proposal to support an app-local alias in `apps/api` must verify all of the following together:
+- テストは `#api/*` で API ソースを import する
+- パッケージ import は引き続きパッケージ名を使う
+- Jest はテスト専用語彙を発明せず、リポジトリ所有の同一 `#api/*` 契約を反映する
 
-1. TypeScript compile-time resolution accepts the alias without adding deprecated or tool-fragile config.
-2. Source startup resolves the same alias without a Nest-only exception path.
-3. The built `dist` runtime resolves the same specifiers without hidden loader assumptions.
-4. Jest resolves the same alias without creating a test-only contract.
-5. Prisma config and Prisma CLI command execution resolve the same alias without a config-only exception path.
-6. Fast local development and parity-oriented runtime validation still exercise the same module-resolution rule.
+### Prisma コマンド実行
 
-The current `#api/*` contract satisfies that checklist for the API workspace today.
+Prisma CLI 経路は `apps/api/prisma.config.ts` から構成され、同ファイルは API ランタイム env ヘルパを `#api/*` 経由で import する。
+
+サポート契約:
+
+- `NODE_OPTIONS=--conditions=development`
+- `#api/*` はパッケージ `imports` 経由で `./src/*.ts` に解決される
+- ランタイム env 読み込みが使うソースファイルが、Prisma 専用エイリアスを足さずに到達できる
+
+## 現状で未サポートの契約形
+
+`apps/api` では以下を意図的に未サポートとする:
+
+- `@/` / `~/` / 裸の `src/*` のようなアプリローカルエイリアス
+- `#api/*` と並列の第二のアプリローカルエイリアス族
+- ランタイム / Prisma 経路と共有しない Jest 専用エイリアス
+- `dist` ランタイムが共有しない Nest 専用エイリアスフック
+- 主たる API 契約と異なる Prisma config 専用エイリアス
+
+これらを許すと、同一ワークスペースに複数の解決契約が並立し、リポジトリ所有の単一契約が崩れる。
+
+## なぜ現行契約が現状で受容可能か
+
+最短の表現ではないが、明示的で再現可能である:
+
+- アプリローカルルールが compile / 起動 / ビルド済みランタイム / テスト / Prisma config で同一に動く
+- emit ランタイムコードはソースツリーと同じ識別子を使う
+- テストは「ランタイムにない第二の識別子語彙」を要さない
+- Prisma config は「config 専用の相対 import 例外」を要さない
+- リポジトリは NodeNext 互換なランタイム挙動を保ちつつ、ツール固有解決のドリフトを避けられる
+
+## 将来のエイリアス前提条件チェックリスト
+
+`apps/api` でアプリローカルエイリアス導入を将来提案する場合、以下をすべて同時に検証する:
+
+1. 非推奨やツールに脆い設定を加えずに TypeScript コンパイル時解決がエイリアスを受け入れる
+2. Nest 専用例外経路無しで、ソース起動が同じエイリアスを解決する
+3. 隠れたローダ前提無しで、ビルド済み `dist` ランタイムが同じ識別子を解決する
+4. テスト専用契約を作らずに、Jest が同じエイリアスを解決する
+5. config 専用例外経路無しで、Prisma config と Prisma CLI 実行が同じエイリアスを解決する
+6. 高速ローカル開発とパリティ志向ランタイム検証の双方が、同じモジュール解決ルールを行使する
+
+現行の `#api/*` 契約は、`apps/api` においてこのチェックリストを満たしている。

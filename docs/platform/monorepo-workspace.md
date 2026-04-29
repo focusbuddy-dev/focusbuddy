@@ -1,20 +1,20 @@
-# Monorepo Workspace Layout
+# モノレポのワークスペースレイアウト
 
-This document captures the output of issue #18.
+本ドキュメントは Issue #18 の成果物である。
 
-Its purpose is to define the first Turborepo workspace layout and the initial package boundaries for FocusBuddy.
+目的は、FocusBuddy における最初の Turborepo ワークスペースレイアウトとパッケージ境界を定義することである。
 
-## Scope
+## スコープ
 
-This document defines:
+本ドキュメントが定めるもの:
 
-- the top-level `apps` and `packages` layout
-- the first responsibility split for web, API, mobile, and shared packages
-- the basic Turborepo task structure used from the repository root
+- トップレベルの `apps` / `packages` レイアウト
+- Web / API / モバイル / 共有パッケージの最初の責務分割
+- リポジトリルートから使う基本的な Turborepo タスク構造
 
-This document does not define detailed app implementation, Prisma setup details, or OpenAPI generation details.
+本ドキュメントが定めないもの: 詳細なアプリ実装、Prisma セットアップ詳細、OpenAPI 生成詳細。
 
-## Workspace tree
+## ワークスペースツリー
 
 ```text
 apps/
@@ -30,79 +30,71 @@ packages/
   logger/
 ```
 
-## App boundaries
+## アプリ境界
 
 ### `apps/api`
 
-- owns the future NestJS API application
-- owns Prisma integration and database access inside the API boundary
-- maps persistence models to contract models instead of leaking database shapes directly
-- is the main implementation target for issue #21
+- NestJS API アプリケーションを所有する
+- API 境界内の Prisma 統合とデータベースアクセスを所有する
+- データベース形状を直接漏らさず、永続化モデルを契約モデルへマッピングする
 
 ### `apps/web`
 
-- owns the future Next.js web application
-- consumes generated contract outputs instead of defining API shapes directly
-- is the main implementation target for issue #22
+- Next.js Web アプリケーションを所有する
+- API 形状を直接定義せず、生成された契約出力を利用する
 
 ### `apps/mobile`
 
-- reserves the future mobile app boundary without implementing it now
-- should later consume the same contract outputs and shared logger facade where practical
-- stays as a placeholder in the MVP setup stage
+- 将来のモバイルアプリ境界を予約する（実装は後回し）
+- 後段で同じ契約出力と共有 logger ファサードを実用範囲で利用することを想定する
+- 当面はプレースホルダワークスペースとして残る
 
-## Shared package boundaries
+## 共有パッケージの境界
 
 ### `packages/api-contract`
 
-- stores the future OpenAPI source of truth
-- is expected to own generated contract outputs such as TypeScript types, validation helpers, and API client artifacts
-- is the main implementation target for issue #20
+- OpenAPI の単一の真実源を所有する
+- TypeScript 型、バリデーションヘルパ、API クライアント成果物などの生成契約出力を所有する
 
 ### `packages/config-typescript`
 
-- will provide the shared TypeScript config baseline
-- is reserved for issue #19
+- 共有 TypeScript config ベースラインを提供する
 
 ### `packages/config-oxlint`
 
-- will provide the shared oxlint baseline and runtime-specific overrides
-- is reserved for issue #19
+- 共有 oxlint ベースラインとランタイム別の override を提供する
 
 ### `packages/config-prettier`
 
-- will provide the shared Prettier baseline
-- is reserved for issue #19
+- 共有 Prettier ベースラインを提供する
 
 ### `packages/config-jest`
 
-- will provide the shared Jest baseline and environment split for web and API
-- is reserved for issue #19
+- 共有 Jest ベースラインと、Web / API の環境分割を提供する
 
 ### `packages/logger`
 
-- will expose the shared logger interface and runtime-specific adapters
-- is the main implementation target for issue #23
+- 共有 logger インタフェースとランタイム別アダプタを公開する
 
-## Boundary rules
+## 境界ルール
 
-- app code lives under `apps/*`
-- shared reusable code or configuration lives under `packages/*`
-- app workspaces must consume code and config from `packages/*` through package names and exported entrypoints, not through relative filesystem paths into package internals
-- app workspaces must not depend on other app workspaces directly
-- package workspaces must not depend on app workspaces directly
-- API contract ownership starts in `packages/api-contract`, not in the API app
-- Prisma and database access stay in the API boundary unless a later issue explicitly extracts a shared database package
-- generated contract outputs are expected to be consumed by apps, not edited manually inside apps
-- mobile remains reserved but should follow the same package boundary rules when implemented later
+- アプリコードは `apps/*` 配下に置く
+- 共有再利用コード / 設定は `packages/*` 配下に置く
+- アプリワークスペースは、`packages/*` のコード / config を、相対パスではなくパッケージ名と公開エントリポイント経由で利用する
+- アプリワークスペースは他のアプリワークスペースに直接依存しない
+- パッケージワークスペースはアプリワークスペースに直接依存しない
+- API 契約の所有は `packages/api-contract` に置き、API アプリ内には置かない
+- Prisma とデータベースアクセスは API 境界内に留める。後の Issue が共有 DB パッケージを明示的に切り出さない限り維持する
+- 生成された契約出力はアプリで利用するためのもので、アプリ内で手書き編集しない
+- モバイルは予約状態を維持する。後で実装する際は同じパッケージ境界ルールに従う
 
-The repository boundary check now enforces these rules from the root through `pnpm lint:boundaries`, and `pnpm lint` includes that check before workspace lint tasks run.
+リポジトリの境界チェックは `pnpm lint:boundaries` から強制され、`pnpm lint` はこのチェックをワークスペース lint タスクの前に実行する。
 
-That check also rejects workspace package imports or tsconfig package extends that are not declared in the importing workspace's `package.json`, and it rejects package subpaths that are outside the target workspace's published exports.
+このチェックは、import 元ワークスペースの `package.json` に宣言の無いパッケージ import / tsconfig extends、および対象ワークスペースの公開 exports 外のサブパスを拒否する。
 
-## Basic Turborepo task structure
+## 基本の Turborepo タスク構造
 
-The repository root exposes these first shared commands:
+リポジトリルートはまず以下の共有コマンドを公開する:
 
 - `pnpm build`
 - `pnpm dev`
@@ -110,46 +102,20 @@ The repository root exposes these first shared commands:
 - `pnpm test`
 - `pnpm typecheck`
 
-The current `turbo.json` intentionally stays small.
+`turbo.json` は意図的に小さく保つ。
 
-- `build` depends on local generate tasks, upstream generate tasks, and upstream workspace builds
-- `build` currently declares no outputs because the issue only creates placeholder workspaces, not real app artifacts yet
-- `dev` is uncached because later app dev servers will be long-running
-- `generate` keeps committed and required generated outputs aligned before downstream validation
-- `test` and `typecheck` depend on local generate tasks, upstream generate tasks, and upstream builds so root command ordering stays stable
-- `lint`, `test`, and `typecheck` are defined at the workspace level so the root can orchestrate them consistently
+- `build` はローカル generate タスク、上流の generate、上流ワークスペースのビルドに依存する
+- `dev` はキャッシュ非対象（長時間稼働の開発サーバを想定）
+- `generate` は、下流の検証前にコミット済み / 必須の生成出力を整える
+- `test` / `typecheck` はローカル generate、上流 generate、上流ビルドに依存し、ルートコマンドの順序を安定させる
+- `lint` / `test` / `typecheck` はワークスペースレベルで定義され、ルートが整合的に統括する
 
-The current workspace package scripts are placeholders so the monorepo structure can be validated before follow-up issues add real implementation.
+## 関連 Issue へのハンドオフ
 
-## Handoff to follow-up issues
+本ドキュメントが想定する後続作業は Issue #19（共有ツーリングベースライン）/ #20（OpenAPI 駆動の最初のパッケージ）/ #21（NestJS API 実装）/ #22（Next.js Web 実装）/ #23（共有 logger）/ #51（Docker ベースのローカル開発）/ #120（パッケージの ESM 移行）であり、いずれも完了している。経緯としてのみ参照する。
 
-### For #19
+それぞれの最新ガイドは以下を参照する:
 
-- the shared tooling baselines are now documented in `docs/platform/shared-tooling.md`
-- future app work should consume the shared config packages instead of defining one-off local tool settings
-
-### For #20
-
-- replace the placeholder contract package with the first OpenAPI-driven package and generation flow
-
-### For #21
-
-- implement the NestJS API app inside `apps/api`
-- wire Prisma into the API boundary using the schema decisions from issue #40
-
-### For #22
-
-- implement the Next.js app inside `apps/web`
-
-### For #23
-
-- replace the placeholder logger package with the shared logger facade and runtime-specific adapters
-
-### For #120
-
-- follow `docs/platform/esm-migration-strategy.md` before converting additional workspace packages to explicit ESM
-- keep package migration work separate from application runtime module-strategy changes unless a later issue explicitly combines them
-
-### For #51
-
-- add the Docker-based local development environment on top of this workspace layout
+- 共有ツーリング: `docs/platform/shared-tooling.md`
+- ESM 移行: `docs/platform/esm-migration-strategy.md`
+- ローカル開発: `docs/platform/local-development.md`

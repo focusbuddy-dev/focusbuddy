@@ -27,9 +27,7 @@ Development happens inside the dev container. Host-side direct `pnpm` / `just` e
 
 The Docker-based local development environment is documented in [docs/platform/local-development.md](docs/platform/local-development.md).
 
-The supported local execution modes and env contract are documented in [docs/platform/local-execution-modes.md](docs/platform/local-execution-modes.md).
-
-The repository-level local environment drift policy is documented in [docs/platform/local-environment-drift-policy.md](docs/platform/local-environment-drift-policy.md).
+The supported local execution modes, env contract, and drift policy are documented in [docs/platform/local-execution-and-drift-policy.md](docs/platform/local-execution-and-drift-policy.md).
 
 For routine full-stack local development, use `just dev` from inside the dev container.
 

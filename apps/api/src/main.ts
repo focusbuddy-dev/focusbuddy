@@ -4,6 +4,7 @@ import { NestFactory } from '@nestjs/core';
 
 import { AppModule } from '#api/app.module';
 import { loadLocalRuntimeEnv } from '#api/config/local-runtime-env';
+import { getApiServerPort } from '#api/env/server';
 import { ApiRequestLoggingInterceptor } from '#api/logging/api-request-logging.interceptor';
 import { createApiRuntimeLogger } from '#api/logging/api-runtime-logger';
 
@@ -14,7 +15,7 @@ async function bootstrap(): Promise<void> {
   const apiRuntimeLogger = createApiRuntimeLogger();
 
   const app = await NestFactory.create(AppModule);
-  const port = Number.parseInt(process.env.PORT ?? '3001', 10);
+  const port = getApiServerPort();
 
   app.enableShutdownHooks();
   app.useGlobalInterceptors(new ApiRequestLoggingInterceptor(apiRuntimeLogger));

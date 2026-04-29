@@ -1,109 +1,104 @@
-# API Module Structure And Context Policy
+# API モジュール構造とコンテキストポリシー
 
-This document captures the output of issue #174.
+本ドキュメントは Issue #174 の成果物である。
 
-Its purpose is to define a reviewable implementation baseline for hand-written code in `apps/api`, with a focus on responsibility-oriented module structure, explicit Nest and Prisma boundaries, type-safe environment access, disciplined side-effect placement, and exported comments that preserve implementation intent.
+目的は、`apps/api` の手書きコードに対するレビュー可能な実装ベースラインを定義することである。責務指向のモジュール構造、Nest / Prisma の境界、型安全な環境変数アクセス、副作用配置の規律、export 意図を保つコメントに焦点を置く。
 
-## Scope
+## スコープ
 
-This document defines:
+本ドキュメントが定めるもの:
 
-- how hand-written `apps/api` modules should be split into directories and files
-- how exported API code should document role and boundary intent
-- how Nest bootstrap, modules, controllers, services, mappers, logging, and Prisma responsibilities should be separated
-- how env access should be centralized instead of spread across runtime code
-- where side effects belong and which code should remain pure or near-pure
-- how logging and error handling should be implemented at API boundaries
-- what naming vocabulary exported code should use
-- which rules should be enforced automatically instead of staying review-only guidance
-- the current known inconsistencies that should be used as review triggers
+- `apps/api` の手書きモジュールをディレクトリ / ファイルへ分割する方針
+- export された API コードが role / boundary をどう示すか
+- Nest の bootstrap / モジュール / コントローラ / サービス / マッパ / ロギング / Prisma の責務分離
+- env アクセスを集中化する方針
+- 副作用が許される境界と、純粋に近い状態を保つコード
+- API 境界でのロギングとエラーハンドリングの実装方針
+- export コードの命名語彙
+- レビュー任せにせず自動化で強制すべきルール
+- レビュートリガとして利用すべき現状の不整合
 
-This document does not define a full repository-wide policy for every workspace, a forced immediate rewrite of all existing API files, or a product-level schema redesign.
+本ドキュメントが定めないもの: ワークスペース全体に渡る完全ポリシー、既存全 API ファイルの即時書き換え、プロダクトレベルのスキーマ再設計。
 
-## Decision summary
+## 決定サマリ
 
-- hand-written `apps/api` code should default to one primary responsibility per file, with splitting triggered by mixed boundary roles rather than by file length alone
-- exported API runtime surfaces should carry short role comments using a fixed format when boundary intent is not already obvious
-- Nest bootstrap, controllers, services, Prisma access, mappers, and logging should stay in distinct layers instead of collapsing into broad service files
-- Prisma client creation and env loading should stay behind explicit configuration boundaries, not scattered through arbitrary runtime modules
-- application code should not read `process.env` directly outside designated env modules
-- controllers should remain thin translation boundaries from transport input to application behavior and output shape
-- mappers should stay pure and should not acquire transport, persistence bootstrap, or request-context side effects
-- logging should happen at operational boundaries, and the same failure should not be logged redundantly at every layer
-- strict automation should enforce the highest-risk boundary rules where the tooling allows it
+- 手書きの `apps/api` コードは「1 ファイル = 1 つの主要責務」を既定とする。分割はファイル長単独ではなく境界ロールの混在で発火する
+- export された API ランタイム面は、境界の意図が自明でない限り、固定形式の短い role コメントを付ける
+- Nest の bootstrap / コントローラ / サービス / Prisma アクセス / マッパ / ロギングは、巨大な service ファイルに潰さず、それぞれ別レイヤとして保つ
+- Prisma クライアントの作成と env 読み込みは、ランタイムモジュールに分散させず明示的な設定境界の背後に置く
+- アプリケーションコードは、指定された env モジュール以外で `process.env` を直接読まない
+- コントローラはトランスポート入力からアプリ挙動・出力形状への薄い変換境界に留める
+- マッパは純粋に保ち、トランスポート / 永続化 bootstrap / リクエスト文脈の副作用を持たない
+- ロギングは運用境界で行い、同じ失敗をすべてのレイヤで重複ロギングしない
+- 強制可能な最高リスクの境界ルールは、ツーリングが許す範囲で自動化する
 
-## Current inconsistency audit
+## 現状の不整合監査
 
-Issue #174 starts from a real mismatch between desired structure and the current `apps/api` tree.
+Issue #174 は望ましい構造と現行 `apps/api` ツリーの実際のミスマッチから出発する。
 
-The current known inconsistencies are:
+現状の既知不整合:
 
-- `apps/api/src/main.ts` reads `process.env.PORT` directly instead of going through an env boundary
-- `apps/api/src/logging/api-runtime-logger.ts` reads `process.env.LOG_LEVEL` directly instead of going through an env boundary
-- `apps/api/src/config/local-runtime-env.ts` correctly centralizes env access for database setup, but the pattern is not yet the API-wide default
-- exported runtime surfaces across `apps/api/src` do not yet carry consistent role comments, which makes AI-authored and later-edited code harder to evaluate quickly
-- `apps/api/src/health/health.controller.ts` currently reaches directly into Prisma for a raw health query, which is acceptable for a small baseline but should be treated as a narrow exception rather than the target layering style for feature code
-- `apps/api/src/prisma/prisma.service.ts` currently combines Prisma client option creation, env loading, and lifecycle wiring in one file; this is acceptable for a minimal bootstrap seam but should remain a deliberately small infrastructure boundary
+- `apps/api/src/health/health.controller.ts` は健全性クエリのために Prisma に直接アクセスしている。最小ベースラインとしては許容するが、機能コードの目標レイヤリングとしては狭い例外として扱う
+- `apps/api/src/prisma/prisma.service.ts` は Prisma クライアントオプション作成・env 読み込み・ライフサイクル結線を 1 ファイルに統合している。最小 bootstrap シームとしては許容するが、意図的に小さなインフラ境界に留める
+- export されたランタイム面のうち、role コメントが一貫して付いていないものがあり、AI 生成コードや後続編集の評価を遅らせる
 
-This audit is intentionally concrete so follow-up refactors can close specific mismatches instead of appealing to general style preference.
+> 注: PORT / LOG_LEVEL の `process.env` 直読みは Issue #174 のフォローアップで `apps/api/src/env/server.ts` 経由に置換済み。本節の不整合は env 集中化以外の残存項目に絞る。
 
-## Module structure rules
+この監査は、一般的なスタイル選好への訴えではなく具体的なミスマッチを閉じるための後続リファクタを駆動するために、意図的に具体的である。
 
-### One file, one primary responsibility
+## モジュール構造ルール
 
-The default expectation is one file, one primary responsibility.
+### 1 ファイル 1 主要責務
 
-This does not mean one file, one function.
+既定は「1 ファイル 1 主要責務」である。
 
-It means a reviewer should be able to answer one clear question about the file:
+これは「1 ファイル 1 関数」を意味しない。
 
-What is the main job this file owns?
+レビュアが当該ファイルに対し「このファイルが所有する主な仕事は何か？」という単一の問いに明快に答えられること。
 
-The file should usually be split when any of the following becomes true:
+次のいずれかが真となったら通常分割する:
 
-- exported members would naturally change for different reasons
-- transport, application, persistence, and mapping logic are mixed together
-- pure shaping logic and external side effects live in the same module
-- the file contains more than one independently nameable section such as `controller`, `service`, `mapper`, and `env`
-- a reviewer would need to scroll past unrelated sections to understand one change safely
+- export メンバが異なる理由で変わる
+- トランスポート / アプリケーション / 永続化 / マッピングが混在している
+- 純粋整形ロジックと外部副作用が同居している
+- ファイル内に `controller` / `service` / `mapper` / `env` のように独立して命名できるセクションが複数ある
+- 1 つの変更を安全に理解するために、レビュアが無関係セクションを読み飛ばす必要がある
 
-Small file-local helpers may stay together when they all serve the same primary responsibility.
+ファイルローカルな小ヘルパは、すべて同じ主要責務に資する場合のみ同居してよい。
 
-### Soft split signals
+### ソフト分割シグナル
 
-The repository should treat the following as soft review signals, not absolute limits:
+次のものは絶対上限ではなくソフトなレビューシグナルとして扱う:
 
-- roughly 150 lines of hand-written logic in one file
-- more than two exported runtime surfaces in one file
-- both persistence access and output mapping in the same file
-- both env loading and unrelated runtime behavior in the same file
+- 1 ファイル概ね 150 行の手書きロジック
+- 1 ファイル内に 2 つを超える export ランタイム面
+- 同一ファイルでの永続化アクセスと出力マッピングの同居
+- 同一ファイルでの env 読み込みと無関係なランタイム挙動の同居
 
-When one of these appears, the reviewer should ask whether the file still has one primary responsibility.
+これらが現れたら、ファイルが依然として 1 つの主要責務を表しているかをレビュアが問う。
 
-### Thin entrypoint rule
+### 薄いエントリポイント
 
-`index.ts` files are allowed when they expose one stable public module surface.
+`index.ts` は 1 つの安定した公開モジュール面を露出する場合に限り許容する。
 
-They should stay thin and should not become storage files for helpers, constants, fixtures, and real implementation all at once.
+エントリポイントは薄く保ち、ヘルパ・定数・フィクスチャ・実装を一箇所に溜め込む保管庫にしない。
 
-### Barrel rule
+### バレル（barrel）ルール
 
-Keep barrels narrow.
+バレルは狭く保つ。
 
-Allowed barrel-like entrypoints are:
+許容するバレル様エントリポイント:
 
-- feature or module `index.ts` files that expose one stable public surface
-- package export boundaries that are already part of the workspace contract
+- 1 つの安定した公開面を露出する feature / モジュールの `index.ts`
+- ワークスペース契約の一部であるパッケージ export 境界
 
-Avoid broad convenience barrels such as `services/index.ts`, `mappers/index.ts`, or multi-feature export hubs.
+`services/index.ts` / `mappers/index.ts` のような広い利便性バレルは避ける。依存関係レビューを難しくし、実レイヤリング判断を隠す。
 
-They make dependency review harder and hide real layering decisions.
+## API 境界ルール
 
-## API boundary rules
+### レイヤ語彙
 
-### Layer vocabulary
-
-For `apps/api`, hand-written source should be reasoned about in these roles:
+`apps/api` の手書きソースは、以下のロールで考える:
 
 - bootstrap
 - module wiring
@@ -112,126 +107,118 @@ For `apps/api`, hand-written source should be reasoned about in these roles:
 - mapper
 - persistence adapter
 - infrastructure adapter
-- config and env
+- config / env
 
-Each file should fit one of these roles clearly enough that a reviewer can tell what it may import and what it should not own.
+各ファイルがどのロールに属するかをレビュアが判別でき、何を import してよく / 何を所有してはいけないかが分かる程度に整える。
 
-### Bootstrap
+### bootstrap
 
-Bootstrap code is responsible for starting the Nest application and wiring top-level runtime concerns.
+Nest アプリ起動とトップレベルランタイム結線を担当する。
 
-Bootstrap may own:
+bootstrap が所有してよいもの:
 
-- Nest application creation
-- top-level logger wiring
-- global interceptor or pipe registration
-- reading already-validated runtime configuration
+- Nest アプリケーション作成
+- トップレベルロガー結線
+- グローバル interceptor / pipe 登録
+- 既に検証済みのランタイム設定の読み込み
 
-Bootstrap must not own:
+bootstrap が所有してはならないもの:
 
-- feature business rules
-- Prisma queries unrelated to startup readiness
-- contract mapping
-- feature-specific validation logic
+- 機能のビジネスルール
+- 起動 readiness と無関係な Prisma クエリ
+- 契約マッピング
+- 機能固有のバリデーションロジック
 
-### Controllers
+### コントローラ
 
-Controllers are transport boundaries.
+トランスポート境界。
 
-Controllers may own:
+所有してよいもの:
 
-- HTTP route decoration
-- transport-level input extraction
-- delegation to application services
-- transport response shaping when the response contract is trivial
+- HTTP ルートデコレーション
+- トランスポートレベルの入力抽出
+- アプリケーションサービスへの委譲
+- 応答契約が自明な場合のレスポンス整形
 
-Controllers should stay thin.
+コントローラは薄く保つ。複雑なクエリ構成、永続化制御、再利用可能マッピングがコントローラに溜まらないようにする。
 
-Controllers must not become the place where complex query composition, persistence orchestration, or reusable mapping logic accumulates.
+### アプリケーションサービス
 
-### Application services
+1 ユースケース、または密接に関連する小さなユースケース群を統括する。
 
-Application services coordinate one use case or a small set of tightly related use cases.
+所有してよいもの:
 
-Application services may own:
+- ドメインロジック / マッパ / 永続化アダプタ間の制御
+- トランザクションを意識した順序付け
+- ユースケース境界での型付きエラー変換
+- 実復旧 / 失敗境界を跨ぐ際の運用ロギング
 
-- orchestration across domain logic, mappers, and persistence adapters
-- transaction-aware sequencing
-- typed error conversion at the use-case boundary
-- operational logging when a real recovery or failure boundary is crossed
+無関係エンドポイントの汎用ユーティリティ袋にしない。
 
-Application services should not become generic utility bags for unrelated endpoints.
+### マッパ
 
-### Mappers
+ある表現を別の表現へ変換する。
 
-Mappers convert one representation into another.
+純粋に保ち、以下を所有しない:
 
-Mappers should stay pure.
+- データベースアクセス
+- env アクセス
+- ロギング副作用
+- リクエスト文脈の読み取り
+- トランザクション制御
 
-Mappers must not own:
+現行 `contract-mappers.ts` は本レイヤとして妥当な形だが、成長後も 1 ファイル / 1 ディレクトリ 1 主要責務を尊重する。
 
-- database access
-- env access
-- logging side effects
-- request-context reads
-- transaction control
+### 永続化 / インフラアダプタ
 
-The current `contract-mappers.ts` file is a legitimate shape for this layer, but future growth should still respect one primary responsibility per file or directory.
+永続化アダプタはデータベースクライアントとの相互作用を所有する。
 
-### Persistence and infrastructure adapters
+インフラアダプタはロギングシンク・env リーダ・キュークライアントなど具体的な外部システムを所有する。
 
-Persistence adapters own database client interaction.
+これらは型付きの値を返し、境界固有の詳細をコントローラやマッパに漏らさない。
 
-Infrastructure adapters own concrete external systems such as logging sinks, env readers, or queue clients.
+## Prisma 責務ルール
 
-These adapters should return typed values and keep boundary-specific details out of controllers and mappers.
+### Prisma 境界の分割
 
-## Prisma responsibility rules
+Prisma 関連を以下に分ける:
 
-### Prisma boundary split
+- Prisma クライアント bootstrap とライフサイクル
+- クエリ実行 / 永続化アクセス
+- Prisma レコード → 契約 / ドメイン形状 のマッピング
+- それらの操作を組み立てるアプリケーションレベルの制御
 
-Prisma-related concerns should be split into distinct responsibilities:
+これらを 1 つの広い service ファイルに潰さない。
 
-- Prisma client bootstrap and lifecycle
-- query execution or persistence access
-- mapping from Prisma records to contract or domain shapes
-- application-level orchestration around those operations
+### 現行の例外
 
-Do not collapse all four into one broad service file.
+現行 `PrismaService` は小さな bootstrap 志向のインフラシームとして許容する。
 
-### Current baseline exception
+機能成長後は、このシームを汎用アプリ層に拡張するのではなく、クエリ実行と上位制御を外へ出す。
 
-The current `PrismaService` shape is acceptable as a small bootstrap-oriented infrastructure seam.
+### マッパ分離ルール
 
-As feature work grows, query execution and higher-level orchestration should move out of that bootstrap seam instead of expanding it into a general-purpose application layer.
+Prisma → 契約のマッピングをコントローラや bootstrap に置かない。応答形状の変動と永続化の変動を別々にレビューできるよう、マッパモジュールに置く。
 
-### Mapper separation rule
+## export コメントルール
 
-Do not place Prisma-to-contract mapping into controllers or bootstrap files.
+### 既定
 
-Keep that logic in mapper modules so response-shape churn and persistence churn can be reviewed separately.
+手書きの export ランタイム面には、ロールを説明する短い先頭コメントを付ける。
 
-## Export comment rules
+コメントは「このモジュール境界に export が存在する理由と、所有する責務」に答える。
 
-### Default rule
+### 固定コメント形式
 
-Every hand-written exported runtime surface should have a short leading comment that explains its role.
+手書き export ランタイム面には 1 つの短いブロックコメント形式を使う。
 
-The comment should answer the question:
+推奨順:
 
-Why does this export exist in the module boundary, and what responsibility does it own?
+- `Role:` この export が所有するもの
+- `Boundary:` 利用可能箇所、または依存してはならないもの
+- `Ref:` 履歴が重要な場合の任意の Issue / PR / Discussion 参照
 
-### Fixed comment format
-
-Use one short block comment format for hand-written exported runtime surfaces.
-
-The preferred order is:
-
-- `Role:` what this export owns
-- `Boundary:` where it may be used or what it must not depend on
-- `Ref:` optional Issue, PR, or Discussion reference when history matters
-
-Example:
+例:
 
 ```ts
 /**
@@ -242,189 +229,185 @@ Example:
 export function createApiRuntimeLogger() {}
 ```
 
-Use `Ref:` only when the decision would otherwise look arbitrary.
+`Ref:` は判断が arbitrary に見える場合のみ使う。テンプレ充足のために空フィールドは入れない。
 
-Do not add empty fields just to satisfy the template.
+### 例外
 
-### Acceptable exceptions
+ファイルレベルコメントが既にロールを明示している場合、繰り返しの per-export コメントは不要:
 
-The following do not need repetitive per-export comments when a file-level comment already explains the role clearly:
+- 1 つの小さな types ファイル内の密接に関連する export 型
+- 純粋な再 export バレル
+- 生成コード
+- フレームワーク要請による export で、ファイル先頭コメントが境界を説明済みのもの
 
-- tightly related exported types in one small types file
-- pure re-export barrels
-- generated code
-- framework-mandated exports when one file-level comment already explains the boundary
+## 定数と env ルール
 
-## Constants and env rules
+### 定数の配置
 
-### Constant placement rule
+機能 / インフラディレクトリ内でのみ意味を持つ値は、feature ローカルな `constants.ts` に置く。
 
-Use feature-local `constants.ts` when the values are only relevant inside one feature or infrastructure directory.
-
-If a deterministic constant is reused across multiple API feature directories and is still API-local, place it under a concrete shared path such as:
+複数の API 機能ディレクトリで再利用する API ローカル定数は、具体的な共有パスに置く:
 
 - `src/common/constants/logging.ts`
 - `src/common/constants/http.ts`
 - `src/common/constants/<domain>.ts`
 
-Do not create one giant shared constants file.
+巨大な共有定数ファイルは作らない。
 
-### Env boundary rule
+### env 境界
 
-Environment variables should be read through dedicated env modules under `src/config` or `src/env`.
+環境変数は `src/config` または `src/env` 配下の専用 env モジュール経由で読む。
 
-The contract should stay the same:
+契約:
 
-- read from `process.env` only inside designated env modules
-- validate and normalize there
-- export typed values or typed getters from there
-- do not read `process.env` directly from bootstrap, controllers, services, mappers, or logging adapters
+- `process.env` の読み取りは指定 env モジュール内に限る
+- そこで検証 / 正規化する
+- そこから型付き値 / 型付きゲッタを export する
+- bootstrap / コントローラ / サービス / マッパ / ロギングアダプタから `process.env` を直接読まない
 
-Suggested layer split:
+レイヤ分割の指針:
 
-- runtime env for deployed or host startup behavior
-- local-dev env helpers for compose or host-side development glue
-- test env helpers for test-only overrides
+- ランタイム env: デプロイ / ホスト起動の挙動
+- ローカル開発 env ヘルパ: compose / ホスト側開発のためのグルー
+- テスト env ヘルパ: テスト専用の上書き
 
-Production runtime code must not import test-only env helpers.
+本番ランタイムコードはテスト専用 env ヘルパを import しない。
 
-## Side-effect placement rules
+> 現状: `apps/api/src/env/server.ts` が `getApiServerPort()` / `getApiServerLogLevel()` を提供し、`apps/api/src/config/local-runtime-env.ts` が DB 接続経路の env 読み込みを所有する。新規 env 値は `src/env/server.ts` への追加を既定とする。
 
-### Core split
+## 副作用配置ルール
 
-For `apps/api`, prefer this mental model:
+### 中核の分割
 
-- controllers translate transport boundaries
-- application services coordinate use cases and side effects
-- mappers stay pure
-- adapters touch external systems
+`apps/api` のメンタルモデル:
 
-### Allowed side-effect boundaries
+- コントローラはトランスポート境界を翻訳する
+- アプリケーションサービスがユースケースと副作用を統括する
+- マッパは純粋
+- アダプタが外部システムに触れる
 
-The following boundaries may own side effects:
-
-- bootstrap
-- controllers when transport interaction is unavoidable and thin
-- application services
-- persistence adapters
-- infrastructure adapters
-
-### Pure-boundary rule
-
-Mappers, formatters, and pure value helpers should not own:
-
-- database access
-- env access
-- logger emission
-- filesystem access
-- time-based orchestration unless time is injected as data
-
-## Logging and error handling rules
-
-### Logging rule of thumb
-
-Log at the boundary where the system crosses an operational seam or makes a recovery decision.
-
-Typical logging boundaries include:
+### 副作用が許される境界
 
 - bootstrap
-- request interceptors and middleware-like boundaries
-- application services when a use-case failure or degraded fallback is chosen
-- infrastructure adapters when an external dependency fails in a way the caller must understand
+- 不可避かつ薄いトランスポート相互作用がある場合のコントローラ
+- アプリケーションサービス
+- 永続化アダプタ
+- インフラアダプタ
 
-Do not log the same failure redundantly at every layer.
+### 純粋境界ルール
 
-### Error conversion rule
+マッパ / フォーマッタ / 純粋値ヘルパは以下を所有しない:
 
-Do not swallow errors silently.
+- データベースアクセス
+- env アクセス
+- ロガー出力
+- ファイルシステムアクセス
+- 時刻をデータとして注入していない時間ベースの制御
 
-An error may be caught only when the code does one of the following:
+## ロギングとエラーハンドリングのルール
 
-- converts it to a typed application or transport error
-- adds boundary context and rethrows
-- chooses an explicitly allowed fallback or degraded path
+### ロギングの目安
 
-### User-facing versus operator-facing split
+システムが運用シームを跨ぐ、または復旧判断を下す境界でログを出す。
 
-Controllers and transport layers decide HTTP-facing behavior.
+典型:
 
-Operational logging should keep request IDs, boundary context, and sanitized technical detail for operators.
+- bootstrap
+- リクエスト interceptor / ミドルウェア相当の境界
+- ユースケース失敗や degraded fallback を選んだ際のアプリケーションサービス
+- 呼び出し側が理解すべき形で外部依存が失敗した際のインフラアダプタ
 
-Do not leak operator-facing technical detail into API response copy or schema fields that are meant for client consumption.
+同じ失敗を全レイヤで重複ロギングしない。
 
-## Naming rules
+### エラー変換ルール
 
-Use names that expose intent, not just implementation shape.
+エラーを静かに飲み込まない。
 
-Recommended prefixes and verbs:
+`catch` してよいのは次のいずれかを行うときだけ:
 
-- `is`, `has`, `can`, `should` for boolean-returning checks
-- `build` for pure assembly of a new value from known inputs
-- `create` for factories or dependency wiring that may hold state or runtime configuration
-- `resolve` for interpreting inputs or context into one decision
-- `get` for simple synchronous retrieval without remote I/O
-- `read` for boundary reads from request, env, storage, or another scoped source
-- `fetch` for remote I/O
-- `load` for orchestration that may combine multiple reads for one caller need
-- `to` for pure transformation into another representation
-- `parse` for validation and normalization of external input
-- `format` for display or log string rendering
-- `assert` for invariant checks that throw on failure
-- `map` for explicit representation conversion where the source and target types matter
+- 型付きアプリケーション / トランスポートエラーへ変換する
+- 境界文脈を付加して再 throw する
+- 明示的に許容された fallback / degraded 経路を選ぶ
 
-Avoid vague names such as `handleData`, `processThing`, or `utils` when a narrower verb would tell the reviewer more.
+### ユーザ向け vs 運用者向けの分離
 
-## Enforcement and automation rules
+コントローラ / トランスポート層が HTTP 向け挙動を決める。
 
-### Enforcement stance
+運用ログには request ID / 境界文脈 / サニタイズ済み技術詳細を残す。
 
-These rules should not stay documentation-only.
+クライアント向け応答コピーやスキーマフィールドに、運用者向けの技術詳細を漏らさない。
 
-The repository should prefer strict automation and fail fast when a new change crosses a boundary incorrectly.
+## 命名ルール
 
-### First enforcement targets
+実装形ではなく意図を表す名前を使う。
 
-The highest-value checks to automate are:
+推奨プレフィックス / 動詞:
 
-- ban direct `process.env` access outside designated env modules
-- ban controllers from importing test-only helpers
-- ban mappers from importing Prisma bootstrap or runtime env modules
-- ban broad convenience barrels outside allowed `index.ts` boundaries
-- require stable test naming for API test files
+- `is` / `has` / `can` / `should`: bool 返却の判定
+- `build`: 既知入力からの純粋アセンブリ
+- `create`: ファクトリや、状態 / ランタイム設定を保持しうる依存結線
+- `resolve`: 入力 / 文脈を 1 つの判断に解釈する
+- `get`: 同期で外部 I/O を含まない単純取得
+- `read`: リクエスト / env / ストレージ / その他スコープ付きソースからの境界読み取り
+- `fetch`: リモート I/O
+- `load`: 1 呼び出し用に複数の read を組み合わせる制御
+- `to`: 別表現への純粋変換
+- `parse`: 外部入力の検証 / 正規化
+- `format`: 表示 / ログ用の文字列描画
+- `assert`: 失敗時に投げる不変条件チェック
+- `map`: source / target 型が重要な場合の表現変換
 
-### Tooling split
+`handleData` / `processThing` / `utils` のような曖昧名は、より狭い動詞が使えるなら避ける。
 
-Use oxlint where the rule can be expressed directly.
+## 強制と自動化のルール
 
-Use repository-owned boundary scripts or AST checks where oxlint cannot yet express the rule precisely enough.
+### 強制スタンス
 
-Important examples that may require repository-owned checks are:
+これらのルールはドキュメント止まりにしない。
 
-- exported role comments on hand-written runtime surfaces
-- path-based layer restrictions inside `apps/api`
-- narrow barrel restrictions based on file name and directory role
+ツーリングが許す範囲で、新規変更が境界を誤って跨いだら fail-fast する厳格な自動化を優先する。
 
-## Review checklist
+### 最初の自動化対象
 
-Use the following checklist when reviewing new or changed `apps/api` code:
+価値が高い順:
 
-- does each file still have one primary responsibility
-- are bootstrap, controller, service, mapper, Prisma, and infrastructure responsibilities clearly separated
-- are controllers thin transport boundaries instead of logic-heavy orchestration layers
-- are Prisma bootstrap, query execution, and mapping kept distinct enough to review safely
-- is `process.env` accessed only through designated env modules
-- are mappers pure and free of side effects
-- does the code log at the right operational boundary without duplicating the same failure everywhere
-- does each exported hand-written surface explain its role with a short comment or a clear file-level comment
-- do export names communicate intent through a stable verb vocabulary
+- 指定 env モジュール以外での `process.env` 直接アクセス禁止
+- コントローラがテスト専用ヘルパを import することの禁止
+- マッパが Prisma bootstrap / ランタイム env モジュールを import することの禁止
+- 許容された `index.ts` 境界以外での広い利便性バレルの禁止
+- API テストファイルに対する安定したテスト命名の要求
 
-## Review triggers
+### ツーリング分割
 
-This document should be revisited when one of the following becomes true:
+ルールを直接表現できるなら oxlint を使う。
 
-- `apps/api` gains stricter boundary automation for path-based layer rules
-- the Prisma surface grows enough that a more explicit persistence-access pattern becomes necessary
-- another workspace wants the same shared app-level base policy and it becomes worth extracting one common layer above the API- and web-specific documents
-- the export comment rule proves too noisy and needs narrower exemptions
+oxlint で精密に表現できないルールは、リポジトリ所有の境界スクリプトや AST チェックで実装する。リポジトリ所有チェックが必要となりうる例:
 
-Until then, the practical rule is simple: keep API files single-purpose, keep Nest and Prisma boundaries explicit, centralize env access, keep mappers pure, place side effects only at real runtime boundaries, log once at the right seam, and leave short role comments on exported hand-written code.
+- 手書きランタイム面の export role コメント
+- `apps/api` 内のパスベースなレイヤ制限
+- ファイル名 / ディレクトリ役割に基づく狭いバレル制限
+
+## レビューチェックリスト
+
+新規 / 変更された `apps/api` コードのレビューで使う:
+
+- 各ファイルが依然として 1 つの主要責務を持つか
+- bootstrap / controller / service / mapper / Prisma / インフラの責務が明確に分かれているか
+- コントローラは薄いトランスポート境界に留まり、ロジック密な制御層になっていないか
+- Prisma の bootstrap / クエリ実行 / マッピングが安全にレビューできる程度に分かれているか
+- `process.env` は指定 env モジュール経由でのみアクセスされているか
+- マッパは純粋で副作用が無いか
+- 適切な運用境界でログが出ており、同じ失敗が全所で重複ロギングされていないか
+- 各 export 手書き面が、短いコメントまたは明確なファイルレベルコメントでロールを説明しているか
+- export 名は安定した動詞語彙で意図を伝えているか
+
+## 見直しトリガ
+
+次のいずれかが真になったら見直す:
+
+- `apps/api` がパスベースのレイヤルールに対する厳格な境界自動化を獲得した
+- Prisma 面が成長し、より明示的な永続化アクセスパターンが必要になった
+- 他ワークスペースが同じ共有のアプリレベル基本ポリシーを欲し、API / Web の固有文書の上に共通レイヤを抽出する価値が出てきた
+- export role コメントルールがノイジー過ぎ、より狭い免除が必要になった
+
+それまでの実務ルールは単純である: API ファイルは単一目的、Nest / Prisma 境界は明示、env アクセスは集中化、マッパは純粋、副作用は実ランタイム境界にのみ配置、適切なシームで 1 度ログ、手書き export には短い role コメント。

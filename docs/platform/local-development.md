@@ -1,129 +1,126 @@
-# Local Development Environment
+# ローカル開発環境
 
-This document captures the output of issue #51.
+本ドキュメントは Issue #51 の成果物であり、Issue #21 / #22 / #106 の成果も統合している。
 
-Its purpose is to define the first Docker-based local development environment for FocusBuddy.
+目的は、FocusBuddy における Docker ベースのローカル開発環境を定義することである。
 
-For the current repository policy on supported local execution modes, see [local-execution-modes.md](./local-execution-modes.md).
+レーン分割（fast / parity / ホスト直接起動）の役割と、ローカル環境のドリフトポリシーは [local-execution-and-drift-policy.md](./local-execution-and-drift-policy.md) を参照する。本ドキュメントは「どう動かすか」を扱い、向こうは「なぜそのレーンか / 何を守るか」を扱う。
 
-## Scope
+## スコープ
 
-This document defines:
+本ドキュメントが定めるもの:
 
-- the first local Docker orchestration approach
-- the runtime layout for web, API, PostgreSQL, and local auth development support
-- the local environment variable strategy
-- the current local authentication strategy and its planned evolution
+- ローカル Docker オーケストレーションの構成
+- Web / API / PostgreSQL / ローカル認証のランタイムレイアウト
+- ローカル環境変数戦略
+- ローカル認証戦略の現状と将来計画
+- 開発者の典型的なフローとコマンド
 
-This document does not define production deployment, final Cloud Run setup, or feature implementation inside web or API.
+本ドキュメントが定めないもの: 本番デプロイ、最終的な Cloud Run 構成、Web / API 内部の機能実装。
 
-## Chosen local orchestration
+## ローカルオーケストレーション
 
-The local development stack uses `docker compose` with [compose.local.yaml](../../compose.local.yaml).
+ローカル開発スタックは [compose.local.yaml](../../compose.local.yaml) と `docker compose` を用いる。
 
-The compose file currently starts four services:
+現状 4 サービスを起動する:
 
-- `postgres` for a real local PostgreSQL instance
-- `auth` for a local auth stub service
-- `api` for the API runtime container
-- `web` for the web runtime container
+- `postgres`: 実ローカル PostgreSQL
+- `auth`: ローカル認証スタブサービス
+- `api`: API ランタイムコンテナ（NestJS）
+- `web`: Web ランタイムコンテナ（Next.js）
 
-Issue #21 replaces the API placeholder with the real NestJS runtime while keeping the same local port and environment variable wiring.
+ローカルポート / 環境変数結線を維持しつつ、現行のリアルな API / Web ベースラインに揃えてある。これによりオーケストレーション、ポート、ヘルスチェック、ランタイム前提を検証可能に保てる。
 
-Issue #22 creates the real Next.js web baseline under `apps/web`, and issue #106 wires that baseline into the local Docker Compose `web` service.
-
-This keeps the local orchestration, ports, health checks, and runtime assumptions testable while aligning the local stack with the current real API and web baselines.
-
-## Service roles
+## サービスの役割
 
 ### `postgres`
 
-- uses the official `postgres:16-bookworm` image
-- persists data in a named Docker volume
-- is the source of truth for local PostgreSQL behavior in development
+- 公式 `postgres:16-bookworm` イメージ
+- データを名前付き Docker ボリュームに永続化
+- 開発時のローカル PostgreSQL 挙動の真実源
 
 ### `auth`
 
-- currently runs a local development auth stub
-- exposes the local auth base URL that web and API can target during early development
-- exists so auth assumptions are explicit before Firebase Auth integration is implemented
+- 現状はローカル開発用認証スタブを動かす
+- Web / API が初期開発で利用するローカル認証ベース URL を露出する
+- Firebase Auth 統合実装前に、認証前提を明示しておくために存在する
 
 ### `api`
 
-- uses the shared local Node development image
-- receives `DATABASE_URL`, auth mode, and auth base URL through environment variables
-- now runs the first NestJS API baseline from issue #21
-- restarts through Nest watch mode when local API source files change during `just dev`
-- exposes `/health` so the compose health check can validate both NestJS startup and PostgreSQL connectivity
+- 共有ローカル Node 開発イメージを使用
+- `DATABASE_URL` / 認証モード / 認証ベース URL を環境変数で受け取る
+- NestJS API ベースラインを稼働
+- `just dev` 中はソース変更で Nest watch モード経由で再起動する
+- `/health` を公開し、Compose ヘルスチェックで NestJS 起動と PostgreSQL 接続性を検証できる
 
 ### `web`
 
-- uses the shared local Node development image
-- runs the real Next.js baseline created in issue #22 and wired into local compose by issue #106
-- receives API base URL and auth-related settings through environment variables
-- exposes `/health` so the compose health check can validate that the web runtime is reachable after startup
+- 共有ローカル Node 開発イメージを使用
+- Issue #22 の Next.js ベースラインを Issue #106 が compose の `web` ランタイムに結線したもの
+- API ベース URL と認証関連設定を環境変数で受け取る
+- `/health` を公開し、Compose ヘルスチェックで Web ランタイム到達性を検証できる
 
-## Shared local image
+## 共有ローカルイメージ
 
-The shared local runtime image lives at [docker/local/node-dev.Dockerfile](../../docker/local/node-dev.Dockerfile).
+共有ローカルランタイムイメージは [docker/local/node-dev.Dockerfile](../../docker/local/node-dev.Dockerfile)。
 
-Current purpose:
+目的:
 
-- provide a stable Debian-based Node runtime close to the repository dev environment
-- enable `pnpm` through Corepack
-- give the local compose services one shared base image instead of service-specific ad hoc commands
+- リポジトリ dev 環境に近い安定した Debian ベース Node ランタイムを提供する
+- Corepack 経由で `pnpm` を有効化する
+- ローカル compose の各サービスにサービス固有のアドホックコマンドではなく、1 つの共有ベースイメージを与える
 
-This is not meant to be a production image.
+これは本番イメージではない。
 
-## Local authentication strategy
+## ローカル認証戦略
 
-The chosen local auth strategy has two phases.
+2 段階。
 
-### Current phase
+### 現フェーズ
 
-- use `FOCUSBUDDY_AUTH_MODE=stub`
-- run the `auth` service as a local auth stub
-- make web and API read auth mode and auth base URL from environment variables
+- `FOCUSBUDDY_AUTH_MODE=stub` を使う
+- `auth` サービスはローカル認証スタブとして動かす
+- Web / API は環境変数から認証モードと認証ベース URL を読む
 
-This keeps local auth explicit even before Firebase integration is implemented.
+これにより、Firebase 統合実装前でもローカル認証を明示できる。
 
-### Planned follow-up phase
+### 計画中の次フェーズ
 
-- switch the `auth` service from the stub to Firebase Auth emulator support when issue #30 is implemented
-- keep the same high-level wiring pattern so web and API still read auth settings from environment variables
+- Issue #30 が実装されたら、`auth` サービスをスタブから Firebase Auth エミュレータサポートに切り替える
+- 同じ高位結線パターンを保ち、Web / API は依然として環境変数から認証設定を読む
 
-This means the repository does not try to fully reproduce managed Firebase behavior today, but it also does not leave local auth behavior undefined.
+つまりリポジトリは現状で managed Firebase の挙動を完全再現しないが、ローカル認証挙動も未定義のままにしない。
 
-## Local environment variable strategy
+## ローカル環境変数戦略
 
-The first tracked example file is [.env.example](../../.env.example).
+最初の追跡例ファイルは [.env.example](../../.env.example)。
 
-The local compose stack currently expects these categories of values:
+ローカル compose スタックは現状以下のカテゴリを期待する:
 
-- PostgreSQL database name, user, password, and host port
-- host port mappings for API, web, and auth
-- local auth mode
-- a browser-visible API base URL for the Next.js web runtime
+- PostgreSQL のデータベース名 / ユーザ / パスワード / ホストポート
+- API / Web / Auth のホストポートマッピング
+- ローカル認証モード
+- Next.js Web ランタイムが見るブラウザ可視 API ベース URL
 
-Follow-up implementation issues should continue this rule:
+後続実装はこのルールを継続する:
 
-- keep secrets out of tracked files
-- keep tracked examples minimal and local-development-oriented
-- pass runtime values to containers through compose environment settings rather than hidden machine-specific shell state
-- distinguish between container-internal service URLs and browser-visible URLs when wiring frontend runtime variables
+- 秘密値は追跡ファイルに含めない
+- 追跡された例は最小限・ローカル開発志向に保つ
+- ランタイム値は machine-specific なシェル状態ではなく compose の環境設定でコンテナへ渡す
+- フロントエンドランタイム変数を結線する際は、コンテナ内サービス URL とブラウザ可視 URL を区別する
 
-For API local startup, the runtime contract is:
+API ローカル起動のランタイム契約:
 
-- load `.env` before local runtime validation
-- honor an explicit `DATABASE_URL` when one is already provided
-- derive a localhost PostgreSQL connection string from tracked `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, and optional `POSTGRES_PORT` when `DATABASE_URL` is absent
-- fail fast with an actionable startup error when neither an explicit nor a derivable local database connection is available
+- ローカルランタイム検証前に `.env` を読み込む
+- 明示的な `DATABASE_URL` がある場合はそれを尊重する
+- `DATABASE_URL` 不在時は、追跡された `POSTGRES_DB` / `POSTGRES_USER` / `POSTGRES_PASSWORD` と任意の `POSTGRES_PORT` から localhost PostgreSQL 接続文字列を派生させる
+- 明示も派生もできない場合は、対処可能な起動エラーで fail-fast する
 
-This keeps the tracked local PostgreSQL inputs as the source of configuration categories while still allowing Compose and host-side auxiliary startup to resolve different final runtime addresses.
+これにより追跡対象の設定カテゴリは安定する一方、Compose やホスト側補助起動が異なる最終ランタイムアドレスを解決できる余地が残る。
 
-## Developer flow
+## 開発者フロー
 
-The repository exposes these local development helpers:
+リポジトリは以下のローカル開発ヘルパを提供する:
 
 - `just install`
 - `just openapi`
@@ -137,112 +134,95 @@ The repository exposes these local development helpers:
 - `just dev-logs-running`
 - `just dev-psql`
 
-The helper scripts live under [scripts/local-dev](../../scripts/local-dev).
+ヘルパスクリプト本体は [scripts/local-dev](../../scripts/local-dev) 配下。
 
-Routine full-stack local development should start with the `just dev` entrypoint.
+日常的なフルスタックローカル開発は `just dev` から開始する。
 
-Re-running `just dev` while the stack is already up restarts the development-oriented app services (`auth`, `api`, and `web`) so package manifest or startup script changes are picked up without recycling PostgreSQL.
+スタックが起動済みのまま `just dev` を再実行すると、開発志向のアプリサービス（`auth` / `api` / `web`）が再起動される。これによりパッケージマニフェストや起動スクリプトの変更が PostgreSQL を再起動せずに取り込まれる。
 
-When you need to update workspace dependencies, run `just install`. It executes `pnpm install` from the repository root and then restarts the currently running app services so dependency and startup changes are picked up without restarting PostgreSQL.
+ワークスペース依存を更新したいときは `just install` を実行する。リポジトリルートで `pnpm install` を実行し、現在動いているアプリサービスを再起動する。依存と起動の変更を PostgreSQL 再起動なしで取り込む。
 
-When you change the OpenAPI shape or any generated client-visible contract, run `just openapi`. It executes `pnpm generate` from the repository root and then restarts the currently running app services so the regenerated contract outputs are picked up without restarting PostgreSQL.
+OpenAPI 形状や生成クライアント可視の契約を変えたら `just openapi` を実行する。リポジトリルートで `pnpm generate` を実行し、現在動いているアプリサービスを再起動して再生成された契約出力を反映する。PostgreSQL は再起動しない。
 
-When you change the Prisma schema, run `just prisma <migration-name>`. It applies the API migration, regenerates the Prisma client through the existing package script, and then restarts the currently running app services so the updated schema contract is picked up without restarting PostgreSQL.
+Prisma スキーマを変えたら `just prisma <migration-name>` を実行する。API マイグレーションを適用し、Prisma クライアントを再生成し、現在動いているアプリサービスを再起動して更新スキーマ契約を反映する。PostgreSQL は再起動しない。
 
-Low-level host-side commands such as `pnpm dev` and direct app package dev commands remain available as auxiliary escape hatches, but they are not the primary supported full-stack workflow.
+`pnpm dev` のような低レベルなホスト側コマンドや、アプリパッケージごとの dev コマンドは補助エスケープハッチとして残るが、第一級のフルスタックワークフローではない。
 
-Expected local flow:
+期待されるローカルフロー:
 
-1. copy [.env.example](../../.env.example) to a local `.env` file if overrides are needed
-2. If you are working inside the dev container, rebuild it with Docker outside of Docker support enabled
-3. Make sure Docker is installed and running on the host machine
-4. run `just dev`
-5. run `just install` whenever a local dependency change should also refresh the running app services
-6. run `just openapi` whenever an OpenAPI or generated contract change should also refresh the running app services
-7. run `just prisma <migration-name>` whenever a Prisma schema change should also refresh the running app services
-8. inspect logs with `just dev-logs`
-9. inspect only the currently running service logs with `just dev-logs-running` when you want a narrower follow mode
-10. connect to PostgreSQL with `just dev-psql` when needed
-11. stop the stack with `just dev-down`
+1. 上書きが必要なら [.env.example](../../.env.example) をローカルの `.env` にコピーする
+2. dev container 内で作業する場合、Docker outside of Docker サポートを有効にしてコンテナを再ビルドする
+3. ホストマシンに Docker がインストール・起動されていることを確認する
+4. `just dev` を実行
+5. 依存変更が動作中サービスにも反映されるべきときは `just install`
+6. OpenAPI / 生成契約の変更がサービスに反映されるべきときは `just openapi`
+7. Prisma スキーマ変更がサービスに反映されるべきときは `just prisma <migration-name>`
+8. ログは `just dev-logs` で確認
+9. 動作中サービスのみ追跡したいときは `just dev-logs-running`
+10. PostgreSQL に接続したいときは `just dev-psql`
+11. スタックを止めるときは `just dev-down`
 
-This flow is the current `fast compose` lane. It is the default full-stack local workflow for this repository.
+これが現行の `fast compose` レーンであり、本リポジトリの既定フルスタックローカルワークフロー。
 
-## Parity compose flow
+## パリティ compose フロー
 
-The repository also exposes a `parity compose` lane for production-oriented local validation.
+本番志向のローカル検証用に `parity compose` レーンも提供する。
 
-- start it with `just parity`
-- inspect it with `just parity-logs`
-- stop it with `just parity-down`
+- 起動: `just parity`
+- ログ: `just parity-logs`
+- 停止: `just parity-down`
 
-The first parity implementation is intentionally narrow.
+最初のパリティ実装は意図的に狭い:
 
-- it still uses the Compose-managed local PostgreSQL and local auth stub topology
-- it replaces development runtimes with built-runtime commands for API and web
-- it waits for Compose health checks before reporting success
+- 依然として Compose 管理のローカル PostgreSQL とローカル認証スタブを使う
+- API / Web を開発ランタイムからビルド済みランタイムコマンドに置き換える
+- Compose ヘルスチェック完了を ready 報告前に待つ
 
-The initial must-match checks in this lane are:
+このレーンの初期 must-match チェック:
 
-- API must boot from built output instead of a watch runner
-- web must boot from `next build` plus `next start` instead of `next dev`
-- API must still start against the explicit Compose `DATABASE_URL` that targets the `postgres` service hostname
-- auth, api, and web must all become healthy under the stricter startup path before the lane is considered ready
+- API は watch ランナーではなくビルド済み出力から起動する
+- Web は `next dev` ではなく `next build` + `next start` で起動する
+- API は依然として `postgres` サービスホスト名を指す明示的な Compose `DATABASE_URL` から起動する
+- auth / api / web のすべてが、より厳格な起動経路下で healthy にならなければ、レーンは ready とみなさない
 
-Because parity compose reuses the same published local ports as the fast lane, switch lanes explicitly.
+parity compose は fast lane と同じ公開ローカルポートを再利用するため、レーンを切り替えるときは明示的に行う:
 
-1. stop fast compose with `just dev-down`
-2. start parity compose with `just parity`
-3. inspect logs with `just parity-logs`
-4. stop parity compose with `just parity-down`
-5. return to the default lane with `just dev` when you are done validating
+1. fast compose を `just dev-down` で止める
+2. parity compose を `just parity` で起動する
+3. ログを `just parity-logs` で確認する
+4. parity compose を `just parity-down` で止める
+5. 検証完了後は `just dev` で既定レーンに戻る
 
-## Relationship to the dev container
+## dev container との関係
 
-The dev container and the local Docker compose stack solve different problems.
+dev container とローカル Docker compose スタックは異なる課題を解く。
 
-- the dev container prepares the editing and CLI environment
-- the local compose stack prepares the app and service runtime topology
+- dev container は編集 / CLI 環境を整える
+- ローカル compose スタックはアプリ / サービスのランタイムトポロジを整える
 
-They should stay compatible, but they are not the same layer.
+互換に保つが、同じレイヤではない。
 
-When the repository dev container is rebuilt with Docker outside of Docker enabled, Docker commands run inside the dev container use the host machine's Docker engine rather than a separate Docker daemon inside the container.
+dev container を Docker outside of Docker 有効で再ビルドした場合、dev container 内で実行される Docker コマンドは、コンテナ内の別 Docker デーモンではなくホストマシンの Docker エンジンを使う。
 
-This means the local compose workflow can be started from inside the dev container, but it still depends on Docker being installed and running on the host machine.
+これにより、ローカル compose ワークフローは dev container 内から起動できるが、ホストマシンに Docker がインストール / 起動されていることが依然として前提となる。
 
-The compose file also needs bind mounts to resolve against the host filesystem, not the container-only `/workspaces/...` path. The dev container handles that by forwarding the host repository path through `FOCUSBUDDY_WORKSPACE_MOUNT`, which the compose file uses as the bind mount source when available.
+compose ファイルはバインドマウントをコンテナ内 `/workspaces/...` ではなくホストファイルシステムに対して解決する必要がある。dev container は `FOCUSBUDDY_WORKSPACE_MOUNT` でホストのリポジトリパスを転送し、compose ファイルが利用可能なときにそれをバインドマウントの source として使う。
 
-## Current differences from deployed runtime
+## デプロイ済みランタイムとの差分
 
-The first local stack intentionally differs from production in these ways:
+最初のローカルスタックは意図的に本番と異なる:
 
-- PostgreSQL is local Docker PostgreSQL, not Cloud SQL
-- auth is a local stub for now, not real Firebase Auth or a full emulator setup yet
-- web now serves the current Next.js baseline, but feature UI remains intentionally minimal after issue #22
-- there is no Secret Manager or Cloud Run wiring in the local stack
+- PostgreSQL は Cloud SQL ではなくローカル Docker PostgreSQL
+- 認証は当面ローカルスタブで、リアル Firebase Auth やフルエミュレータではない
+- Web は現行 Next.js ベースラインを配信するが、機能 UI は Issue #22 後も意図的に最小
+- ローカルスタックには Secret Manager や Cloud Run 結線は無い
 
-These differences are acceptable for the current stage because the goal is to make the local workflow explicit and reproducible before full app implementation begins.
+これらの差分が許容されるのは、ローカルワークフローを「明示的かつ再現可能」にすることが、フル機能実装より先という現段階の目的に合致するためである。
 
-For the distinction between the default `fast compose` path, the implemented `parity compose` path, and host-side auxiliary startup, see [local-execution-modes.md](./local-execution-modes.md).
+`fast compose` / `parity compose` / ホスト直接起動の差、must-match なランタイムカテゴリ、許容されるローカルドリフトの詳細は [local-execution-and-drift-policy.md](./local-execution-and-drift-policy.md) を参照する。
 
-For the repository-level policy on must-match runtime categories and tolerated local drift, see [local-environment-drift-policy.md](./local-environment-drift-policy.md).
+## 関連 Issue へのハンドオフ
 
-## Handoff to follow-up issues
-
-### For #21
-
-- extend the real NestJS API baseline with feature modules and real endpoints
-- keep the current `DATABASE_URL` and auth environment pattern where practical
-
-### For #22 and #106
-
-- issue #22 established the Next.js web baseline only
-- issue #106 connects that baseline to the local Docker Compose `web` runtime
-- follow-up web issues should build on the real local compose runtime rather than reintroducing the placeholder service
-
-### For #30
-
-- replace the auth stub with Firebase Auth emulator support or another finalized local auth mechanism
-
-### For #28 and #31
-
-- align the local PostgreSQL and config approach with the later Cloud SQL and runtime configuration rules
+- Issue #21（NestJS API ベースライン）/ #22（Next.js ベースライン）/ #106（Web ベースラインの compose 結線）/ #51（本 Docker ベース環境）はいずれも完了済み
+- Issue #30 で認証スタブを Firebase Auth エミュレータサポートまたは別の確定ローカル認証機構に置き換える
+- Issue #28 / #31 で、ローカル PostgreSQL と config の方針を後段の Cloud SQL / ランタイム設定ルールと整合させる

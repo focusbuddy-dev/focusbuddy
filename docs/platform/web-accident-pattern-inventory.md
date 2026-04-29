@@ -1,250 +1,250 @@
-# Web Accident Pattern Inventory
+# Web 事故パターンインベントリ
 
-This document captures the output of issue #76.
+本ドキュメントは Issue #76 の成果物である。
 
-Its purpose is to make the expected web accident patterns, control postures, and follow-up implementation tracks explicit before feature implementation expands on top of issue #22.
+目的は、Issue #22 を起点とする機能実装が広がる前に、想定される Web 事故パターン・制御スタンス・後続実装トラックを明示することである。
 
-This document is the accident inventory. Issue #77 builds on it by assigning prevention, detection, and recovery responsibilities across design, types, lint, runtime helpers, tests, and observability.
+本ドキュメントは事故インベントリである。Issue #77 は、これに基づいて主要パターンに対する予防・検出・復旧の責任を、設計・型・lint・ランタイムヘルパ・テスト・可観測性に割り当てる。
 
-## Scope
+## スコープ
 
-This document defines:
+本ドキュメントが定めるもの:
 
-- the repository-level accident inventory for the FocusBuddy web app
-- the trigger, unsafe outcome, and preferred safe outcome for each accident class
-- whether each pattern should be treated as prevention-first, detection-first, or mixed-control
-- which patterns primarily affect route or navigation, mutation, background fetch, auth or session, multi-step flow, or observability
-- the minimum observability signal needed for each pattern
-- concrete follow-up issue seeds for web, shared contract, and testing work
+- FocusBuddy Web アプリのリポジトリレベル事故インベントリ
+- 各事故クラスのトリガ・安全でない結果・望ましい安全な結果
+- 各パターンを「予防優先」「検出優先」「混合制御」のどれで扱うべきか
+- 各パターンが主にどの面（ルート / ミューテーション / バックグラウンド取得 / 認証 / 多段フロー / 可観測性）に影響するか
+- 各パターンに必要な最小限の可観測性シグナル
+- Web / 共有契約 / テスト作業に向けた具体的なフォローアップ Issue の種
 
-This document does not define final helper APIs, final lint rules, or concrete app code.
+本ドキュメントが定めないもの: 最終的なヘルパ API、最終的な lint ルール、具体的なアプリコード。
 
-## Control posture definitions
+## 制御スタンスの定義
 
-### Prevention-first
+### 予防優先
 
-Use prevention-first when the unsafe outcome is easy to trigger and expensive to clean up afterward.
+安全でない結果が発生しやすく、後始末が高コストな場合に予防優先を使う。
 
-### Mixed-control
+### 混合制御
 
-Use mixed-control when the product should block the highest-risk path but still needs explicit recovery behavior and telemetry.
+最高リスクのパスはプロダクトでブロックすべきだが、明示的な復旧挙動とテレメトリも必要な場合に混合制御を使う。
 
-### Detection-first
+### 検出優先
 
-Use detection-first when full prevention is unrealistic or too costly, but the condition must be surfaced quickly enough to debug and improve.
+完全な予防が現実的でない / コスト過大な場合に検出優先を使う。条件はデバッグや改善のために十分速く可視化する必要がある。
 
-## Priority tiers
+## 優先度ティア
 
-The first implementation wave should treat the following eight patterns as primary focus because they are likely to shape shared helpers, route behavior, and product policy across many screens.
+最初の実装の波では、共有ヘルパ・ルート挙動・プロダクトポリシーを多画面に渡って形作る可能性が高いため、以下の 8 パターンを主焦点とする。
 
-- async navigation race
-- double submit or rapid re-entry
-- concurrent fetch with stale response win
-- unsaved-exit during multi-step flow
-- destructive mutation versus background refresh
-- auth expiry or permission drift mid-flow
-- over-broad fallback behavior
-- hidden failure due to missing instrumentation
+- 非同期ナビゲーション競合
+- 二重送信または素早い再入力
+- 並列フェッチと古い応答の勝利
+- 多段フロー中の未保存離脱
+- 破壊的ミューテーション vs バックグラウンド再取得
+- フロー中の認証期限切れ / 権限ドリフト
+- 過度に広いフォールバック挙動
+- 計装欠如による隠れた失敗
 
-The following patterns stay in the catalog but are second-wave design targets until the single-tab and single-flow rules are stable.
+以下のパターンはカタログには残すが、単タブ・単フロー側のルールが安定するまでは第二波の設計対象とする。
 
-- duplicate intent across tabs or repeated resume
-- partial success with missing visible feedback
+- タブ間 / 復帰時の重複意図
+- 部分成功と可視フィードバック欠如
 
-## Surface coverage map
+## 面のカバレッジマップ
 
-| Surface          | Primary patterns                                                                                                                                                                | Why it matters early                                                                                |
-| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| route/navigation | async navigation race, unsaved-exit during multi-step flow, auth expiry or permission drift mid-flow, over-broad fallback behavior                                              | route context changes are where stale work and destructive recovery paths often become user-visible |
-| mutation/form    | double submit or rapid re-entry, destructive mutation versus background refresh, partial success with missing visible feedback, duplicate intent across tabs or repeated resume | repeated intent and conflicting writes create durable side effects that are expensive to unwind     |
-| background fetch | concurrent fetch with stale response win, destructive mutation versus background refresh, auth expiry or permission drift mid-flow                                              | background activity can quietly reintroduce stale or contradictory state                            |
-| auth/session     | auth expiry or permission drift mid-flow, duplicate intent across tabs or repeated resume                                                                                       | session drift crosses route, mutation, and permission boundaries at once                            |
-| multi-step flow  | unsaved-exit during multi-step flow, partial success with missing visible feedback                                                                                              | wizard-like work needs explicit draft-loss and recovery rules                                       |
-| observability    | hidden failure due to missing instrumentation plus minimum signals on every other pattern                                                                                       | locally recovered accidents still need to be visible enough to debug                                |
+| 面               | 主なパターン                                                                                                                                                                       | なぜ早期に重要か                                                                                       |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| ルート/ナビ      | 非同期ナビゲーション競合 / 多段フロー中の未保存離脱 / フロー中の認証期限切れ・権限ドリフト / 過度に広いフォールバック挙動                                                          | ルート文脈の変化は、古い作業や破壊的復旧パスがユーザに見える形で表面化しやすい                         |
+| ミューテーション/フォーム | 二重送信 / 破壊的ミューテーション vs バックグラウンド再取得 / 部分成功と可視フィードバック欠如 / タブ間・復帰時の重複意図                                                                                       | 反復意図と競合書き込みは、後始末が高コストな永続副作用を生む                                           |
+| バックグラウンド取得 | 並列フェッチと古い応答の勝利 / 破壊的ミューテーション vs バックグラウンド再取得 / フロー中の認証期限切れ・権限ドリフト                                                                                          | バックグラウンドの活動は、古い・矛盾する状態を静かに再導入しうる                                       |
+| 認証/セッション  | フロー中の認証期限切れ・権限ドリフト / タブ間・復帰時の重複意図                                                                                                                                              | セッションのドリフトは、ルート・ミューテーション・権限の境界を一度にまたぐ                            |
+| 多段フロー       | 多段フロー中の未保存離脱 / 部分成功と可視フィードバック欠如                                                                                                                                                | ウィザード様式の作業には、明示的な下書き喪失・復旧ルールが必要                                         |
+| 可観測性         | 計装欠如による隠れた失敗、加えて他全パターンに最小シグナル                                                                                                                                                  | ローカルで復旧された事故もデバッグ可能な可視性が要る                                                   |
 
-## Accident catalog
+## 事故カタログ
 
-| Accident pattern                                | Control posture  | Primary surface               | Typical trigger                                                                    | Unsafe outcome if unmanaged                                                           | Preferred safe outcome                                                                                     | Minimum observability                                                         | Likely follow-up owner                                     |
-| ----------------------------------------------- | ---------------- | ----------------------------- | ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- | ---------------------------------------------------------- |
-| async navigation race                           | prevention-first | route/navigation              | route changes while earlier work is still in flight                                | late result commits into the wrong screen or route state                              | old work is canceled, ignored, or silently completed without state commit                                  | route context ID, request ID, late-result discard counter                     | web route/runtime helper work                              |
-| double submit or rapid re-entry                 | prevention-first | mutation/form                 | repeated click, Enter repeat, impatient retry, duplicate handler wiring            | duplicate mutation or duplicate side effect                                           | second intent is suppressed or merged while busy state stays explicit                                      | duplicate-submit counter, mutation attempt correlation, suppression reason    | web mutation helper work plus contract idempotency review  |
-| concurrent fetch with stale response win        | prevention-first | data load/background refresh  | competing loads resolve out of order                                               | stale payload overwrites fresher state                                                | stale response is discarded by centralized freshness rules                                                 | request sequence marker, stale-result discard counter                         | web data-loading and background refresh work               |
-| unsaved-exit during multi-step flow             | mixed-control    | multi-step flow/navigation    | user leaves with draft or staged changes not committed                             | lost input, abandoned setup, confusing resume experience                              | high-risk exit is blocked or confirmed, with resumable recovery where appropriate                          | abandonment warning count, confirm-leave outcome, draft recovery signal       | web flow guard and product UX work                         |
-| destructive mutation versus background refresh  | prevention-first | mutation + background fetch   | delete, archive, publish-like action overlaps with auto-refresh                    | UI re-enables invalid actions or shows contradictory state                            | destructive window locks or serializes conflicting refresh work                                            | destructive-window suppression counter, conflicting refresh event             | web mutation/background coordination work                  |
-| auth expiry or permission drift mid-flow        | mixed-control    | auth/session + route/mutation | token expiry, role change, ownership change after render                           | action fails late, stale privileged affordance remains visible, route becomes invalid | route or action is invalidated safely, user context is preserved where possible, recovery path is explicit | forced re-auth counter, permission drift event, interrupted mutation event    | web auth/session policy work with #74 and #73 coordination |
-| duplicate intent across tabs or repeated resume | mixed-control    | mutation/session              | same logical action resumes in another tab or restored flow                        | hidden conflict, surprising state jump, duplicate effect                              | conflict is detected and surfaced, with server-backed idempotency where needed                             | resume conflict event, cross-tab intent collision event                       | second-wave web session coordination plus contract review  |
-| partial success with missing visible feedback   | detection-first  | mutation/flow                 | server accepts part of a sequence but UI collapses to generic success or failure   | user trust loss, repeated retries, support burden                                     | partial outcome is visible and recoverable instead of hidden                                               | partial-success event, missing-feedback error tag, retry-after-partial metric | second-wave web UX plus contract error vocabulary          |
-| hidden failure due to missing instrumentation   | detection-first  | observability                 | fallback or suppression happens without telemetry                                  | safety regressions remain invisible until user reports                                | recovered and suppressed paths emit structured telemetry by default                                        | required event taxonomy, missing-telemetry CI or review checks                | observability and CI work                                  |
-| over-broad fallback behavior                    | prevention-first | route/error handling          | generic redirect, route reset, or catch-all error handling used for distinct cases | recoverable states become destructive or confusing                                    | failure class maps to the narrowest safe fallback                                                          | fallback reason code, redirect/reset counter, error-class tag                 | web error policy work with #74                             |
+| 事故パターン                                | 制御スタンス     | 主な面                       | 典型的トリガ                                                                  | 未管理時の安全でない結果                                                                  | 望ましい安全な結果                                                                                          | 最小可観測性                                                                       | 想定フォローアップ所有者                                |
+| ------------------------------------------- | ----------------- | ---------------------------- | ----------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| 非同期ナビゲーション競合                    | 予防優先          | ルート/ナビ                  | 先行作業がまだ進行中にルートが変わる                                          | 遅延結果が誤った画面 / ルートステートに反映される                                         | 古い作業はキャンセル / 無視 / 静かに完了させ、ステートにコミットしない                                    | ルート文脈 ID、request ID、遅延結果破棄カウンタ                                    | Web ルート / ランタイムヘルパ                            |
+| 二重送信または素早い再入力                  | 予防優先          | ミューテーション/フォーム    | 連打、Enter 連打、せっかちなリトライ、ハンドラ多重結線                       | 重複ミューテーションや重複副作用、または矛盾する pending / success ステート             | 最初の意図がミューテーション窓を所有し、後続は抑制 / 明示マージし、ロック / busy ステートを表示する        | 二重送信抑制カウンタ、ミューテーション相関 ID、抑制理由                            | Web ミューテーションヘルパ + 契約の冪等性レビュー        |
+| 並列フェッチと古い応答の勝利                | 予防優先          | データ取得 / バックグラウンド | refetch、フィルタ変更、ルート遷移で取得が重なる                               | 古いペイロードが新しい状態を上書きする                                                   | 集中化された鮮度ルールが古い結果を破棄する                                                                | request シーケンスマーカ、古い結果破棄カウンタ                                     | Web データ読み込みおよびバックグラウンド再取得           |
+| 多段フロー中の未保存離脱                    | 混合制御          | 多段フロー / ナビ            | 下書きや段階的変更が未確定でユーザが離脱                                      | 入力が消失、セットアップが放棄、再開体験が混乱                                            | 高リスクな離脱はブロック / 確認、適切に復旧可能にする                                                     | 離脱警告表示数、確認結果、下書き復旧シグナル                                       | Web フローガード + プロダクト UX                         |
+| 破壊的ミューテーション vs バックグラウンド再取得 | 予防優先          | ミューテーション + バックグラウンド | 削除・アーカイブ・公開類のアクションが自動再取得と重なる                       | UI が無効アクションを再有効化、矛盾するステート表示                                       | 破壊的ウィンドウが競合再取得をロック / 直列化する                                                          | 破壊的ウィンドウ抑制カウンタ、競合再取得イベント                                   | Web ミューテーション / バックグラウンド調整              |
+| フロー中の認証期限切れ / 権限ドリフト       | 混合制御          | 認証/セッション + ルート/ミューテーション | トークン期限切れ、ロール変更、描画後の所有権変更                              | アクションが遅れて失敗、特権アフォーダンスが残ったまま、ルートが無効に                    | ルート / アクションを安全に無効化、可能ならユーザ文脈を保持、復旧経路を明示                                | 強制再認証カウンタ、権限ドリフトイベント、中断ミューテーションイベント             | Web 認証/セッションポリシー（#74 / #73 と協調）         |
+| タブ間 / 復帰時の重複意図                   | 混合制御          | ミューテーション/セッション  | 同一論理アクションが別タブで再開、または復元フローで再生                      | 隠れたコンフリクト、驚きのステートジャンプ、重複副作用                                   | コンフリクトを検出し提示、必要に応じてサーバ側冪等性で裁定                                                | 再開コンフリクトイベント、タブ間意図衝突イベント                                  | 第二波 Web セッション調整 + 契約レビュー                |
+| 部分成功と可視フィードバック欠如            | 検出優先          | ミューテーション/フロー      | サーバが一連の途中まで受け付け、UI は汎用 success/failure に潰す              | ユーザの信頼喪失、繰り返しリトライ、サポート負荷                                         | 部分結果を可視・復旧可能にする                                                                            | 部分成功イベント、フィードバック欠如エラータグ、部分後リトライメトリクス           | 第二波 Web UX + 契約のエラー語彙                       |
+| 計装欠如による隠れた失敗                    | 検出優先          | 可観測性                     | フォールバックや抑制がテレメトリ無しで起こる                                  | 安全性のリグレッションがユーザ報告まで見えない                                            | 復旧 / 抑制パスは既定で構造化テレメトリを発する                                                            | 必須イベント分類、欠落テレメトリの CI / レビューチェック                          | 可観測性および CI                                       |
+| 過度に広いフォールバック挙動                | 予防優先          | ルート/エラーハンドリング   | 汎用リダイレクト、ルートリセット、catch-all エラー処理を異質ケースに使う      | 復帰可能ステートが破壊的になる、不整合になる                                              | 失敗クラスを最も狭い安全フォールバックにマップする                                                        | フォールバック理由コード、リダイレクト/リセットカウンタ、エラークラスタグ          | Web エラーポリシー（#74）                              |
 
-## Pattern details
+## パターン詳細
 
-### Async navigation race
+### 非同期ナビゲーション競合
 
-- User story or route context: a user starts a route-triggered load or mutation side effect, then navigates before the earlier work completes.
-- Trigger sequence: route A starts work, user moves to route B, late result from route A resolves after route context changed.
-- Unsafe outcome if unmanaged: stale result commits into route B or mutates shared state as if route A were still active.
-- Preferred safe outcome: late work is canceled or ignored at commit time, and route B remains authoritative.
-- Whether prevention is realistic at the UI boundary: yes; navigation-aware helpers can own route-context invalidation and result discard.
-- Whether server or contract support is required: not strictly required, but correlation IDs and explicit error classes make debugging easier.
-- Required observability signal: request ID, route context token, late-result discard count, and route transition timing.
-- Likely follow-up implementation owner: web route and navigation safety work.
+- ユーザストーリ / ルート文脈: ルート起点の読み込みやミューテーション副作用を始めた後、先行作業の完了前にユーザが移動する
+- トリガシーケンス: ルート A が作業を開始 → ユーザがルート B へ → A の遅延結果が文脈変更後に解決
+- 未管理時の安全でない結果: 古い結果がルート B にコミット、または共有ステートを A の前提で変更
+- 望ましい安全な結果: コミット時点で遅延作業をキャンセル / 無視し、ルート B を権威とする
+- UI 境界での予防は現実的か: yes。ナビゲーション認識ヘルパがルート文脈の無効化と結果破棄を所有できる
+- サーバ / 契約サポートの要否: 必須ではないが、相関 ID と明示エラークラスがデバッグを助ける
+- 必須可観測性シグナル: request ID、ルート文脈トークン、遅延結果破棄カウンタ、ルート遷移タイミング
+- 想定フォローアップ所有者: Web ルート / ナビゲーション安全作業
 
-### Double submit or rapid re-entry
+### 二重送信または素早い再入力
 
-- User story or route context: a user submits a form or presses a primary action multiple times while the first mutation is still pending.
-- Trigger sequence: repeated pointer or keyboard activation, delayed response, or duplicated event wiring creates overlapping submissions.
-- Unsafe outcome if unmanaged: duplicate records, duplicate side effects, or contradictory pending and success states.
-- Preferred safe outcome: the first intent owns the mutation window, later attempts are suppressed or explicitly merged, and the UI shows a locked or busy state.
-- Whether prevention is realistic at the UI boundary: yes; mutation helpers and action-state design should prevent the duplicate path by default.
-- Whether server or contract support is required: server idempotency and duplicate-intent semantics are useful backup support, especially for durable side effects.
-- Required observability signal: duplicate-submit prevention count, mutation correlation ID, and suppressed-intent reason.
-- Likely follow-up implementation owner: web mutation guardrails plus contract idempotency review.
+- ユーザストーリ / ルート文脈: 最初のミューテーションが pending 中にユーザがフォームを複数回送る
+- トリガシーケンス: ポインタ / キー入力の繰り返し、応答の遅延、イベント結線の重複で重なる送信が発生
+- 未管理時の安全でない結果: 重複レコード、重複副作用、矛盾する pending / success
+- 望ましい安全な結果: 最初の意図がミューテーション窓を所有し、後続は抑制または明示マージ。UI はロック / busy を示す
+- UI 境界での予防は現実的か: yes。ミューテーションヘルパとアクションステート設計が既定で重複パスを防ぐべき
+- サーバ / 契約サポートの要否: 永続副作用に対しては、サーバ側冪等性と重複意図セマンティクスが有用なバックアップ
+- 必須可観測性シグナル: 二重送信抑制カウンタ、ミューテーション相関 ID、抑制理由
+- 想定フォローアップ所有者: Web ミューテーションガードレール + 契約の冪等性レビュー
 
-### Concurrent fetch with stale response win
+### 並列フェッチと古い応答の勝利
 
-- User story or route context: a screen triggers overlapping loads through refetch, filter change, or route transition.
-- Trigger sequence: request 1 starts, request 2 starts later, request 2 resolves first, request 1 resolves last and overwrites the newer state.
-- Unsafe outcome if unmanaged: stale data wins, causing the UI to regress to an older snapshot.
-- Preferred safe outcome: centralized freshness policy discards stale results and commits only the currently authoritative response.
-- Whether prevention is realistic at the UI boundary: yes; request sequencing and freshness ownership belong in shared loading primitives.
-- Whether server or contract support is required: optional but helpful for cache validators, timestamps, or version markers.
-- Required observability signal: request sequence metadata, stale-result discard counter, and overlap timing diagnostics.
-- Likely follow-up implementation owner: web data-loading and background fetch work.
+- ユーザストーリ / ルート文脈: refetch、フィルタ変更、ルート遷移で同一画面の読み込みが重なる
+- トリガシーケンス: 要求 1 開始 → 要求 2 開始 → 要求 2 が先に解決 → 要求 1 が後で解決し新ステートを上書き
+- 未管理時の安全でない結果: 古いデータが勝ち、UI が古いスナップショットに退行
+- 望ましい安全な結果: 集中化された鮮度ポリシーが古い結果を破棄し、現在権威ある応答だけをコミット
+- UI 境界での予防は現実的か: yes。要求順序付けと鮮度所有は共通ロード基盤に置くべき
+- サーバ / 契約サポートの要否: 任意。キャッシュバリデータ、タイムスタンプ、バージョンマーカは助けになる
+- 必須可観測性シグナル: 要求シーケンスメタデータ、古い結果破棄カウンタ、重なりタイミング診断
+- 想定フォローアップ所有者: Web データ読み込みとバックグラウンド取得
 
-### Unsaved-exit during multi-step flow
+### 多段フロー中の未保存離脱
 
-- User story or route context: a user partially completes a wizard, setup flow, or multi-step editor and leaves before commit.
-- Trigger sequence: route change, browser back, close, refresh, or auth interruption happens while draft state is still local.
-- Unsafe outcome if unmanaged: meaningful input disappears and the user cannot tell whether progress was saved or lost.
-- Preferred safe outcome: high-risk exits trigger confirmation or draft preservation, while low-risk exits remain silent.
-- Whether prevention is realistic at the UI boundary: partially; the UI can guard obvious exits, but recovery and resume policy still matter.
-- Whether server or contract support is required: optional for autosave or resumable drafts, but not required for the first warning policy.
-- Required observability signal: confirm-leave display count, confirm outcome, draft-resume usage, and abandonment rate.
-- Likely follow-up implementation owner: web flow guard design and product UX work.
+- ユーザストーリ / ルート文脈: ウィザード、セットアップフロー、多段エディタの一部だけ完了して離脱
+- トリガシーケンス: 下書きが手元のままで、ルート変更・ブラウザバック・close・再読み込み・認証中断が発生
+- 未管理時の安全でない結果: 有意な入力が消え、進捗が保存されたか失われたかをユーザが判別できない
+- 望ましい安全な結果: 高リスク離脱は確認 / 下書き保存をトリガし、低リスク離脱は静か
+- UI 境界での予防は現実的か: 部分的。明白な離脱はガードできるが、復旧 / 再開ポリシーも重要
+- サーバ / 契約サポートの要否: 自動保存 / 再開可能下書きには任意で有用。最初の警告ポリシーには不要
+- 必須可観測性シグナル: 確認表示数、確認結果、下書き再開使用、放棄率
+- 想定フォローアップ所有者: Web フローガード設計 + プロダクト UX
 
-### Destructive mutation versus background refresh
+### 破壊的ミューテーション vs バックグラウンド再取得
 
-- User story or route context: a user deletes, archives, publishes, or changes visibility while background refresh continues.
-- Trigger sequence: destructive mutation opens a pending window, then refetch or automatic refresh commits conflicting state before the mutation settles.
-- Unsafe outcome if unmanaged: stale controls reappear, invalid actions are re-enabled, or the screen shows contradictory server truth.
-- Preferred safe outcome: destructive windows lock or serialize conflicting refresh work, followed by explicit reconciliation after mutation completion.
-- Whether prevention is realistic at the UI boundary: yes; coordination should live in shared mutation and refresh helpers.
-- Whether server or contract support is required: useful for explicit version conflict or post-mutation state markers.
-- Required observability signal: destructive-window refresh suppression count, conflict event, and post-mutation reconciliation result.
-- Likely follow-up implementation owner: web mutation and background-fetch coordination work.
+- ユーザストーリ / ルート文脈: 削除・アーカイブ・公開・可視性変更を行う最中にバックグラウンド再取得が継続
+- トリガシーケンス: 破壊的ミューテーションが pending 窓を開く → refetch / 自動再取得が、ミューテーション確定前に競合ステートをコミット
+- 未管理時の安全でない結果: 古いコントロール再表示、無効アクション再有効化、矛盾するサーバ真実
+- 望ましい安全な結果: 破壊的窓が競合再取得をロック / 直列化し、ミューテーション完了後に明示的整合
+- UI 境界での予防は現実的か: yes。共通のミューテーション / 再取得ヘルパで調整すべき
+- サーバ / 契約サポートの要否: 明示的な version conflict やミューテーション後ステートマーカが有用
+- 必須可観測性シグナル: 破壊的窓の再取得抑制カウンタ、コンフリクトイベント、ミューテーション後整合結果
+- 想定フォローアップ所有者: Web ミューテーション / バックグラウンド取得調整
 
-### Auth expiry or permission drift mid-flow
+### フロー中の認証期限切れ / 権限ドリフト
 
-- User story or route context: a user is active on a screen when the session expires or their authorization changes.
-- Trigger sequence: token expiration, sign-out in another context, role change, ownership transfer, or server-side permission update occurs after render.
-- Unsafe outcome if unmanaged: privileged actions remain visible, late mutations fail opaquely, or the user is dumped to a generic fallback route.
-- Preferred safe outcome: the route or action invalidates safely, the user context is preserved where possible, and recovery is explicit rather than generic.
-- Whether prevention is realistic at the UI boundary: only partially; stale affordances can be narrowed in the UI, but runtime interruption handling is still required.
-- Whether server or contract support is required: yes; shared error categories from #73 and response policy from #74 are part of the safe path.
-- Required observability signal: forced re-auth event, permission-drift event, interrupted mutation or route-load event, and preserved-context flag.
-- Likely follow-up implementation owner: web auth and session policy work with #73 and #74 coordination.
+- ユーザストーリ / ルート文脈: 画面表示中にセッション期限切れ / 認可変更
+- トリガシーケンス: トークン期限切れ、別文脈でのサインアウト、ロール変更、所有権譲渡、描画後のサーバ側権限更新
+- 未管理時の安全でない結果: 特権アクションが残る、後発ミューテーションが不透明に失敗、汎用ルートへの強制
+- 望ましい安全な結果: ルート / アクションを安全に無効化、可能ならユーザ文脈を保持、復旧を明示
+- UI 境界での予防は現実的か: 部分的のみ。古いアフォーダンスは UI で絞れるが、ランタイム中断処理も必要
+- サーバ / 契約サポートの要否: yes。Issue #73 の共有エラーカテゴリと Issue #74 の応答ポリシーが安全パスの一部
+- 必須可観測性シグナル: 強制再認証イベント、権限ドリフトイベント、中断ミューテーション / ルート読み込みイベント、文脈保持フラグ
+- 想定フォローアップ所有者: Web 認証 / セッションポリシー（#73 / #74 と協調）
 
-### Duplicate intent across tabs or repeated resume
+### タブ間 / 復帰時の重複意図
 
-- User story or route context: the same logical draft, publish action, or resume flow is reopened from another tab or restored after interruption.
-- Trigger sequence: second tab continues the same intent, a restored session replays stale draft state, or a pending action resumes without fresh context.
-- Unsafe outcome if unmanaged: duplicate writes, surprising state jumps, or invisible conflicts between current and restored intent.
-- Preferred safe outcome: collisions are detected, conflicting state is surfaced clearly, and server-backed idempotency or revision checks arbitrate final state.
-- Whether prevention is realistic at the UI boundary: partially; some collisions can be blocked locally, but cross-tab and resume cases need shared identifiers or revision support.
-- Whether server or contract support is required: usually yes for robust idempotency keys, revision markers, or resume tokens.
-- Required observability signal: cross-tab collision event, resume-conflict event, and duplicate-intent correlation data.
-- Likely follow-up implementation owner: second-wave web session coordination plus shared contract review.
+- ユーザストーリ / ルート文脈: 同一論理の下書き・公開アクション・再開フローを別タブで再開、または中断後に復元
+- トリガシーケンス: 第二タブが同意図を継続、復元セッションが古い下書きを再生、保留中アクションが新文脈無く再開
+- 未管理時の安全でない結果: 重複書き込み、驚きのステートジャンプ、現在意図と復元意図の不可視コンフリクト
+- 望ましい安全な結果: 衝突を検出、コンフリクトを明示し、サーバ側冪等性 / リビジョンチェックで最終ステートを裁定
+- UI 境界での予防は現実的か: 部分的。一部はローカルブロック可、タブ間 / 再開は共有 ID やリビジョン支援が要る
+- サーバ / 契約サポートの要否: 通常 yes。冪等キー、リビジョンマーカ、再開トークンが必要
+- 必須可観測性シグナル: タブ間衝突イベント、再開コンフリクトイベント、重複意図相関データ
+- 想定フォローアップ所有者: 第二波 Web セッション調整 + 共有契約レビュー
 
-### Partial success with missing visible feedback
+### 部分成功と可視フィードバック欠如
 
-- User story or route context: a multi-step action partially succeeds but the UI presents only generic success or failure.
-- Trigger sequence: one step of a compound mutation succeeds while later steps fail or are skipped, and the UI collapses the result.
-- Unsafe outcome if unmanaged: the user retries a partially completed action, loses trust in the UI, or creates support-heavy ambiguity.
-- Preferred safe outcome: partial completion is visible, distinguishable from full success and full failure, and paired with clear next steps.
-- Whether prevention is realistic at the UI boundary: not fully; the UI mostly needs enough signal to detect and display the partial outcome correctly.
-- Whether server or contract support is required: yes for typed partial-success outcomes or error categories that distinguish incomplete completion.
-- Required observability signal: partial-success event, retry-after-partial counter, and missing-feedback error tag.
-- Likely follow-up implementation owner: second-wave web UX work with shared contract vocabulary from #73.
+- ユーザストーリ / ルート文脈: 多段アクションが部分成功するが、UI は汎用 success / failure のみを提示
+- トリガシーケンス: 複合ミューテーションの 1 ステップが成功し、後続が失敗 / スキップされ、UI が結果を潰す
+- 未管理時の安全でない結果: 部分完了をユーザがリトライ、UI への信頼喪失、サポートの曖昧さ
+- 望ましい安全な結果: 部分完了を可視、フル成功 / フル失敗と区別し、明確な次手順を提示
+- UI 境界での予防は現実的か: 完全には不可。UI は主に「部分結果を表現するシグナル」を取得して正しく表示すれば良い
+- サーバ / 契約サポートの要否: yes。型付き部分成功またはエラーカテゴリで「不完全な完了」を区別
+- 必須可観測性シグナル: 部分成功イベント、部分後リトライカウンタ、フィードバック欠如エラータグ
+- 想定フォローアップ所有者: 第二波 Web UX + Issue #73 の共有契約語彙
 
-### Hidden failure due to missing instrumentation
+### 計装欠如による隠れた失敗
 
-- User story or route context: a control suppresses or recovers from a failure locally, but no one can observe it later.
-- Trigger sequence: stale result is discarded, duplicate submit is suppressed, fallback path activates, or forced recovery succeeds silently.
-- Unsafe outcome if unmanaged: regressions remain invisible until users report them and the team lacks enough data to reproduce the problem.
-- Preferred safe outcome: recovered and suppressed paths emit structured telemetry by default, not only fatal failures.
-- Whether prevention is realistic at the UI boundary: no; this is mainly a detection requirement.
-- Whether server or contract support is required: not necessarily, but shared event fields and correlation IDs improve traceability.
-- Required observability signal: required event taxonomy, correlation IDs, and coverage checks for suppression and recovery paths.
-- Likely follow-up implementation owner: observability and CI work.
+- ユーザストーリ / ルート文脈: コントロールがローカルで失敗を抑制 / 復旧したが、後で観察できない
+- トリガシーケンス: 古い結果の破棄、二重送信抑制、フォールバック起動、強制復旧が静かに成功
+- 未管理時の安全でない結果: ユーザ報告まで退行が見えず、再現に必要なデータが手元に無い
+- 望ましい安全な結果: 復旧 / 抑制パスが既定で構造化テレメトリを発する。fatal だけではない
+- UI 境界での予防は現実的か: no。これは主に検出要件
+- サーバ / 契約サポートの要否: 必須ではないが、共有イベントフィールドと相関 ID がトレーサビリティを高める
+- 必須可観測性シグナル: 必須イベント分類、相関 ID、抑制 / 復旧パスのカバレッジチェック
+- 想定フォローアップ所有者: 可観測性および CI
 
-### Over-broad fallback behavior
+### 過度に広いフォールバック挙動
 
-- User story or route context: the app handles many distinct failures by redirecting away, resetting the route, or showing a generic error shell.
-- Trigger sequence: an error boundary, route loader, or mutation handler maps multiple failure classes into one destructive fallback.
-- Unsafe outcome if unmanaged: recoverable work is discarded, user context is lost, and route behavior becomes confusing and inconsistent.
-- Preferred safe outcome: each failure class maps to the narrowest safe fallback, preserving context whenever possible.
-- Whether prevention is realistic at the UI boundary: yes; error policy and helper boundaries can prevent generic fallbacks from becoming the default.
-- Whether server or contract support is required: yes for distinguishing error classes through #73, and #74 defines the web-specific response policy.
-- Required observability signal: fallback reason code, redirect or reset counter, error-class tag, and preserved-context flag.
-- Likely follow-up implementation owner: web error-handling policy work with #74.
+- ユーザストーリ / ルート文脈: 多くの異質な失敗を、リダイレクト・ルートリセット・汎用エラーシェルで一括処理
+- トリガシーケンス: エラーバウンダリ、ルートローダ、ミューテーションハンドラが複数失敗クラスを 1 つの破壊的フォールバックにマップ
+- 未管理時の安全でない結果: 復帰可能な作業が破棄、ユーザ文脈喪失、ルート挙動が混乱・不整合
+- 望ましい安全な結果: 各失敗クラスを最も狭い安全なフォールバックにマップし、可能な限り文脈を保持
+- UI 境界での予防は現実的か: yes。エラーポリシーとヘルパ境界で、汎用フォールバック既定化を防げる
+- サーバ / 契約サポートの要否: yes。Issue #73 で失敗クラスを区別、Issue #74 が Web 固有応答ポリシーを定義
+- 必須可観測性シグナル: フォールバック理由コード、リダイレクト / リセットカウンタ、エラークラスタグ、文脈保持フラグ
+- 想定フォローアップ所有者: Web エラーハンドリングポリシー（#74）
 
-## Coordination with #73, #74, and #77
+## #73 / #74 / #77 との連携
 
-Issue #73 owns the shared error vocabulary and typed error surfaces needed by patterns such as auth drift, partial success, and over-broad fallback behavior.
+Issue #73 は、認証ドリフト・部分成功・過度に広いフォールバックが必要とする型付きエラー語彙を所有する。
 
-Issue #74 owns the web-specific response policy for those error classes, including when to keep route context, when to redirect, and when inline recovery is required.
+Issue #74 は、これらのエラークラスに対する Web 固有応答ポリシー（ルート文脈の保持・リダイレクト・インライン復旧）を所有する。
 
-Issue #77 builds on this document by assigning responsibility for the primary patterns across design, types, lint, runtime helpers, tests, and observability.
+Issue #77 は、本ドキュメントの上に立ち、主要パターンに対する責任を設計・型・lint・ランタイムヘルパ・テスト・可観測性に割り当てる。
 
-The boundary is intentional:
+境界は意図的:
 
-- this document answers what can go wrong and what safe outcome is expected
-- #77 answers which layer owns the control
-- #73 answers which error categories and typed surfaces are shared
-- #74 answers how the web product should react when those error categories appear
+- 本ドキュメント: 何が起きうるか、望ましい安全な結果は何か
+- #77: どのレイヤが制御を所有するか
+- #73: どのエラーカテゴリ / 型付きサーフェスが共有されるか
+- #74: それらが現れたとき Web プロダクトはどう反応するか
 
-## Patterns that need API or contract coordination
+## API / 契約と協調が必要なパターン
 
-The strongest contract touchpoints are:
+最も契約面の接点が強いパターン:
 
-- auth expiry or permission drift mid-flow
-- double submit or rapid re-entry when durable idempotency matters
-- duplicate intent across tabs or repeated resume
-- partial success with missing visible feedback
-- over-broad fallback behavior through typed error categories
+- フロー中の認証期限切れ / 権限ドリフト
+- 永続副作用の冪等性が要る場合の二重送信
+- タブ間 / 復帰時の重複意図
+- 部分成功と可視フィードバック欠如
+- 型付きエラーカテゴリでの過度に広いフォールバック挙動
 
-The strongest web-boundary-first patterns are:
+最も Web 境界主導で済むパターン:
 
-- async navigation race
-- concurrent fetch with stale response win
-- unsaved-exit during multi-step flow
-- destructive mutation versus background refresh
-- hidden failure due to missing instrumentation
+- 非同期ナビゲーション競合
+- 並列フェッチと古い応答の勝利
+- 多段フロー中の未保存離脱
+- 破壊的ミューテーション vs バックグラウンド再取得
+- 計装欠如による隠れた失敗
 
-## Follow-up issue seeds
+## フォローアップ Issue の種
 
-The first follow-up seeds that should be split after this catalog are:
+最初のフォローアップとして本カタログから分離すべき種:
 
-- route and navigation safety rules for async work, including route-context invalidation and late-result discard
-- mutation submission guardrails, busy locking, and duplicate-intent suppression defaults
-- stale-response and background refresh coordination rules, especially around destructive mutation windows
-- unsaved-exit policy for multi-step flows, including confirm-leave and draft recovery boundaries
-- auth and permission drift handling, aligned with #73 and #74
-- observability requirements for recovered, suppressed, and fallback paths
+- 非同期作業のためのルート / ナビゲーション安全ルール（ルート文脈無効化、遅延結果破棄を含む）
+- ミューテーション送信ガードレール、busy ロック、重複意図抑制の既定
+- 古い応答 / バックグラウンド再取得の調整ルール（特に破壊的ミューテーション窓）
+- 多段フローの未保存離脱ポリシー（確認、下書き復旧の境界）
+- 認証 / 権限ドリフトハンドリング（#73 / #74 と整合）
+- 復旧 / 抑制 / フォールバックパスへの可観測性要件
 
-The second-wave seeds can stay behind the first safety wave:
+第二波の種は最初の安全波の後に残してよい:
 
-- cross-tab or resume conflict handling with shared identifiers or revision checks
-- partial-success display policy and contract vocabulary for incomplete completion states
+- 共有 ID やリビジョンチェックを伴うタブ間 / 再開コンフリクト処理
+- 部分成功表示ポリシーと「不完全な完了」のための契約語彙
 
-## Exit criteria coverage
+## 完了基準カバレッジ
 
-This catalog now provides:
+本カタログは以下を提供する:
 
-- the main web accident patterns with explicit trigger, impact, and preferred safe outcome
-- posture classification for all ten patterns
-- explicit coverage across route/navigation, mutation, background fetch, auth/session, multi-step flow, and observability
-- a primary-focus shortlist for design constraints before #22 follow-up implementation expands
-- clear handoff boundaries to #73, #74, and #77
-- concrete issue seeds for later implementation and design work
+- 主要 Web 事故パターンに対する明示的なトリガ・影響・望ましい安全な結果
+- 全 10 パターンに対するスタンス分類
+- ルート/ナビ・ミューテーション・バックグラウンド取得・認証・多段フロー・可観測性に跨る明示的カバレッジ
+- Issue #22 後段の実装拡張に向けた設計制約の主焦点ショートリスト
+- #73 / #74 / #77 への明確な引き渡し境界
+- 後続の実装 / 設計作業のための具体的 Issue の種
