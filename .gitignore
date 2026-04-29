@@ -73,6 +73,9 @@ web_modules/
 .env.*
 !.env.example
 
+# devcontainer secret env (GH_TOKEN, host git user — read via runArgs --env-file)
+.devcontainer/.devcontainer.env
+
 # parcel-bundler cache (https://parceljs.org/)
 .cache
 .parcel-cache
@@ -155,3 +158,6 @@ vite.config.ts.timestamp-*
 
 # Husky runtime files created during install
 .husky/_
+
+# Local notes / scratch (kyogo, plan drafts, etc.)
+.works/

@@ -50,8 +50,12 @@ curl -fsSL -o "$tmp_dir/SHA256SUMS" "$base_url/SHA256SUMS"
 
 tar -xzf "$tmp_dir/$archive" -C "$tmp_dir"
 
-if command -v sudo >/dev/null 2>&1; then
-	sudo -n install -m 0755 "$tmp_dir/just" /usr/local/bin/just
-else
-	install -m 0755 "$tmp_dir/just" /usr/local/bin/just
-fi
+# Install to a user-writable directory so we don't need sudo.
+# This script assumes the devcontainer environment, where the Dockerfile sets
+# NPM_CONFIG_PREFIX=/home/node/.npm-global and puts ${NPM_CONFIG_PREFIX}/bin on
+# PATH. `just` lands next to Claude Code / ccusage. Failing fast when
+# NPM_CONFIG_PREFIX is unset is intentional: a /usr/local/bin fallback would
+# silently fail for non-root users outside the container, which is misleading.
+install_dir="${NPM_CONFIG_PREFIX:?NPM_CONFIG_PREFIX must be set; this script targets the devcontainer only}/bin"
+mkdir -p "$install_dir"
+install -m 0755 "$tmp_dir/just" "$install_dir/just"

@@ -1,158 +1,57 @@
 # Dev Container Setup
 
-This repository uses a dev container for local development.
+This repository uses a dev container for local development. **All development happens inside the container.** Host-side direct `pnpm` / `just` is not the supported workflow.
 
-The container configuration handles two separate concerns:
+The container handles:
 
-- Git commit signing with SSH keys
-- GitHub CLI authentication for issue and pull request workflows
-- developer task entrypoints with just
+- pnpm via corepack, pinned to the version in `package.json`
+- `just` task runner (pinned binary install)
+- outbound network allowlist via tinyproxy (Level 1 restriction)
+- Claude Code CLI + ccusage with persisted authentication
+- GitHub CLI authentication via `GH_TOKEN`
+- host's git `user.name` / `user.email` propagation
+- Docker outside of Docker for `just dev` / `docker compose`
 
-These are related, but they do not use the same authentication path.
-
-## just Task Runner
-
-This repository now uses `just` as the main entry point for developer tasks.
-
-The dev container installs a pinned `just` release during `postCreateCommand` by running [.devcontainer/install-just.sh](install-just.sh).
-
-Useful checks inside the container:
-
-```bash
-just --version
-just --list
-```
-
-If you work outside the dev container, install `just` on the host before running repository tasks.
-
-## Package Manager Policy
-
-`pnpm` is the only supported package manager in this repository.
-
-Use this command for the first repository setup inside the dev container:
-
-```bash
-just commitlint-setup
-```
-
-That flow runs `pnpm install --frozen-lockfile` through the Justfile, so dependency installation stays reproducible and explicit.
-
-The dev container intentionally does not install repository dependencies during `postCreateCommand`.
-
-This separation is intentional, not temporary. Dev container startup can already fail for multiple reasons. If dependency installation is added to `postCreateCommand`, the failure surface becomes larger and troubleshooting becomes harder.
+Commit signing is intentionally **disabled** in this repository (unsigned commits, matched with the upstream Claude framework).
 
 ## What Is Automated
 
-The dev container automates two bootstrap steps:
+`postCreateCommand` runs once after the container is created and:
 
-- `postCreateCommand` prepares the pinned `pnpm` version from `package.json` and installs `just`
-- `postStartCommand` configures Git SSH signing on container start via [setup-git-signing.sh](setup-git-signing.sh)
+1. starts tinyproxy with the outbound allowlist
+2. configures `gh` git credential helper if `GH_TOKEN` is present
+3. installs Claude Code CLI and ccusage globally (`npm-global`, supply-chain `--min-release-age=3`)
+4. verifies Python (used by `.claude/hooks/*.py` once Phase 3 lands)
+5. ensures the `focusbuddy-claude-auth` volume is owned by the `node` user
+6. activates the pinned `pnpm` via corepack
+7. installs the pinned `just` binary into `/home/node/.npm-global/bin`
+8. propagates host git `user.name` / `user.email` from `.devcontainer/.devcontainer.env`
+9. sets repo-local `pull.rebase=false` and `commit.gpgsign=false`
 
-It also preinstalls the VS Code extensions used directly by this repository:
+`postStartCommand` (every container start) restarts tinyproxy if it is not already running.
 
-- ESLint
-- Prettier
-- GraphQL
-- Prisma
-- Jest
-- Stylelint
-
-Repository dependency installation is intentionally left out of `postCreateCommand` and stays in the explicit `just commitlint-setup` flow.
-
-The signing script does the following:
-
-- reads the first public key exposed by the forwarded `ssh-agent`
-- writes that public key to a container-local file under `~/.ssh`
-- configures Git to use SSH signing with that file
-
-This avoids pointing Git at a host-only path such as `/Users/...`, which does not exist inside the container.
-
-## Working With Issue Worktrees
-
-This repository uses issue-specific git worktrees under `.worktrees/` for implementation work.
-
-The dev container keeps the in-container path stable by explicitly binding the opened folder to `/workspaces/focusbuddy` while still forwarding the host-side path through `FOCUSBUDDY_WORKSPACE_MOUNT`.
-
-That means an issue worktree such as `.worktrees/issue-102` can be opened and rebuilt directly, while repository scripts inside the container continue to see the workspace at `/workspaces/focusbuddy`.
-
-Recommended flow for validating `.devcontainer` changes from a worktree:
-
-1. open the target issue worktree folder in its own VS Code window
-2. rebuild or reopen the dev container from that worktree window
-3. run the verification commands in this document inside the container
-
-Expected behavior:
-
-- the issue worktree is mounted to `/workspaces/focusbuddy` inside the container
-- `printenv FOCUSBUDDY_WORKSPACE_MOUNT` still reports the host-side worktree path
-- existing repository scripts that assume `/workspaces/focusbuddy` continue to work
-
-Do not validate mount behavior from the main workspace window when the target change is intended for a worktree. Open the worktree itself.
+Repository dependencies are intentionally **not** installed during `postCreateCommand`. Run `just commitlint-setup` once after the container starts.
 
 ## Host Requirements
 
-Before opening the repository in the dev container, make sure the host machine already has working SSH access to GitHub.
+Before opening the repository in the dev container, the host needs only:
 
-The dev container now uses Docker outside of Docker for repository tasks such as `just dev`.
-That means Docker must be installed and running on the host machine before the container is rebuilt.
-It also forwards the host workspace path into `FOCUSBUDDY_WORKSPACE_MOUNT` so `docker compose`
-bind mounts target the host filesystem rather than the container-only `/workspaces/...` path.
+- **Docker** running (Docker Desktop on macOS/Windows, Docker Engine on Linux)
+- **A fine-grained GitHub personal access token** for this repository, written to `.devcontainer/.devcontainer.env` (see below). The token is no longer read from host environment variables — `.devcontainer.env` is per-repo and `.gitignore`d.
 
-Recommended checks on the host:
+`ssh` access from the host to GitHub is **not required** because pushes go through HTTPS + `GH_TOKEN` from inside the container.
 
-```bash
-ssh -T git@github.com
-ssh-add -L
-docker version
+## `.devcontainer/.devcontainer.env`
+
+This file is gitignored and read at container start via `runArgs --env-file`. Create it before the first build:
+
+```env
+GH_TOKEN=<fine-grained PAT>
 ```
 
-Expected results:
+`HOST_GIT_USER_NAME` and `HOST_GIT_USER_EMAIL` are upserted automatically by `initialize.sh` from the host's global git config — do not write them manually.
 
-- `ssh -T git@github.com` confirms GitHub SSH authentication works
-- `ssh-add -L` prints at least one public key
-- `docker version` succeeds on the host
-
-If `ssh-add -L` returns no identities, commit signing inside the container will not be configured.
-If `docker version` fails on the host, Docker-based local development commands will not work from inside the dev container.
-
-## Git Commit Signing
-
-Git push over SSH and Git commit signing are different things.
-
-- SSH push authentication uses the forwarded `ssh-agent`
-- Git commit signing uses `gpg.format=ssh` and `user.signingkey`
-
-If commit signing is configured against a host-only path, Git fails during commit even if SSH access to GitHub already works.
-
-The container setup avoids that by generating a container-local public key file on startup.
-
-Useful checks inside the container:
-
-```bash
-git config --show-origin --get-regexp '^(user\.signingkey|commit\.gpgsign|gpg\.format)$'
-git log --show-signature -1
-```
-
-Expected behavior:
-
-- `user.signingkey` points to `/home/node/.ssh/github_signing_key.pub`
-- signed commits show a valid SSH signature locally
-
-## GitHub CLI Authentication
-
-The dev container includes `gh` via a devcontainer feature. Authentication for `gh` is provided by `GH_TOKEN`, not by the host machine's GitHub CLI login session.
-
-Mounting `~/.config/gh` from the host is not reliable on macOS because the host `gh` login may store the token in Keychain instead of `hosts.yml`.
-
-The recommended approach is:
-
-1. create a fine-grained personal access token for this repository
-2. expose it on the host as `GH_TOKEN`
-3. let the dev container read it through `remoteEnv`
-
-### Recommended Fine-Grained Token Settings
-
-Create a fine-grained personal access token with these settings:
+### Recommended fine-grained token settings
 
 - Resource owner: `focusbuddy-dev`
 - Repository access: `Only select repositories`
@@ -160,57 +59,66 @@ Create a fine-grained personal access token with these settings:
 - Repository permissions:
   - `Issues`: `Read and write`
   - `Pull requests`: `Read and write`
-  - `Contents`: `Read`
+  - `Contents`: `Read and write`
 
-Use a short expiration unless there is a reason not to.
+If the organization requires approval for fine-grained tokens, the token may stay pending until approved.
 
-If the organization requires approval for fine-grained tokens, the token may remain pending until approved.
+## Outbound Network Allowlist (tinyproxy)
 
-### macOS Host Setup
+All outbound HTTP/HTTPS traffic from the container is forced through `http://127.0.0.1:8888` (tinyproxy). The allowlist is in `.devcontainer/allowlist.txt`. Anything not in the allowlist is denied (`FilterDefaultDeny Yes`).
 
-On macOS, expose the token to GUI apps such as VS Code through `launchctl`:
+Currently allowlisted hosts:
+
+- GitHub (`github.com`, `api.github.com`, `*.githubusercontent.com`)
+- npm (`registry.npmjs.org`, `*.npmjs.org`)
+- Anthropic / Claude (`api.anthropic.com`, `*.anthropic.com`, `*.claude.com`)
+- Slack (`hooks.slack.com`)
+- PyPI (`pypi.org`, `files.pythonhosted.org`)
+- ghcr (`ghcr.io`, `*.ghcr.io`)
+- Docker registry (`registry-1.docker.io`, `auth.docker.io`, `production.cloudflare.docker.com`, `*.docker.com`, `mcr.microsoft.com`)
+
+To reload the allowlist without rebuilding the container:
 
 ```bash
-launchctl setenv GH_TOKEN 'YOUR_TOKEN'
-launchctl getenv GH_TOKEN
+pkill -HUP tinyproxy
 ```
 
-Then fully restart VS Code and rebuild the dev container.
+tinyproxy runs as the `node` user inside the container, so signaling it does not require `sudo`. Adding a host requires a Pull Request that updates `allowlist.txt`.
 
-### Windows Host Setup (Unverified)
+## Claude Code Authentication Volume
 
-The following Windows steps are included for completeness, but they have not been verified in this repository yet.
+`/home/node/.claude` is backed by the named volume `focusbuddy-claude-auth`. This survives container rebuilds, so re-running `claude` does not re-trigger authentication. The volume is per-machine, not per-worktree.
 
-The container-side setup should still work because the signing script runs inside the Linux dev container, not on the Windows host.
+## just Task Runner
 
-To expose `GH_TOKEN` from PowerShell for the current session only:
+`just` is installed at `/home/node/.npm-global/bin/just` (in PATH). Useful commands:
 
-```powershell
-$env:GH_TOKEN = "YOUR_TOKEN"
-code .
+```bash
+just --list
+just --version
 ```
 
-To persist `GH_TOKEN` as a user environment variable:
+## Package Manager Policy
 
-```powershell
-setx GH_TOKEN "YOUR_TOKEN"
+`pnpm` is the only supported package manager in this repository.
+
+For the first repository setup inside the dev container:
+
+```bash
+just commitlint-setup
 ```
 
-If you use `setx`, fully close VS Code and reopen it before rebuilding the dev container.
+This runs `pnpm install --frozen-lockfile` through the Justfile. Repository dependency installation is intentionally separated from `postCreateCommand` so dev container startup failures stay isolated from dependency-resolution failures.
 
-Recommended host-side checks on Windows:
+## Working With Issue Worktrees
 
-```powershell
-ssh -T git@github.com
-ssh-add -L
-echo $env:GH_TOKEN
-```
+Issue work happens in `.worktrees/issue-<N>/`. The container binds the opened folder to `/workspaces/focusbuddy`, so worktrees can be opened directly:
 
-Expected behavior:
+1. open the target worktree folder in its own VS Code window
+2. rebuild or reopen the dev container from that worktree window
+3. inside the container, `pwd` returns `/workspaces/focusbuddy`
 
-- GitHub SSH authentication succeeds
-- `ssh-add -L` shows at least one public key
-- `GH_TOKEN` is set before VS Code opens the folder in the dev container
+`FOCUSBUDDY_WORKSPACE_MOUNT` continues to forward the host-side path so `docker compose` bind mounts hit the host filesystem rather than `/workspaces/...`.
 
 ## Verification After Rebuild
 
@@ -222,88 +130,81 @@ printenv FOCUSBUDDY_WORKSPACE_MOUNT
 gh auth status
 docker version
 docker compose version
-git config --get user.signingkey
-git log --show-signature -1
+claude --version
+ccusage --version
+just --version
+pnpm --version
+python3 --version
+pgrep -x tinyproxy && echo "tinyproxy running"
 ```
 
-Expected behavior:
+Expected:
 
-- `printenv GH_TOKEN | wc -c` returns more than `1`
-- `printenv FOCUSBUDDY_WORKSPACE_MOUNT` prints the host machine's repository path
-- `gh auth status` succeeds without running `gh auth login`
-- `docker version` shows Docker client and server information
-- `docker compose version` succeeds
-- `git config --get user.signingkey` returns the container-local key path
-- `git log --show-signature -1` shows the commit signature
+- `GH_TOKEN` length > 1
+- `FOCUSBUDDY_WORKSPACE_MOUNT` returns the host repo path
+- `gh auth status` succeeds without `gh auth login`
+- `docker version` / `docker compose version` succeed
+- `claude` / `ccusage` / `just` / `pnpm` / `python3` print their versions
+- tinyproxy is running
+
+Then verify outbound traffic is filtered:
+
+```bash
+curl -sf -x http://127.0.0.1:8888 --max-time 10 https://api.github.com/zen   # OK
+curl -sf -x http://127.0.0.1:8888 --max-time 10 https://www.example.com      # blocked
+```
 
 ## Troubleshooting
 
 ### `gh auth status` says you are not logged in
 
-If this command fails but `printenv GH_TOKEN | wc -c` returns `1`, the container received an empty environment variable.
+Most likely `.devcontainer/.devcontainer.env` is missing or `GH_TOKEN` is not set in it.
 
-That usually means VS Code did not inherit the host's `GH_TOKEN` value at the time the dev container was rebuilt.
+```bash
+ls -la /workspaces/focusbuddy/.devcontainer/.devcontainer.env
+printenv GH_TOKEN | wc -c
+```
 
-Recommended recovery steps:
+If the file is missing, create it with `GH_TOKEN=<your PAT>` and rebuild the container.
 
-1. verify that `GH_TOKEN` is set on the host before rebuilding the container
-2. fully restart VS Code
-3. rebuild the dev container
-4. rerun the verification commands inside the container
+### `just dev` fails with `docker: command not found`
 
-On macOS, `launchctl getenv GH_TOKEN` is a useful check.
+The dev container was rebuilt without the `docker-outside-of-docker` feature, or Docker is not running on the host.
 
-On Windows PowerShell, use `echo $env:GH_TOKEN`.
+Confirm `.devcontainer/devcontainer.json` includes `ghcr.io/devcontainers/features/docker-outside-of-docker:1`, then ensure Docker is running on the host and rebuild.
 
-### `docker: command not found` from `just dev`
+### `docker info` fails inside the container
 
-That usually means the dev container was created without Docker outside of Docker support.
-
-Recommended recovery steps:
-
-1. confirm `.devcontainer/devcontainer.json` includes `ghcr.io/devcontainers/features/docker-outside-of-docker:1`
-2. make sure Docker is installed and running on the host machine
-3. rebuild the dev container
-4. rerun `docker version` and `docker compose version` inside the container
-
-If `docker version` works on the host but not in the container after rebuild, the container likely did not pick up the updated feature configuration.
-
-### `docker info` fails inside the dev container
-
-That means the Docker CLI is present, but the host Docker engine is not reachable from the container.
-
-Recommended recovery steps:
-
-1. start Docker on the host machine
-2. rebuild or reopen the dev container
-3. rerun `docker version` and `docker compose version` inside the container
+Docker CLI is present, but the host Docker engine is not reachable. Start Docker on the host and reopen the container.
 
 ### `Mounts denied` mentions `/workspaces/...` during `just dev`
 
-That means `docker compose` is still trying to bind mount the container path instead of the
-host workspace path.
-
-Recommended recovery steps:
-
-1. make sure `.devcontainer/devcontainer.json` includes `FOCUSBUDDY_WORKSPACE_MOUNT` under `remoteEnv`
-2. rebuild the dev container so the new environment variable is injected
-3. verify `printenv FOCUSBUDDY_WORKSPACE_MOUNT` shows the host repository path
-4. rerun `just dev`
-
-### `git commit` fails with a host path under `/Users/...`
-
-That means Git is still pointing at a host-only signing key path.
-
-Check the current setting inside the container:
+`docker compose` is bind-mounting the container path. Confirm `FOCUSBUDDY_WORKSPACE_MOUNT` is set:
 
 ```bash
-git config --show-origin --get-regexp '^(user\.signingkey|commit\.gpgsign|gpg\.format)$'
+printenv FOCUSBUDDY_WORKSPACE_MOUNT
 ```
 
-The signing key should point to `/home/node/.ssh/github_signing_key.pub`, not to a host path.
+If empty, check `.devcontainer/devcontainer.json` `containerEnv` and rebuild.
 
-### `ssh -T git@github.com` works but commit signing still fails
+### `npm install -g` fails with EACCES
 
-That is possible and expected when SSH push authentication works but Git commit signing is misconfigured.
+`NPM_CONFIG_PREFIX=/home/node/.npm-global` should make the prefix user-writable without sudo. If you see EACCES, the Dockerfile didn't `chown` the directory — rebuild with no cache.
 
-Treat these as separate checks.
+### tinyproxy is not running
+
+```bash
+bash /workspaces/focusbuddy/.devcontainer/start-proxy.sh
+```
+
+Or rebuild. If sudoers is misconfigured, the script logs the failure to stderr.
+
+### A new outbound host is blocked
+
+Add the host to `.devcontainer/allowlist.txt` (POSIX extended regex), then:
+
+```bash
+pkill -HUP tinyproxy
+```
+
+The change is bind-mounted, no rebuild required for the running session, but commit the change so future rebuilds inherit it.
