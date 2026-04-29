@@ -7,7 +7,7 @@ require_docker
 restart_services=()
 running_services="$(docker compose -f compose.local.yaml ps --status running --services 2>/dev/null || true)"
 
-for service_name in auth api web; do
+for service_name in auth; do
   if grep -qx "$service_name" <<<"$running_services"; then
     restart_services+=("$service_name")
   fi

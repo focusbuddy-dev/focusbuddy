@@ -17,7 +17,12 @@
   "containerEnv": {
     "CLAUDE_CONFIG_DIR": "/home/node/.claude",
     "GIT_PAGER": "cat",
-    "FOCUSBUDDY_WORKSPACE_MOUNT": "${localWorkspaceFolder}"
+    "FOCUSBUDDY_WORKSPACE_MOUNT": "${localWorkspaceFolder}",
+    // The base image (node:24-bookworm) only ships C / C.utf8 / POSIX locales.
+    // Without this, glibc falls back to POSIX → wcwidth() reports CJK chars as
+    // width 1, which breaks Claude Code's TUI redraw on `claude --resume`.
+    "LANG": "C.UTF-8",
+    "LC_ALL": "C.UTF-8"
   },
   "remoteEnv": {
     "http_proxy": "http://127.0.0.1:8888",

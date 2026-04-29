@@ -73,3 +73,16 @@ upsert_env "HOST_GIT_USER_EMAIL" "$HOST_EMAIL" "$ENV_FILE"
 if [ -z "$HOST_NAME" ] || [ -z "$HOST_EMAIL" ]; then
     echo "[initialize] NOTE: host git user.name or user.email is unset. Container commits may require manual config." >&2
 fi
+
+# 6. Ensure the shared docker network exists before the devcontainer joins it.
+# The compose stack (postgres, auth) attaches as `external: true`, and the
+# devcontainer joins via runArgs --network. Created idempotently on the host.
+NETWORK_NAME="focusbuddy-net"
+if command -v docker >/dev/null 2>&1; then
+    if ! docker network inspect "$NETWORK_NAME" >/dev/null 2>&1; then
+        docker network create "$NETWORK_NAME" >/dev/null
+        echo "[initialize] Created docker network: $NETWORK_NAME"
+    fi
+else
+    echo "[initialize] WARNING: docker not found on host. devcontainer requires docker." >&2
+fi
