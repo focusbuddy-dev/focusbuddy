@@ -29,7 +29,8 @@
   },
   "mounts": [
     "source=focusbuddy-claude-auth,target=/home/node/.claude,type=volume",
-    "source=${localWorkspaceFolder}/.devcontainer/allowlist.txt,target=/etc/tinyproxy/allowlist.txt,type=bind,consistency=cached"
+    "source=${localWorkspaceFolder}/.devcontainer/allowlist.txt,target=/etc/tinyproxy/allowlist.txt,type=bind,consistency=cached",
+    "source=${localWorkspaceFolder}/../../.git,target=${localWorkspaceFolder}/../../.git,type=bind,consistency=cached"
   ],
   "postCreateCommand": "bash .devcontainer/post-create.sh",
   "postStartCommand": "bash .devcontainer/start-proxy.sh",
