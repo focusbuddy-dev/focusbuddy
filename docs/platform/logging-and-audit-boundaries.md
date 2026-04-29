@@ -1,95 +1,99 @@
-# Logging And Audit Boundaries
+# ロギングと監査の境界
 
-This document captures the output of issue #132.
+本ドキュメントは Issue #132 の成果物である。
 
-Its purpose is to explain the current boundary between shared logging concerns and audit-oriented recording concerns across the FocusBuddy web and API runtimes.
+目的は、FocusBuddy の Web ランタイムと API ランタイムにおいて、共通ロギングと監査志向の記録の責務をどのように分けるかを示すことである。
 
-## Scope
+## スコープ
 
-This document defines:
+本ドキュメントが定めるもの:
 
-- the responsibility split between `logger`, `log-sanitizer`, `reporter`, and audit-oriented recording
-- how those concerns are used across `web client`, `web middleware`, `web server`, and `api server`
-- the current boundary between shared packages and app-local runtime or persistence logic
+- `logger` / `log-sanitizer` / `reporter` / 監査志向の記録 の責務分割
+- それらの関心が `web client` / `web middleware` / `web server` / `api server` でどう使われるか
+- 共有パッケージとアプリ固有のランタイム / 永続化ロジックとの境界
 
-This document does not define the final Prisma schema, the final audit trail table layout, or the final deployed hosting implementation.
+本ドキュメントが定めないもの: 最終的な Prisma スキーマ、最終的な監査トレイルテーブル設計、最終的なホスティング実装。
 
-## Current split
+## 現状補足
 
-FocusBuddy should not treat the shared logger package as the whole observability and audit solution.
+本書時点で `packages/logger` のみが実装済みで、`packages/log-sanitizer` および `packages/reporter` はまだ実装されておらず、後述する「shared package 候補」の段階にある。本ポリシーは、これらが将来パッケージ化される際の責務境界を先に固定する目的で書かれている。
 
-The current split is:
+## 現状の責務分割
 
-- `logger`: shared structured-log entry point, event schema layer, and sink adapter boundary
-- `log-sanitizer`: shared field policy, redaction, header filtering, and profile-specific sanitization rules
-- `reporter`: browser-side exception capture and delivery boundary for frontend failures
-- audit-oriented recording: authoritative recording for security audit logs, audit trails, and business events
+FocusBuddy では、共通 logger パッケージを「可観測性と監査の唯一の解」として扱わない。
 
-The first three are good candidates for shared packages.
+現状の分割:
 
-Audit-oriented recording should not be treated as a package-first design from the start. Its authoritative behavior depends on `apps/api` use cases, transaction boundaries, and persistence rules.
+- `logger`: 共通の構造化ログのエントリポイント、イベントスキーマ層、シンクアダプタ境界
+- `log-sanitizer`: 共有のフィールドポリシー、編集（redaction）、ヘッダフィルタ、プロファイル別のサニタイズルール
+- `reporter`: ブラウザ側の例外捕捉とフロントエンド失敗の配送境界
+- 監査志向の記録: セキュリティ監査ログ・監査トレイル・ビジネスイベントの権威ある記録
 
-## Responsibility details
+最初の 3 つは共有パッケージの良い候補である。
+
+監査志向の記録は、最初から package-first で設計してはならない。権威ある挙動は `apps/api` のユースケース、トランザクション境界、永続化ルールに依存するためである。
+
+## 各責務の詳細
 
 ### `logger`
 
-- provides the shared logging facade used by application code
-- shapes structured log entries into one repository-wide format
-- supports event schema definitions for stable event names and fields
-- exposes a sink adapter boundary so concrete runtimes can inject `pino`, browser `console`, or another log writer
-- does not own deployment-specific collection such as Cloud Logging itself
+- アプリケーションコードが使う共通ロギングファサードを提供する
+- 構造化ログエントリをリポジトリ全体で 1 つの形式に整える
+- 安定したイベント名・フィールドのためのイベントスキーマ定義をサポートする
+- 具体的なランタイムが `pino` / ブラウザ `console` / 別のログライタを差し込めるシンクアダプタ境界を露出する
+- Cloud Logging などデプロイ環境固有のコレクションは所有しない
 
 ### `log-sanitizer`
 
-- defines allowed and forbidden field policy for operational logging
-- sanitizes or removes raw headers, secrets, tokens, and unsafe free-form data
-- applies different policies for client-visible logs and server-side logs
-- gives `logger` and `reporter` one shared sanitization entry point
-- does not decide business meaning or transaction boundaries
+- 運用ロギングで許可・禁止するフィールドのポリシーを定める
+- 生ヘッダ・秘密値・トークン・安全でない自由形式データをサニタイズまたは除去する
+- クライアント可視ログとサーバ側ログで異なるポリシーを適用する
+- `logger` と `reporter` に共通のサニタイズ入口を与える
+- ビジネス上の意味やトランザクション境界は決めない
 
 ### `reporter`
 
-- captures browser-side errors that operational logging alone cannot reliably preserve
-- prepares error reports for delivery to a backend intake boundary
-- is distinct from normal browser developer logging
-- should reuse `log-sanitizer` before payload delivery
-- should not be treated as the authoritative audit trail or business-event store
+- 通常の運用ロギングだけでは確実に保全できないブラウザ側エラーを捕捉する
+- バックエンド受信境界へ配送するエラーレポートを準備する
+- 通常のブラウザ向け開発者ログとは別物
+- ペイロード配送前に `log-sanitizer` を再利用する
+- 権威ある監査トレイルやビジネスイベントストアとして扱わない
 
-### Audit-oriented recording
+### 監査志向の記録
 
-This document uses one umbrella term for three related but distinct concerns:
+本ドキュメントでは、関連はするが別個の 3 つの関心に対し 1 つの傘語を用いる:
 
-- security audit logs: security-relevant events such as authentication failures, authorization failures, or privilege changes
-- audit trails: append-only records of who changed what and when
-- business events: domain-significant events outside the security-only path
+- セキュリティ監査ログ: 認証失敗・認可失敗・権限変更などのセキュリティ関連イベント
+- 監査トレイル: 「誰が何をいつ変更したか」の追記専用記録
+- ビジネスイベント: セキュリティ専用パスの外側のドメイン上重要なイベント
 
-These records are closer to `apps/api` internal application service contracts than to shared runtime logging.
+これらの記録は、共有ランタイムロギングよりも `apps/api` 内のアプリケーションサービス契約に近い。
 
-They usually need:
+通常以下が必要となる:
 
-- use-case-aware event decisions
-- transaction-aware persistence
-- append-only or correction-by-new-record rules
-- authoritative linkage to actor, target, and outcome
+- ユースケースを意識したイベント決定
+- トランザクションを意識した永続化
+- 追記専用または「新レコードによる訂正」のルール
+- アクタ・対象・結果への権威ある関連付け
 
-## Ownership boundary
+## 所有権の境界
 
 ```mermaid
 flowchart LR
-  subgraph SharedPackages[Shared packages]
+  subgraph SharedPackages[共有パッケージ]
     direction TB
-    Logger[logger\nshared facade + event schema + sink boundary]
-    Sanitizer[log-sanitizer\nfield policy + redaction + header filtering]
-    Reporter[reporter\nbrowser error capture + delivery boundary]
+    Logger[logger\n共通ファサード + イベントスキーマ + シンク境界]
+    Sanitizer[log-sanitizer\nフィールドポリシー + 編集 + ヘッダフィルタ]
+    Reporter[reporter\nブラウザエラー捕捉 + 配送境界]
   end
 
-  subgraph AppLocal[App-local runtime and persistence design]
+  subgraph AppLocal[アプリ固有のランタイム / 永続化設計]
     direction TB
-    WebRuntime[web runtime integration\nconsole or server sink injection]
-    ApiRuntime[api runtime integration\npino or another server sink injection]
-    Intake[frontend error intake\nserver-side validation + enrichment]
-    AuditRecording[audit-oriented recording\nsecurity audit + audit trail + business events]
-    ApiUseCases[apps/api use cases\napplication service contracts + transactions]
+    WebRuntime[web ランタイム統合\nconsole / server シンクの注入]
+    ApiRuntime[api ランタイム統合\npino / 別 server シンクの注入]
+    Intake[フロントエンドエラー受信\nサーバ側のバリデーション + 補強]
+    AuditRecording[監査志向の記録\nセキュリティ監査 + 監査トレイル + ビジネスイベント]
+    ApiUseCases[apps/api ユースケース\nアプリサービス契約 + トランザクション]
   end
 
   Reporter ~~~ Intake
@@ -102,117 +106,117 @@ flowchart LR
   AuditRecording --> ApiUseCases
 ```
 
-## Runtime usage
+## ランタイムごとの利用
 
-### Runtime summary
+### サマリ
 
-| Runtime        | `logger`                                         | `log-sanitizer`                        | `reporter`                                        | audit-oriented recording                                                                                                        |
-| -------------- | ------------------------------------------------ | -------------------------------------- | ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| web client     | yes, for normal developer-visible logging        | yes, with the strictest client profile | yes, for browser exceptions and rejected promises | no authoritative persistence; only user action origination                                                                      |
-| web middleware | yes, for structured ingress and correlation logs | yes, server-side profile               | no                                                | usually no authoritative persistence; may emit operational or security-relevant ingress signals only                            |
-| web server     | yes, for structured server logs                  | yes, server-side profile               | no                                                | limited local use; authoritative persistence should stay with the API boundary unless the web server owns the business mutation |
-| api server     | yes, for structured operational logs             | yes, server-side profile               | no                                                | yes, this is the primary place for authoritative audit and business recording                                                   |
+| ランタイム      | `logger`                                           | `log-sanitizer`                                    | `reporter`                                          | 監査志向の記録                                                                                                              |
+| --------------- | -------------------------------------------------- | -------------------------------------------------- | --------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| web client      | あり。通常の開発者向けロギングに使用              | あり。最厳のクライアントプロファイル              | あり。ブラウザ例外と reject された Promise の捕捉  | 権威ある永続化なし。ユーザアクションの起点記録のみ                                                                          |
+| web middleware  | あり。構造化された ingress / 相関ログ             | あり。サーバ側プロファイル                         | なし                                                | 通常は権威ある永続化なし。運用 / セキュリティ関連の ingress シグナル発信のみ                                              |
+| web server      | あり。構造化されたサーバログ                       | あり。サーバ側プロファイル                         | なし                                                | 限定的な利用。Web サーバがビジネス変更を所有する場合を除き、権威ある永続化は API 境界に残す                                |
+| api server      | あり。構造化された運用ログ                         | あり。サーバ側プロファイル                         | なし                                                | あり。権威ある監査・ビジネス記録の主な配置場所                                                                              |
 
-### Runtime map
+### ランタイムマップ
 
 ```mermaid
 flowchart TB
   subgraph WebClient[web client]
-    WCAction[user actions + UI errors]
+    WCAction[ユーザアクション + UI エラー]
     WCLogger[logger]
-    WCSanitizer[log-sanitizer\nclient profile]
+    WCSanitizer[log-sanitizer\nクライアントプロファイル]
     WCReporter[reporter]
-    WCConsole[console sink]
+    WCConsole[console シンク]
 
     WCAction --> WCSanitizer --> WCLogger --> WCConsole
     WCAction --> WCSanitizer --> WCReporter
   end
 
   subgraph WebMiddleware[web middleware]
-    MWIngress[request ingress]
+    MWIngress[リクエスト ingress]
     MWLogger[logger]
-    MWSanitizer[log-sanitizer\nserver profile]
-    MWPino[pino or another server sink]
+    MWSanitizer[log-sanitizer\nサーバプロファイル]
+    MWPino[pino / 別 server シンク]
 
     MWIngress --> MWSanitizer --> MWLogger --> MWPino
   end
 
   subgraph WebServer[web server]
-    WSHandler[route handlers + server rendering]
+    WSHandler[ルートハンドラ + サーバ描画]
     WSLogger[logger]
-    WSSanitizer[log-sanitizer\nserver profile]
-    WSPino[pino or another server sink]
+    WSSanitizer[log-sanitizer\nサーバプロファイル]
+    WSPino[pino / 別 server シンク]
 
     WSHandler --> WSSanitizer --> WSLogger --> WSPino
   end
 
   subgraph ApiServer[api server]
-    APIUseCase[apps/api use case]
-    APISanitizer[log-sanitizer\nserver profile]
+    APIUseCase[apps/api ユースケース]
+    APISanitizer[log-sanitizer\nサーバプロファイル]
     APILogger[logger]
-    APIPino[pino or another server sink]
-    AuditRecords[audit-oriented recording\nsecurity audit + audit trail + business events]
-    AuditStore[(authoritative persistence)]
+    APIPino[pino / 別 server シンク]
+    AuditRecords[監査志向の記録\nセキュリティ監査 + 監査トレイル + ビジネスイベント]
+    AuditStore[(権威ある永続化)]
 
     APIUseCase --> APISanitizer --> APILogger --> APIPino
     APIUseCase --> AuditRecords --> AuditStore
   end
 
-  WCReporter --> Intake[server-side intake]
+  WCReporter --> Intake[サーバ側受信]
   Intake --> APISanitizer
-  APIPino --> Stdout[structured stdout]
+  APIPino --> Stdout[構造化された stdout]
   MWPino --> Stdout
   WSPino --> Stdout
-  Stdout --> CloudLogging[Cloud Logging or equivalent host collection]
+  Stdout --> CloudLogging[Cloud Logging またはホスト側コレクション]
 ```
 
-## Operational interpretation for GCP-style hosting
+## GCP 系ホスティングでの運用解釈
 
-If the deployed runtime is on GCP-style managed hosting, the current intended operational path is:
+デプロイ先が GCP 系のマネージドホスティングである場合、想定する運用パスは以下の通り:
 
-- server-side runtimes emit structured logs through `pino` or another injected server log writer
-- that writer emits to `stdout` or `stderr`
-- the hosting platform collects those streams into Cloud Logging or an equivalent managed collector
+- サーバ側ランタイムは `pino` または注入された別の server log writer を通じて構造化ログを出力する
+- そのライタは `stdout` / `stderr` に出力する
+- ホスティングプラットフォームがそれらのストリームを Cloud Logging やそれと等価なマネージドコレクタに収集する
 
-The shared `logger` package therefore stops at the structured-log boundary and concrete sink injection boundary.
+したがって共有 `logger` パッケージは「構造化ログの境界」と「具体的なシンクの注入境界」までで止まる。
 
-It does not own:
+`logger` は以下を所有しない:
 
-- Cloud Logging client configuration
-- GCP project routing
-- log retention policies
-- audit-trail persistence schema
+- Cloud Logging クライアント設定
+- GCP プロジェクトのルーティング
+- ログ保管期間ポリシー
+- 監査トレイル永続化スキーマ
 
-## Why audit-oriented recording stays closer to `apps/api`
+## 監査志向の記録が `apps/api` 寄りに残る理由
 
-Audit-oriented recording is not just another sink.
+監査志向の記録は単なるシンクではない。
 
-It depends on:
+依存するのは:
 
-- which use case is being executed
-- what actor and target the system considers authoritative
-- whether a mutation succeeded or failed
-- whether the record must be persisted in the same transaction as the business change
-- whether the record must behave as append-only history
+- どのユースケースが実行されているか
+- システムが権威と見なすアクタと対象は何か
+- ミューテーションが成功したか失敗したか
+- ビジネス変更と同一トランザクションで永続化する必要があるか
+- 追記専用履歴として振る舞う必要があるか
 
-Because of that, the authoritative design point is usually the `apps/api` application service contract and persistence boundary, not the shared logger package.
+そのため、権威ある設計点は通常、共有 logger パッケージではなく `apps/api` のアプリケーションサービス契約と永続化境界となる。
 
-Shared packages may later hold common contracts or helpers for audit and business events, but the first design should not assume extraction before the `apps/api` internal contract is understood.
+共有パッケージは将来、監査やビジネスイベントの共通契約 / ヘルパを保持してもよいが、`apps/api` の内部契約が把握できるまでは抽出を仮定しない。
 
-## Rule of thumb
+## 経験則
 
-- use `logger` for operational visibility
-- use `log-sanitizer` for shared safety policy
-- use `reporter` for browser error capture and delivery
-- use audit-oriented recording for authoritative security, history, and business records
+- 運用可視性には `logger` を使う
+- 共有された安全ポリシーには `log-sanitizer` を使う
+- ブラウザエラー捕捉と配送には `reporter` を使う
+- 権威あるセキュリティ・履歴・ビジネス記録には監査志向の記録を使う
 
-If one use case needs multiple records, that is expected.
+1 つのユースケースで複数の記録が必要になることはあり得る。
 
-For example, a single API mutation may produce:
+例えば、1 回の API ミューテーションが以下を生むことがある:
 
-- an operational log entry
-- a security audit record
-- an audit trail record
-- a business event record
+- 運用ログエントリ
+- セキュリティ監査記録
+- 監査トレイル記録
+- ビジネスイベント記録
 
-Those are separate records because they serve different operational and persistence goals.
+これらは目的（運用 / 永続化）が異なるため、別個の記録として扱う。

@@ -1,189 +1,189 @@
-# Web Error Handling Policy
+# Web エラーハンドリングポリシー
 
-This document captures the output of issue #74.
+本ドキュメントは Issue #74 の成果物である。
 
-Its purpose is to define the first web-side error handling policy for redirects, inline feedback, retry actions, and route-level error rendering in FocusBuddy.
+目的は、FocusBuddy における Web 側エラーハンドリングの最初のポリシーとして、リダイレクト・インラインフィードバック・リトライアクション・ルートレベルのエラー描画を定義することである。
 
-This document uses the shared public error vocabulary defined by issue #73 and applies it to web-specific route, mutation, and background-refresh behavior.
+本ドキュメントは Issue #73 で定めた共有公開エラー語彙を、Web 固有のルート / ミューテーション / バックグラウンド再取得の挙動に適用する。
 
-## Scope
+## スコープ
 
-This document defines:
+本ドキュメントが定めるもの:
 
-- how the web app should interpret shared public error codes
-- which failures trigger redirect, not-found rendering, inline feedback, retry UI, toast or banner messaging, or route-level ErrorBoundary rendering
-- the first handling matrix for route loads, mutations, and background refreshes
-- the boundary between shared error codes and web-only presentation logic
-- when already rendered stale data may remain visible and when it must be replaced
+- Web アプリが共有公開エラーコードをどう解釈するか
+- どの失敗がリダイレクト / Not Found 描画 / インラインフィードバック / リトライ UI / トースト・バナー / ルートレベル ErrorBoundary 描画をトリガするか
+- ルート読み込み・ミューテーション・バックグラウンド再取得の最初のハンドリングマトリクス
+- 共有エラーコードと Web 固有プレゼンテーションロジックの境界
+- 既に描画済みの古いデータを残してよい場面と差し替えなければならない場面
 
-This document does not define final copy, localization, design-system wording, mobile UX, or app implementation details.
+本ドキュメントが定めないもの: 最終的なコピー、ローカライゼーション、デザインシステムの文言、モバイル UX、アプリ実装詳細。
 
-## Ownership split
+## 所有権の分割
 
-The first ownership split should stay explicit.
+最初の所有権境界は明示的に保つ。
 
-| Area                                       | Owns                                                                                                | Does not own                                     |
-| ------------------------------------------ | --------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
-| shared contract consumption in `apps/web`  | branching by public `code`, using `retryable`, choosing UI states, route fallback decisions         | defining canonical server codes or HTTP mappings |
-| route and page UX in `apps/web`            | redirect destinations, not-found rendering, route-level error rendering, mutation feedback patterns | server exception normalization                   |
-| shared contract in `packages/api-contract` | error code vocabulary and response shape consumed by web                                            | UI copy, route transitions, visual severity      |
+| 領域                                          | 所有                                                                                                | 所有しない                                       |
+| --------------------------------------------- | --------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
+| `apps/web` での共有契約の利用                 | 公開 `code` による分岐、`retryable` の使用、UI ステートの選択、ルートフォールバックの判断           | サーバ側エラーの正規化、HTTP マッピングの定義   |
+| `apps/web` のルートおよびページ UX            | リダイレクト先、Not Found 描画、ルートレベルエラー描画、ミューテーションフィードバック             | サーバ側例外の正規化                            |
+| `packages/api-contract` の共有契約            | エラーコード語彙と応答形状（Web が利用する）                                                       | UI コピー、ルート遷移、視覚的な重大度の決定     |
 
-The rule of thumb is:
+実務上のルール:
 
-- the shared contract decides what the failure means
-- the web policy decides how that failure appears to the user
-- the web policy must not redefine the meaning of the shared error codes
+- 共有契約は「失敗が何を意味するか」を決める
+- Web ポリシーは「ユーザにどう見せるか」を決める
+- Web ポリシーは共有エラーコードの意味を再定義しない
 
-## First handling principles
+## 最初のハンドリング原則
 
-The first web error policy should follow these principles.
+最初の Web エラーポリシーは次の原則に従う。
 
-- redirect only when the user must change auth context before retrying
-- prefer inline feedback for user-fixable mutation failures such as validation and narrow business-rule failures
-- prefer not-found rendering for secrecy-preserving missing-or-hidden resources
-- use route-level error rendering for route-load failures that are unrecoverable inside the current view
-- keep background refresh failures non-destructive when already rendered data is still safe to show
-- use toast or banner as supplemental signals, not as the only signal for route-fatal failures
-- preserve local mutation input whenever the user can still correct and retry
+- 認証コンテキストを変えなければリトライできない場合のみリダイレクトする
+- ユーザが修正可能な VALIDATION や狭いビジネスルール失敗は、インラインフィードバックを優先する
+- 秘匿性が重要な「存在しない / 見せられない」リソースは Not Found 描画を優先する
+- 現在のビューでは復帰不能なルート読み込み失敗は、ルートレベルのエラー描画を使う
+- 既に描画済みの安全なデータは、バックグラウンド再取得の失敗で破壊しない
+- トーストやバナーは補助シグナルとして使い、ルート致命的失敗の唯一のシグナルとはしない
+- ユーザがまだ修正してリトライできる場合は、ローカルなミューテーション入力を保持する
 
-## UI primitives
+## UI プリミティブ
 
-The first policy uses these primitives.
+最初のポリシーで使うプリミティブ:
 
-| UI primitive                        | Primary use                                                                        |
-| ----------------------------------- | ---------------------------------------------------------------------------------- |
-| redirect to sign-in                 | `AUTH_REQUIRED` when the current action cannot continue without new auth context   |
-| not-found rendering                 | `RESOURCE_NOT_FOUND` and secrecy-preserving `ACCESS_DENIED` cases                  |
-| inline field feedback               | `VALIDATION_ERROR`                                                                 |
-| inline page-level business feedback | `INVALID_STATE_TRANSITION`, `DOMAIN_RULE_VIOLATION`, selected `DUPLICATE_RESOURCE` |
-| retryable route error state         | `UPSTREAM_UNAVAILABLE`, selected route-load `RATE_LIMITED`                         |
-| generic route error state           | `INTERNAL_ERROR` and unrecoverable route-load failures                             |
-| non-blocking toast or banner        | selected background-refresh failures and capability-loss signals                   |
+| UI プリミティブ                       | 主な用途                                                                              |
+| ------------------------------------- | ------------------------------------------------------------------------------------- |
+| サインインへのリダイレクト            | 現アクションが新しい認証コンテキスト無しに継続できない `AUTH_REQUIRED` のとき         |
+| Not Found 描画                        | `RESOURCE_NOT_FOUND` および秘匿が重要な `ACCESS_DENIED` ケース                        |
+| インラインフィールドフィードバック    | `VALIDATION_ERROR`                                                                    |
+| インラインのページレベルビジネス通知  | `INVALID_STATE_TRANSITION` / `DOMAIN_RULE_VIOLATION` / 一部の `DUPLICATE_RESOURCE`    |
+| リトライ可能なルートエラーステート    | `UPSTREAM_UNAVAILABLE`、ルート読み込み時の `RATE_LIMITED` の一部                      |
+| 汎用ルートエラーステート              | `INTERNAL_ERROR` および復帰不能なルート読み込み失敗                                  |
+| 非ブロッキングなトースト / バナー     | バックグラウンド再取得失敗の一部、能力喪失シグナル                                    |
 
-## Decision matrix
+## 判断マトリクス
 
-| Public code                | Route load on protected or owner-scoped page                                                                 | Route load on public page                                                           | Mutation or form submit                                                                                                     | Background refresh                                                                                |
-| -------------------------- | ------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
-| `VALIDATION_ERROR`         | treat as unexpected and log; render generic route error only if no local recovery exists                     | same as protected route load                                                        | show inline field or form error and preserve user input                                                                     | do not interrupt the view; log for investigation if it occurs                                     |
-| `AUTH_REQUIRED`            | hard redirect to sign-in and preserve return path                                                            | keep the public page unless the viewer explicitly initiated an auth-required action | redirect to sign-in or open auth flow, then allow retry when the route can recover safely                                   | show session-expired banner or prompt without destroying the current view                         |
-| `ACCESS_DENIED`            | render access-denied state only when the route already discloses resource existence; otherwise use not-found | usually render not-found for secrecy-preserving public surfaces                     | show non-field error and keep the current view; do not retry automatically                                                  | surface a non-blocking capability-lost message and stop the blocked action                        |
-| `RESOURCE_NOT_FOUND`       | render not-found                                                                                             | render not-found                                                                    | show resource-missing message, disable stale action, and navigate away only if the current route can no longer remain valid | keep stale data only if it is still safe to show; otherwise replace with empty or not-found state |
-| `INVALID_STATE_TRANSITION` | show recoverable page state when current resource state can be refreshed; otherwise use generic route error  | same as protected route load                                                        | show inline or page-level business message and refetch current resource state                                               | refetch once, then show non-blocking state-changed message                                        |
-| `DOMAIN_RULE_VIOLATION`    | show recoverable page state when the resource context remains trustworthy                                    | same as protected route load                                                        | show inline or adjacent explanatory message and preserve current form state                                                 | keep current UI and surface a lightweight warning if the action was rejected                      |
-| `DUPLICATE_RESOURCE`       | usually treat as recoverable and refresh the resource                                                        | same as protected route load                                                        | show idempotent success hint or narrow conflict message based on action semantics                                           | suppress noisy UI and reconcile with fresh data                                                   |
-| `RATE_LIMITED`             | show retryable route error with cooldown guidance when the route cannot proceed                              | same as protected route load                                                        | show inline or toast cooldown message and temporarily disable repeated submit                                               | back off silently first, then surface a banner only if the condition persists                     |
-| `UPSTREAM_UNAVAILABLE`     | render retryable route error state with request ID and retry affordance                                      | render retryable route error state with request ID and retry affordance             | preserve user input, show retry affordance, and avoid route reset                                                           | retain stale data, mark refresh failure, and retry later                                          |
-| `INTERNAL_ERROR`           | render generic route error state and log with request ID                                                     | render generic route error state and log with request ID                            | show generic failure message, preserve input when possible, and offer retry                                                 | keep stale data if safe, log, and avoid repeated user interruption                                |
+| 公開コード                 | 保護 / 所有者スコープのページのルート読み込み                                                                  | 公開ページのルート読み込み                                                              | ミューテーション / フォーム送信                                                                                                | バックグラウンド再取得                                                                                |
+| -------------------------- | -------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------- |
+| `VALIDATION_ERROR`         | 想定外として扱いログ。ローカル復帰が無理なら汎用ルートエラーを描画                                              | 保護ルートと同じ                                                                        | インラインのフィールド / フォームエラーを表示し、ユーザ入力を保持                                                              | ビューを中断しない。発生時は調査用にログ                                                              |
+| `AUTH_REQUIRED`            | サインインへハードリダイレクトし return path を保持                                                           | 認証必須アクションをユーザが明示開始しない限り公開ページを維持                          | サインインへリダイレクトまたは認証フローを開く。ルートが安全に復帰できる場合のみリトライを許可                                  | セッション期限切れバナー / プロンプトを表示し、現ビューを破壊しない                                  |
+| `ACCESS_DENIED`            | ルートが既にリソース存在を開示している場合のみアクセス拒否ステートを描画。それ以外は Not Found を使う           | 公開面の秘匿性を優先して通常 Not Found を描画                                          | フィールド外のエラーを表示し、現ビューを保持。自動リトライしない                                                               | 非ブロッキングな能力喪失メッセージを表示し、ブロックされたアクションを停止                          |
+| `RESOURCE_NOT_FOUND`       | Not Found 描画                                                                                                 | Not Found 描画                                                                          | リソース欠如メッセージを表示し、古いアクションを無効化。ルートが妥当でなくなった場合のみ離脱                                   | 古いデータが安全なら維持。そうでなければ空 / Not Found ステートに差し替え                            |
+| `INVALID_STATE_TRANSITION` | リソースステート再取得で復帰可能なら復帰可能ページステートを表示。そうでなければ汎用ルートエラー               | 保護ルートと同じ                                                                        | インラインまたはページレベルのビジネスメッセージを表示し、現リソースステートを refetch                                         | 1 度 refetch し、その後 「状態が変化しました」 系の非ブロッキング通知を表示                          |
+| `DOMAIN_RULE_VIOLATION`    | リソースコンテキストが信頼できる場合は復帰可能ページステートを表示                                              | 保護ルートと同じ                                                                        | インラインや隣接位置で説明的なメッセージを表示し、現フォームステートを保持                                                     | 現 UI を維持し、アクション拒否時は軽量警告を提示                                                     |
+| `DUPLICATE_RESOURCE`       | 通常は復帰可能として扱い、リソースをリフレッシュ                                                                | 保護ルートと同じ                                                                        | アクション意味論に応じて「冪等成功ヒント」または狭いコンフリクトメッセージを表示                                              | ノイジーな UI を抑制し、新鮮データで整合させる                                                       |
+| `RATE_LIMITED`             | ルートが続行できないなら、クールダウンガイダンス付きのリトライ可能ルートエラーを表示                            | 保護ルートと同じ                                                                        | インラインまたはトーストでクールダウンメッセージを表示し、繰り返し送信を一時無効化                                            | まず無音でバックオフし、状態が継続する場合のみバナーで通知                                            |
+| `UPSTREAM_UNAVAILABLE`     | request ID と再試行手段付きのリトライ可能ルートエラーを描画                                                    | request ID と再試行手段付きのリトライ可能ルートエラーを描画                            | ユーザ入力を保持し、再試行手段を提示し、ルートリセットを避ける                                                                  | 古いデータを保持し、再取得失敗をマークし、後で再試行                                                  |
+| `INTERNAL_ERROR`           | 汎用ルートエラーステートを描画し request ID と共にログ                                                          | 汎用ルートエラーステートを描画し request ID と共にログ                                  | 汎用失敗メッセージを表示し、可能なら入力を保持し、再試行を提案                                                                 | 安全なら古いデータを保持。ログを残し、ユーザを繰り返し中断しない                                     |
 
-## Route-context rules
+## ルートコンテキスト別ルール
 
-### Route loads
+### ルート読み込み
 
-Route-load failures must choose among redirect, not-found rendering, recoverable page state, and route-level error rendering.
+ルート読み込み失敗は、リダイレクト・Not Found 描画・復帰可能ページステート・ルートレベルエラー描画のいずれかを選ぶ。
 
-The first route-load rules should be:
+最初のルール:
 
-- `AUTH_REQUIRED` on protected routes redirects to sign-in and preserves return path
-- secrecy-preserving visibility failures prefer not-found over explicit access-denied rendering
-- route-load `UPSTREAM_UNAVAILABLE` and route-load `INTERNAL_ERROR` become route-level error states rather than inline page fragments
-- domain failures may stay in a recoverable page state only when the route still has enough trustworthy context to explain and retry safely
+- 保護ルート上の `AUTH_REQUIRED` はサインインへリダイレクトし、return path を保持する
+- 秘匿性の重要な可視性失敗は、明示的アクセス拒否描画より Not Found を優先する
+- ルート読み込み時の `UPSTREAM_UNAVAILABLE` および `INTERNAL_ERROR` は、ページ内インライン断片ではなくルートレベルエラーステートにする
+- ドメイン失敗が復帰可能ページステートに留まれるのは、ルートに状況を説明し安全に再試行できる十分なコンテキストが残っているときだけ
 
-### Mutations and forms
+### ミューテーションとフォーム
 
-Mutation failures should prefer preserving local state so the user can correct and retry.
+ミューテーション失敗は、ユーザが修正してリトライできるよう、ローカルステートの保持を優先する。
 
-The first mutation rules should be:
+最初のルール:
 
-- `VALIDATION_ERROR` stays inline and keeps field values intact
-- `INVALID_STATE_TRANSITION` and `DOMAIN_RULE_VIOLATION` stay adjacent to the affected action or page section instead of triggering route replacement
-- `AUTH_REQUIRED` from mutation paths should preserve retry intent when feasible, but must not silently replay destructive actions after re-auth without explicit user confirmation
-- `DUPLICATE_RESOURCE` should map to idempotent success when the product semantics are intentionally idempotent, such as repeated helpful-stamp enable
+- `VALIDATION_ERROR` はインラインに留まりフィールド値を保持する
+- `INVALID_STATE_TRANSITION` と `DOMAIN_RULE_VIOLATION` は対象アクション / セクションの隣接位置に留まり、ルート差し替えは起こさない
+- ミューテーション経路の `AUTH_REQUIRED` は可能ならリトライ意図を保持する。ただし破壊的アクションを再認証後に明示確認なく無音再生してはならない
+- 意図的な冪等性を持つ場合（例: 「役立った」スタンプの再有効化）、`DUPLICATE_RESOURCE` は冪等成功にマップする
 
-### Background refresh
+### バックグラウンド再取得
 
-Background refresh failures should not destroy already rendered valid data unless that data is now unsafe to show.
+バックグラウンド再取得の失敗は、表示中の正当データが安全に保てる限り破壊しない。
 
-The first background-refresh rules should be:
+最初のルール:
 
-- keep stale data visible for `UPSTREAM_UNAVAILABLE`, `INTERNAL_ERROR`, and transient `RATE_LIMITED` cases when the data is still safe
-- if auth or permission drift makes the current data unsafe to keep showing, replace it with the safer state instead of leaving stale privileged content on screen
-- use banner or lightweight messaging for refresh failures that affect capability but do not invalidate the entire route
+- `UPSTREAM_UNAVAILABLE` / `INTERNAL_ERROR` および一過性の `RATE_LIMITED` は、データが安全なら古いデータを保持
+- 認証・権限のドリフトで現データが安全に表示できなくなったら、特権付き古いコンテンツを残さずに安全なステートへ差し替える
+- バナーや軽量メッセージは、能力に影響するがルート全体は無効にしない再取得失敗に使う
 
-## Auth and redirect policy
+## 認証およびリダイレクトポリシー
 
-The first auth policy should be explicit.
+最初の認証ポリシーは明示的に保つ。
 
-- route-load `AUTH_REQUIRED` on protected routes uses hard redirect to sign-in and preserves return path
-- public routes do not redirect just because a background request hit `AUTH_REQUIRED`; they only prompt when the user initiates an action that requires auth
-- mutation-triggered `AUTH_REQUIRED` may use an in-place auth prompt only if the current route can remain valid and the pending action can be resumed safely
-- after re-auth, the product should restore user context when possible instead of forcing a home redirect
+- 保護ルートでのルート読み込み `AUTH_REQUIRED` はサインインへハードリダイレクトし、return path を保持
+- 公開ルートは、バックグラウンド要求が `AUTH_REQUIRED` を受けただけではリダイレクトしない。ユーザが認証必須アクションを開始したときのみプロンプトする
+- ミューテーション起因の `AUTH_REQUIRED` は、現ルートが妥当に保たれ保留中アクションを安全に再開できる場合に限り、その場での認証プロンプトを使ってよい
+- 再認証後は、ホームへの強制リダイレクトではなく、可能な限りユーザコンテキストを復元する
 
-## Not-found versus access-denied policy
+## Not Found とアクセス拒否のポリシー
 
-The web app should preserve secrecy where needed instead of over-explaining authorization failures.
+Web アプリは認可失敗を過度に説明せず、必要な箇所では秘匿性を保つ。
 
-The first not-found policy should be:
+最初の Not Found ポリシー:
 
-- public summary pages and other public-facing routes should use not-found for all hidden-resource cases, even if the viewer is authenticated but unauthorized
-- owner-scoped or already-disclosed routes may use explicit access-denied states when the user already knows the resource exists
-- `RESOURCE_NOT_FOUND` remains the default rendering choice for missing or hidden content on public surfaces
+- 公開サマリページなど公開面のルートは、ユーザが認証されていても認可されていない場合を含め、すべての非開示リソースを Not Found とする
+- 所有者スコープや既に存在を開示済みのルートでは、ユーザがリソース存在を既知である場合に限り明示的なアクセス拒否ステートを使ってよい
+- 公開面では、欠如または非開示コンテンツの既定として `RESOURCE_NOT_FOUND` を使う
 
-## Duplicate-intent and stamp policy
+## 重複意図とスタンプのポリシー
 
-The web app should not turn intentional idempotency into visible conflict noise.
+Web アプリは意図的な冪等性を、目に見えるコンフリクトノイズに変えない。
 
-The first duplicate-intent policy should be:
+最初のポリシー:
 
-- duplicate helpful-stamp enable attempts should surface as silent success or no-op confirmation, not as a visible conflict error
-- mutation helpers may still record suppressed duplicate intent internally for observability, but the user-visible state should stay stable
-- non-idempotent duplicate creates may still show a narrow conflict message when the user needs to understand why the action failed
+- 「役立った」スタンプの重複有効化は、可視のコンフリクトエラーではなく無音成功 / 冪等確認として扱う
+- ミューテーションヘルパは可観測性のために抑制された重複意図を内部記録してよいが、ユーザに見えるステートは安定に保つ
+- 非冪等の重複作成は、ユーザに失敗理由を理解してもらう必要がある場合、狭いコンフリクトメッセージを表示してよい
 
-## Recoverable versus route-fatal failures
+## 復帰可能 vs ルート致命的な失敗
 
-The route should remain recoverable only when the product can still explain the current state safely and offer a meaningful next action.
+ルートが復帰可能であり続けるのは、プロダクトが現状を安全に説明し、意味ある次アクションを提示できるときだけである。
 
-Use recoverable page state when:
+復帰可能ページステートを使うのは:
 
-- the resource context is still trustworthy
-- the user can fix the problem in place
-- no secrecy or auth reset is required
+- リソースコンテキストが依然信頼できる
+- ユーザが現位置で問題を修正できる
+- 秘匿性や認証リセットが不要
 
-Use route-level error rendering when:
+ルートレベルエラー描画を使うのは:
 
-- the route cannot explain the current state without a full reload or retry
-- upstream or internal failures prevent trustworthy route composition
-- keeping the current route would encourage unsafe or misleading user actions
+- フルリロードや再試行無しでは現状を説明できない
+- 上流または内部の失敗で信頼可能なルート構成ができない
+- 現ルートを保持すると安全でない / 誤解を招くアクションを誘発する
 
-## Relationship to issues #73, #76, and #77
+## Issue #73 / #76 / #77 との関係
 
-Issue #73 owns the shared public error vocabulary and response shape.
+Issue #73 は共有公開エラー語彙と応答形状を所有する。
 
-Issue #76 identifies the accident patterns that make inconsistent fallback behavior dangerous.
+Issue #76 は、フォールバック挙動の不整合を危険にする事故パターンを特定する。
 
-Issue #77 assigns responsibility for prevention, detection, and recovery across layers, and this document supplies the web-specific response policy referenced there.
+Issue #77 は、レイヤを跨いだ予防・検出・復旧の責任を割り当て、本ドキュメントは Issue #77 で参照される Web 固有応答ポリシーを供給する。
 
-The boundary is:
+境界:
 
-- issue #73 decides what the error means
-- this document decides how the web app reacts
-- issue #77 decides which layer owns the control path
+- Issue #73 はエラーが何を意味するかを決める
+- 本ドキュメントは Web アプリがどう反応するかを決める
+- Issue #77 はどのレイヤが制御パスを所有するかを決める
 
-## Follow-up issue seeds
+## フォローアップ Issue の種
 
-This policy should be concrete enough to drive follow-up work such as:
+本ポリシーは具体的な後続作業を駆動するのに十分である:
 
-- route-level error state helpers for retryable versus generic failures
-- auth-required redirect and return-path helpers
-- mutation error presentation helpers that preserve field state
-- not-found versus access-denied route helpers for public and owner-scoped pages
-- background refresh banners and stale-data retention rules
+- リトライ可能 / 汎用失敗向けのルートレベルエラーステートヘルパ
+- 認証必須リダイレクトおよび return path ヘルパ
+- フィールドステートを保持するミューテーションエラー表示ヘルパ
+- 公開 / 所有者スコープページに対する Not Found / アクセス拒否ヘルパ
+- バックグラウンド再取得バナーと古いデータ保持ルール
 
-## Done-state coverage
+## カバレッジの完了状態
 
-This document now makes explicit:
+本ドキュメントは以下を明示的にした:
 
-- the first web error handling matrix by error code and request context
-- redirect, inline feedback, retry, not-found, and route-level error rendering rules
-- the ownership split between shared error codes and web-specific presentation logic
-- the boundary between recoverable page state and route-fatal failures
-- the decisions needed to guide implementation work after issue #22
+- エラーコードとリクエスト文脈別の Web ハンドリングマトリクス
+- リダイレクト・インラインフィードバック・リトライ・Not Found・ルートレベルエラー描画の各ルール
+- 共有エラーコードと Web プレゼンテーションロジックとの所有権分割
+- 復帰可能ページステートとルート致命的失敗の境界
+- Issue #22 後段の実装作業を導く判断点

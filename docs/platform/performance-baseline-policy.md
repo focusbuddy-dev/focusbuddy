@@ -1,260 +1,270 @@
-# Performance Baseline Measurement Policy
+# パフォーマンス計測ベースラインポリシー
 
-This document captures the output of issue #60.
+本ドキュメントは Issue #60 の成果物である。
 
-Its purpose is to define the first repository-owned performance policy in a way that makes the roles of web and API obviously different, keeps accepted baselines comparable in git, and gives follow-up automation a minimal adoption path.
+目的は、リポジトリが所有する最初のパフォーマンスポリシーを定義することである。Web と API の役割を明確に区別し、受け入れ済みベースラインを git 上で比較可能に保ち、後続の自動化が最小コストで導入できる経路を示す。
 
-## Why this exists
+## なぜこのポリシーが存在するか
 
-Performance work in this repository is not primarily about chasing the highest synthetic score. It exists to shorten the time between a harmful change landing and the moment that change is noticed, understood, and fixed.
+このリポジトリのパフォーマンス作業は、合成スコアの最高値を追うためのものではない。害のある変更が混入してから、それが気づかれ・理解され・修正されるまでの時間を短縮するために存在する。
 
-For a solo-maintained product, that means the policy must optimize for these outcomes:
+ソロメンテナンスのプロダクトとして、ポリシーは次の成果を最適化する:
 
-- catch regressions before they turn into user-visible pain or incident-like behavior
-- separate signal from noise so performance checks do not become a manual ritual on every PR
-- keep the evidence close to the code review so regressions are easier to explain and revert
-- introduce automation in the smallest order that improves detection speed without creating a new maintenance burden
+- ユーザに見える痛みやインシデントになる前にリグレッションを検出する
+- パフォーマンスチェックが PR ごとの手作業儀式にならないよう、シグナルとノイズを切り分ける
+- リグレッションを説明・取り消ししやすくするため、根拠を変更レビューの近くに置く
+- 検出速度を高める一方でメンテナンスコストを増やさないよう、自動化を最小順序で導入する
 
-That is why this policy deliberately splits web and API into different operational roles instead of treating them as one generic performance lane.
+これが、Web と API を 1 つのパフォーマンスレーンとして扱わず、別の運用役割として分割する理由である。
 
-## Scope
+## スコープ
 
-This document defines:
+本ドキュメントが定めるもの:
 
-- the role split between web and API performance checks
-- the execution split between local accepted baseline capture and CI regression checks
-- the first representative scenarios to measure
-- the local parity environment used for comparable reruns
-- the saved JSON format for accepted baseline snapshots
-- the first review thresholds before CI enforcement becomes mature
-- the minimum tool-adoption roadmap, assuming LHCI for web and k6 for API
+- Web と API のパフォーマンスチェックの役割分担
+- ローカルでの受け入れベースライン取得と CI でのリグレッション検査の実行分割
+- 最初に計測する代表シナリオ
+- 比較可能な再実行のためのローカルパリティ環境
+- 受け入れ済みベースラインスナップショットの保存 JSON 形式
+- CI 強制が成熟するまでの最初のレビュー閾値
+- LHCI（Web）と k6（API）を前提にした最小ツール導入ロードマップ
 
-This document does not define production telemetry export, repository-wide hard merge blocking, or full historical monitoring infrastructure.
+本ドキュメントが定めないもの: 本番テレメトリ送出、リポジトリ全体のハードマージブロック、完全な履歴監視インフラ。
 
-## Role split at a glance
+## 現状補足
 
-| Area | Main purpose | Primary failure to catch early | Primary tool direction | Main review output |
-| --- | --- | --- | --- | --- |
-| Web | prevent user-experience regressions on real page loads and navigations | slower paint, layout instability, worse interaction feel, bundle drift | LHCI for initial-load, custom capture only where LHCI does not cover the scenario well | PR-level baseline comparison and explanatory audits |
-| API | detect response-quality regressions before they become reliability or latency incidents | slower responses, unstable status codes, heavier payloads, boot-path drift | k6 for repeatable HTTP scenario execution and threshold evaluation | PR-level latency and status summary for owned endpoints |
+ベースライン JSON は schema version 1 形式で 3 件コミット済み:
 
-The important distinction is operational.
+- `apps/web/performance/baselines/web.home.initial-load.json`
+- `apps/web/performance/baselines/web.home.details-navigation.json`
+- `apps/api/performance/baselines/api.health.get.json`
 
-- Web performance is a UX regression policy.
-- API performance is a service-response quality policy.
+LHCI / k6 を組み込んだ CI ワークフローはまだ実装されていない（merge gate のみ）。本ポリシーはそのロードマップの起点として位置づける。
 
-They use different tools because they are trying to surface different kinds of failure.
+## 役割の概要
 
-## Execution model
+| 領域 | 主な目的 | 早期に検出したい主な失敗 | 主なツール方向 | 主なレビュー出力 |
+| ---- | -------- | ------------------------ | -------------- | ---------------- |
+| Web  | 実ページ読み込みおよびナビゲーションでの UX リグレッションを防ぐ | ペイントの遅延、レイアウトの不安定化、インタラクション体感悪化、バンドル肥大 | LHCI を初期ロードに、LHCI の表現が苦手なシナリオに限り独自キャプチャ | PR レベルのベースライン比較と説明的な audit |
+| API  | 信頼性 / レイテンシのインシデントになる前に応答品質のリグレッションを検出する | 応答の遅延、ステータスコードの不安定化、ペイロード肥大、ブートパスのドリフト | 反復可能な HTTP シナリオ実行と閾値評価のための k6 | PR レベルでの所有エンドポイントのレイテンシ / ステータスサマリ |
 
-### Local accepted baseline capture
+運用上の重要な区分:
 
-The first accepted baseline must be captured against the parity runtime lane.
+- Web パフォーマンスは UX リグレッションポリシー
+- API パフォーマンスはサービス応答品質ポリシー
 
-- start the stack with `just parity`
-- measure the web app at `http://127.0.0.1:3000`
-- measure the API app at `http://127.0.0.1:3001`
-- use built runtimes, not watch-mode development servers
-- use a clean browser profile with extensions disabled for browser-driven web measurements
-- rerun the same scenario at least 3 times and compare medians for threshold review
+異なる失敗種別を表に出すため、異なるツールを使う。
 
-This keeps the first baseline close to the repository's production-oriented local path without making CI orchestration a prerequisite for the initial policy decision.
+## 実行モデル
 
-### CI regression execution
+### ローカルでの受け入れベースライン取得
 
-CI should treat runtime startup and measurement as separate steps.
+最初の受け入れベースラインはパリティランタイムレーンに対して取得する。
 
-- start the target runtime first
-- wait for health before measurement starts
-- run the measurement tool against the already-running service URL
-- tear the runtime down after measurement completes
+- `just parity` でスタックを起動する
+- Web は `http://127.0.0.1:3000` で計測する
+- API は `http://127.0.0.1:3001` で計測する
+- watch モードの開発サーバではなく、ビルド済みランタイムを使う
+- ブラウザ駆動の Web 計測では、拡張機能無効のクリーンプロファイルを用いる
+- 同一シナリオを最低 3 回再実行し、閾値レビュー時に中央値で比較する
 
-For this repository, that means `just parity` is the clearest first setup step when the goal is a full-stack comparable CI lane. LHCI and k6 then run against the resulting URLs. They do not replace the stack startup step.
+これにより、CI オーケストレーションを前提条件にせずに、リポジトリの本番志向ローカルパスに最初のベースラインを近づける。
 
-In other words, LHCI in CI is not "run `just parity` inside LHCI". The workflow should start parity first, then run LHCI against `http://127.0.0.1:3000`. The same separation applies to k6 for `http://127.0.0.1:3001`.
+### CI でのリグレッション実行
 
-If a faster web-only CI lane is added later, it may use LHCI's own server startup support for the web app alone. That must be treated as a separate run mode from the full-stack parity lane until the repository explicitly adopts it as the new comparison reference.
+CI ではランタイム起動と計測を別ステップとして扱う。
 
-### Database handling
+- 先に対象ランタイムを起動する
+- ヘルスチェックが通ってから計測を開始する
+- 既に動いているサービス URL に対して計測ツールを走らせる
+- 計測完了後にランタイムを停止する
 
-Database preparation is part of runtime setup, not part of LHCI or k6 themselves.
+このリポジトリでは、フルスタックの比較レーンを目的とする場合、最初のセットアップステップとして `just parity` が最も明確である。LHCI と k6 はその結果出力された URL に対して走らせ、スタック起動ステップを置き換えない。
 
-For the current first API scenario, `api.health.get`, the owned check only requires PostgreSQL reachability. The current `/health` handler executes `SELECT 1`, so an empty PostgreSQL instance started by parity is acceptable for this specific scenario. No schema migration or seed step is required to make that health check meaningful today.
+つまり「LHCI の中で `just parity` を走らせる」のではなく、ワークフロー側でまず parity を起動し、続いて LHCI を `http://127.0.0.1:3000` に対して走らせる。同じ分離が k6 / `http://127.0.0.1:3001` にも当てはまる。
 
-That exemption is specific to `api.health.get`. It should not be generalized to later API performance scenarios.
+後により高速な Web 単独の CI レーンを追加する場合、LHCI 自身の Web アプリ起動サポートを使ってもよい。ただしリポジトリが新たな比較基準として採用するまでは、フルスタックパリティレーンとは別の実行モードとして扱う。
 
-When a future API scenario touches Prisma-managed tables or depends on row shape, row count, or relational joins, the workflow must add an explicit database preparation step before measurement:
+### データベースの扱い
 
-- create or reset the database to a known state for the run mode
-- apply the repository-approved schema bootstrap step before the app is measured
-- seed deterministic fixture data only when the scenario depends on specific records or cardinality
-- start measurement only after schema and fixture preparation completes
+データベース準備はランタイムセットアップの一部であり、LHCI / k6 自体の責務ではない。
 
-Once repository-owned migrations exist for those scenarios, CI should prefer a migration-based bootstrap such as `prisma migrate deploy` over ad hoc schema setup. Until then, any temporary bootstrap step must be documented as a bootstrap-only choice for comparability, not as the long-term contract.
+最初の API シナリオ `api.health.get` は、PostgreSQL 到達性のみを要求する。現在の `/health` ハンドラは `SELECT 1` を実行するため、parity が起動した空の PostgreSQL インスタンスでこのシナリオは意味を持つ。スキーママイグレーションやシード手順は不要である。
 
-The important operational rule is that LHCI and k6 measure an already-prepared runtime. They are not the mechanism that defines database state.
+この例外は `api.health.get` 限定であり、後続の API パフォーマンスシナリオに一般化してはならない。
 
-### Fixed-value and mock-data handling
+将来の API シナリオが Prisma 管理テーブルに触れたり、行形状・行数・関係結合に依存する場合、計測前に明示的なデータベース準備ステップを追加する:
 
-Fixed values, mock responses, and contract-backed preview data are useful in this repository, but they answer a different question from the performance baseline.
+- 当該実行モード向けに既知状態へデータベースを作成 / リセットする
+- 計測前にリポジトリが承認したスキーマブートストラップ手順を適用する
+- 特定レコードや件数に依存する場合のみ決定論的なフィクスチャをシードする
+- スキーマ / フィクスチャ準備が完了してから計測を開始する
 
-They are appropriate when the goal is to:
+該当シナリオに対するリポジトリ所有のマイグレーションが整い次第、CI は `prisma migrate deploy` などマイグレーションベースのブートストラップを優先する。それまでに必要な暫定ブートストラップは「比較可能性のためのブートストラップ専用の選択であり、長期契約ではない」ことを明記する。
 
-- verify UI composition before the final backend exists
-- confirm contract shape, empty-state handling, and rendering behavior deterministically
-- keep day-to-day implementation review fast without waiting for full-stack runtime setup
+運用上の重要なルールは、LHCI と k6 は「準備済みのランタイム」を計測する、ということである。これらはデータベース状態を定義する仕組みではない。
 
-They are not sufficient when the goal is to claim a repository-owned performance baseline for an endpoint or page load.
+### 固定値 / モックデータの扱い
 
-If a measurement runs only against fixed values, it can still be useful as a narrow implementation-time preview, but it fails to represent several effects that the baseline policy is meant to catch:
+固定値・モック応答・契約付きプレビューデータは、本リポジトリで有用ではあるが、パフォーマンスベースラインとは別の問いに答える。
 
-- database connection establishment and pool behavior
-- ORM and serialization overhead on the real response path
-- cache misses, cold-path startup, and runtime dependency latency
-- payload growth caused by actual record shape or cardinality
+これらが適切なのは:
 
-For that reason, this repository should treat mock-first preview and performance baseline as separate lanes:
+- 最終バックエンドが整う前に UI 構成を検証したいとき
+- 契約形状・空状態ハンドリング・描画挙動を決定論的に確認したいとき
+- フルスタック起動を待たずに日々の実装レビューを高速に保ちたいとき
 
-- preview or mock lanes may use fixed values to validate rendering and contract usage during implementation
-- accepted performance baselines must run against a real runtime dependency shape for the owned scenario
-- deterministic fixture data is required only when the owned performance scenario depends on specific row shape, row count, or relational behavior
+これらは、エンドポイントやページロードに対するリポジトリ所有のパフォーマンスベースラインを主張するには不十分である。
 
-This keeps the earlier mock-first web rule valid without turning preview data into evidence for service or UX performance claims.
+固定値だけを使った計測は、以下のような本ポリシーが捕えたい効果を表現しきれない:
 
-### LHCI result storage
+- データベース接続確立とプール挙動
+- 実応答経路上の ORM / シリアライズオーバーヘッド
+- キャッシュミス、コールドパス起動、ランタイム依存のレイテンシ
+- 実レコード形状や件数によるペイロード肥大
 
-LHCI storage should also be introduced in phases.
+そのため、モック先行のプレビューとパフォーマンスベースラインは別レーンとして扱う:
 
-For the first PR-review lane, the repository does not need a self-hosted LHCI server yet. The first useful outcome is a PR-visible Lighthouse summary and a reproducible collected report.
+- プレビュー / モックレーンは、実装中の描画や契約利用検証のために固定値を用いてよい
+- 受け入れ済みパフォーマンスベースラインは、所有シナリオに対する実ランタイム依存形状で実行する
+- 決定論的なフィクスチャは、所有シナリオが特定の行形状・行数・関係挙動に依存する場合にのみ必要となる
 
-That means the initial web lane may use either of these lightweight outputs:
+これにより、先行する「モック先行 Web」ルールを保ちつつ、プレビューデータをサービス / UX パフォーマンス主張の根拠に転化させない。
 
-- temporary-public-storage when the repository accepts short-lived hosted report links for review
-- filesystem output saved as CI artifacts when the repository wants raw reports without introducing another always-on service yet
+### LHCI 結果の保存
 
-A self-hosted LHCI server becomes necessary only when the repository wants durable historical comparisons, controlled access to reports, or a repository-owned trend dashboard. That is a later infrastructure decision, not a prerequisite for adopting LHCI as the first PR regression tool.
+LHCI の保存も段階的に導入する。
 
-The operational rule is therefore:
+最初の PR レビューレーンでは、自前 LHCI サーバはまだ不要である。最初の有用な成果は、PR で見える Lighthouse サマリと再現可能なレポートである。
 
-- PR review summary first
-- durable history later
-- self-hosted LHCI server only when the repository decides that retained Lighthouse history is worth the extra service ownership
+つまり初期の Web レーンは以下のいずれかの軽量出力でよい:
 
-## Web policy
+- 短命のホスト URL を許容するなら temporary-public-storage
+- 常時稼働サービスを増やさず生レポートを残したいなら、ファイルシステム出力 + CI アーティファクト
 
-### Role
+自前 LHCI サーバが必要になるのは、リポジトリが永続的な履歴比較・レポートのアクセス制御・所有のトレンドダッシュボードを欲したときである。これは LHCI を最初の PR リグレッションツールとして導入する前提条件ではない。
 
-The web lane exists to answer one question quickly: did this change make the user-facing experience of the measured route meaningfully worse?
+運用ルール:
 
-The owned signal is not backend throughput in isolation. The owned signal is what the browser and the user feel on the measured route.
+- まず PR レビューサマリを優先する
+- 後で永続的な履歴を追加する
+- 自前 LHCI サーバは「Lighthouse 履歴の保持に追加サービス所有のコストをかける」とリポジトリが決断したときのみ導入する
 
-### Owned scenarios
+## Web ポリシー
 
-The first web baseline owns two scenarios.
+### 役割
+
+Web レーンは「この変更で、計測対象ルートのユーザ体感が有意に悪化したか？」という問いに素早く答えるために存在する。
+
+所有するシグナルはバックエンドスループット単独ではなく、計測対象ルートでブラウザとユーザが体感するものである。
+
+### 所有シナリオ
+
+最初の Web ベースラインは 2 シナリオを所有する。
 
 #### `web.home.initial-load`
 
-- start from a fresh browser profile with cleared storage
-- open `http://127.0.0.1:3000/`
-- wait until the baseline page hero and logging demo are visible
-- capture load-oriented Web Vitals from that visit
-- run Lighthouse against the same URL under the same parity conditions
+- ストレージをクリアした新規ブラウザプロファイルから開始
+- `http://127.0.0.1:3000/` を開く
+- ベースラインページのヒーローおよびロギングデモが見えるまで待つ
+- 当該訪問のロード系 Web Vitals を取得
+- 同一 URL に対して同一パリティ条件下で Lighthouse を走らせる
 
-This is the repository-owned baseline for first-view performance on the current Next.js app.
+これは現在の Next.js アプリにおける初期表示パフォーマンスのリポジトリ所有ベースラインである。
 
 #### `web.home.details-navigation`
 
-- begin from the loaded home page in the same clean session
-- click the `Navigate to details demo` control
-- wait until the URL becomes `/?view=details` and the client logging status returns to idle
-- capture interaction-oriented Web Vitals for that navigation step
+- 同一クリーンセッションでホームを読み込んだ状態から開始
+- 「Navigate to details demo」コントロールをクリック
+- URL が `/?view=details` になり、クライアントロギングのステータスが idle に戻るまで待つ
+- そのナビゲーションステップのインタラクション系 Web Vitals を取得
 
-This keeps the first interactive baseline tied to a real, already-implemented route-state transition instead of an invented synthetic flow.
+最初のインタラクションベースラインを、合成フローではなく既に実装済みのルート状態遷移に紐付ける。
 
-### Owned metrics
+### 所有メトリクス
 
-- direct browser capture for `TTFB`, `FCP`, and `CLS`
-- interaction metric: prefer `INP`, but accept `FID` in the first local automation lane when Chromium emits that metric instead
-- Web Vitals metadata: `id`, `navigationType`, `rating`, and `value`
-- Lighthouse `performance` score and the selected audits that explain score drift, including the first comparable `largest-contentful-paint` value
-- first-load JavaScript byte count for the `/` route in the parity build output
+- ブラウザでの直接取得: `TTFB` / `FCP` / `CLS`
+- インタラクションメトリクス: `INP` を優先。最初のローカル自動化レーンで Chromium が `INP` を出さない場合は `FID` を許容
+- Web Vitals メタデータ: `id` / `navigationType` / `rating` / `value`
+- Lighthouse の `performance` スコアおよびスコア変動を説明する選択された audit（最初に比較可能な `largest-contentful-paint` を含む）
+- パリティビルド出力における `/` ルートの初回ロード JavaScript バイト数
 
-`web.home.initial-load` owns `TTFB`, `FCP`, and `CLS` as direct load metrics, while Lighthouse owns the first comparable `LCP` value in the automation lane. `web.home.details-navigation` owns the first interactive metric capture, preferring `INP` and falling back to `FID` when local automation does not emit `INP`.
+`web.home.initial-load` は `TTFB` / `FCP` / `CLS` を直接ロードメトリクスとして所有し、Lighthouse は自動化レーンで最初の比較可能な `LCP` を所有する。`web.home.details-navigation` は最初のインタラクションメトリクス取得を所有し、`INP` を優先し、ローカル自動化が `INP` を出さない場合は `FID` にフォールバックする。
 
-### Tool ownership by case
+### ケース別ツール所有
 
-| Case | Goal | Primary tool | Runtime expectation | Notes |
-| --- | --- | --- | --- | --- |
-| `web.home.initial-load` local accepted baseline capture | refresh the repository-owned comparison reference | temporary local browser plus Lighthouse capture under parity | full-stack parity | bootstrap path until the CI lane becomes the stable source of truth |
-| `web.home.initial-load` PR regression check in CI | detect initial-load regressions on review | LHCI | start runtime first, then measure `http://127.0.0.1:3000` | the first comparable CI lane should prefer parity startup as a workflow step |
-| `web.home.details-navigation` route-transition check | detect regressions in app navigation behavior | narrow custom capture or Playwright-assisted browser flow | start runtime first, then drive the navigation scenario | this scenario is not owned by LHCI unless the repository later decides otherwise |
+| ケース | 目的 | 主なツール | ランタイム前提 | 補足 |
+| ----- | --- | --------- | ------------- | ---- |
+| `web.home.initial-load` のローカル受け入れベースライン取得 | リポジトリ所有の比較基準を更新 | パリティ下での一時ローカルブラウザ + Lighthouse 取得 | フルスタックパリティ | CI レーンが信頼できる主源泉になるまでのブートストラップ |
+| `web.home.initial-load` の PR リグレッション検査（CI） | レビューで初期ロードのリグレッションを検出 | LHCI | まずランタイムを起動し、`http://127.0.0.1:3000` を計測 | 最初の比較可能 CI レーンはワークフローステップとして parity 起動を優先する |
+| `web.home.details-navigation` のルート遷移チェック | アプリのナビゲーション挙動のリグレッションを検出 | 狭い独自キャプチャ / Playwright 連携のブラウザフロー | まずランタイムを起動し、ナビゲーションシナリオを駆動 | 別の標準ツールを採用するまで、本シナリオは LHCI に所有させない |
 
-### Why LHCI is the primary tool direction
+### LHCI を主方向にする理由
 
-LHCI is the intended primary tool for the web initial-load lane because it already solves the parts that matter most for fast regression detection on PRs:
+LHCI は、PR でのリグレッション検出を素早く回すために必要な要素を既に備えているため、Web 初期ロードレーンの主ツール方向とする:
 
-- repeatable Lighthouse collection under CI
-- assertion and budget support
-- PR-visible results
-- optional historical storage later without redefining the measurement model
+- CI 下での反復可能な Lighthouse 取得
+- アサーションと予算サポート
+- PR 可視の結果
+- 後続でレーン自体を再定義することなく履歴保存を追加できる
 
-Custom browser capture still has a place for route-transition metrics that LHCI does not represent cleanly, but that capture should stay narrow and scenario-specific instead of becoming a second full platform.
+独自のブラウザキャプチャは、LHCI が綺麗に表現できないルート遷移メトリクスに残るが、それは狭くシナリオ固有のものに留め、第二のフル基盤に育てない。
 
-## API policy
+## API ポリシー
 
-### Role
+### 役割
 
-The API lane exists to answer a different question: did this change make a repository-owned request path slower, less stable, or heavier in a way that could become an operational problem?
+API レーンは別の問いに答える: 「この変更で、リポジトリ所有の要求パスが、信頼性 / レイテンシのインシデントになりうるほど遅くなった、安定性が落ちた、ペイロードが重くなったか？」
 
-The owned signal is not browser UX. The owned signal is response quality on a real endpoint that already exercises important runtime dependencies.
+所有シグナルはブラウザ UX ではなく、重要なランタイム依存を既に行使している実エンドポイントの応答品質である。
 
-### Owned scenario
+### 所有シナリオ
 
-The first API baseline owns one scenario.
+最初の API ベースラインは 1 シナリオを所有する。
 
 #### `api.health.get`
 
-- wait until `just parity` reports healthy services
-- send 10 sequential `GET http://127.0.0.1:3001/health` requests
-- record status consistency, median latency, p95 latency, and response size in bytes
+- `just parity` がサービス健全性を報告するまで待つ
+- `GET http://127.0.0.1:3001/health` を 10 回連続で送る
+- ステータスの一貫性、中央値レイテンシ、p95 レイテンシ、応答サイズ（バイト数）を記録する
 
-For this scenario, one accepted baseline rerun still counts as one scenario sample. The 10 sequential requests belong to that rerun's internal measurement detail and should be recorded as a separate request count inside `measurements` rather than by changing the meaning of `sampleSize`.
+このシナリオでは、1 回の受け入れベースライン再実行は依然として 1 サンプルとして数える。10 回の連続要求は当該再実行の内部計測詳細であり、`measurements` 内の別のリクエスト数として記録する。`sampleSize` の意味を変えてはならない。
 
-The current API runtime only exposes `/health`, and that endpoint already exercises the application boot path plus PostgreSQL connectivity through Prisma. The first API baseline should therefore measure the real health path instead of inventing a placeholder feature endpoint.
+現在の API ランタイムは `/health` のみを公開しており、これは既にアプリの起動経路と Prisma 経由の PostgreSQL 接続を行使する。最初の API ベースラインは、仮置きの機能エンドポイントを発明するのではなく、実健全性パスを計測する。
 
-### Owned metrics
+### 所有メトリクス
 
-- response status consistency across the sample set
-- median latency in milliseconds
-- p95 latency in milliseconds
-- serialized response size in bytes
+- サンプルセット全体での応答ステータス一貫性
+- 中央値レイテンシ（ミリ秒）
+- p95 レイテンシ（ミリ秒）
+- シリアライズされた応答サイズ（バイト）
 
-### Tool ownership by case
+### ケース別ツール所有
 
-| Case | Goal | Primary tool | Runtime expectation | Notes |
-| --- | --- | --- | --- | --- |
-| `api.health.get` local accepted baseline capture | refresh the repository-owned comparison reference | the same scenario definition used for automation, executed against parity | full-stack parity | keep the saved output aligned with schema version 1 |
-| `api.health.get` PR regression check in CI | detect endpoint latency or status drift during review | k6 | start runtime first, then measure `http://127.0.0.1:3001/health` | parity startup is the clearest first lane while only `/health` is owned; empty DB is acceptable because `/health` only checks connectivity |
+| ケース | 目的 | 主なツール | ランタイム前提 | 補足 |
+| ----- | --- | --------- | ------------- | ---- |
+| `api.health.get` のローカル受け入れベースライン取得 | リポジトリ所有の比較基準を更新 | 自動化と同一のシナリオ定義をパリティ下で実行 | フルスタックパリティ | 保存出力を schema version 1 に揃える |
+| `api.health.get` の PR リグレッション検査（CI） | レビュー時にエンドポイントレイテンシ / ステータスのドリフトを検出 | k6 | まずランタイムを起動し、`http://127.0.0.1:3001/health` を計測 | `/health` のみを所有する間、parity 起動が最も明確な最初のレーン。`/health` は接続性のみ確認するため空 DB で可 |
 
-### Why k6 is the primary tool direction
+### k6 を主方向にする理由
 
-k6 is the intended primary tool for the API lane because it fits the job that this policy is actually trying to do:
+k6 は本ポリシーがやろうとしている仕事に適合するため、API レーンの主方向とする:
 
-- run repeatable HTTP scenarios with explicit thresholds
-- produce clear latency and status summaries in CI
-- scale from simple PR reruns to later scheduled monitoring without replacing the scenario language
-- keep API performance discussion centered on endpoint behavior instead of browser-centric metrics
+- 明示的閾値を持つ反復可能な HTTP シナリオの実行
+- CI で明瞭なレイテンシ / ステータスサマリの生成
+- 単純な PR 再実行から後の定期監視へ、シナリオ言語を置き換えずにスケール
+- ブラウザ中心メトリクスではなく、エンドポイント挙動を中心に据えた API パフォーマンス議論
 
-This makes k6 a better default direction for API response-quality checks than trying to extend LHCI beyond its natural browser-first scope.
+これは LHCI をブラウザ中心のスコープ外まで拡張するより、API 応答品質チェックの既定方向として優れている。
 
-## Saved result format
+## 保存結果フォーマット
 
-Accepted baseline snapshots must be committed as JSON under an app-owned `performance/baselines` directory.
+受け入れ済みベースラインスナップショットは、アプリ所有の `performance/baselines` ディレクトリ配下に JSON でコミットする。
 
-- web baseline snapshots live under `apps/web/performance/baselines/`
-- API baseline snapshots live under `apps/api/performance/baselines/`
+- Web のスナップショット: `apps/web/performance/baselines/`
+- API のスナップショット: `apps/api/performance/baselines/`
 
-Each accepted snapshot must use schema version 1 and keep the top-level shape stable:
+各スナップショットは schema version 1 を用い、トップレベルの形を安定に保つ:
 
 ```json
 {
@@ -274,125 +284,125 @@ Each accepted snapshot must use schema version 1 and keep the top-level shape st
 }
 ```
 
-Required rules for this format:
+形式の必須ルール:
 
-- `schemaVersion`, `app`, `scenarioId`, `runMode`, `capturedAt`, and `sampleSize` are mandatory for every saved snapshot
-- `sampleSize` always means the number of full scenario reruns aggregated into the saved summary
-- `environment` must describe enough runtime context to rerun the same scenario without guessing
-- `summary` must contain the comparison-ready metric values used for regression review
-- `measurements` may contain raw per-run detail such as individual Web Vitals, Lighthouse audit values, HTTP timings, and scenario-internal counts such as `requestCount`
-- one JSON file maps to one accepted scenario baseline
+- `schemaVersion` / `app` / `scenarioId` / `runMode` / `capturedAt` / `sampleSize` は全スナップショットで必須
+- `sampleSize` は常に保存サマリに集約された「フルシナリオの再実行回数」を意味する
+- `environment` は同一シナリオを推測無しで再実行できる程度のランタイム文脈を持つ
+- `summary` はリグレッションレビューで使う比較準備済みのメトリクス値を含む
+- `measurements` には、個別の Web Vitals、Lighthouse audit 値、HTTP タイミング、`requestCount` などのシナリオ内部カウントを含めてよい
+- 1 つの JSON ファイルが 1 つの受け入れシナリオベースラインに対応する
 
-This keeps accepted baseline outputs diffable in git while still allowing raw detail to stay close to the summary numbers reviewers will actually compare.
+これにより、受け入れ済みベースライン出力を git 上で diff 可能に保ちつつ、レビュアが実際に比較するサマリ数値の近くに raw 詳細を残せる。
 
-## Accepted baseline lifecycle
+## 受け入れベースラインのライフサイクル
 
-An accepted baseline is the repository-owned comparison reference for a scenario and run mode. It is not a feature acceptance criterion and it is not a permanent performance promise. Its job is to give later measurements a stable point of comparison.
+受け入れベースラインは、シナリオと実行モードに対するリポジトリ所有の比較基準である。機能受入基準でも永久のパフォーマンス約束でもない。仕事は、後続の計測に安定した比較点を与えることである。
 
-Do not replace an accepted baseline on every measurement run. Replace it only when one of these is true:
+毎回の計測で受け入れベースラインを差し替えない。差し替えるのは以下のいずれかが真のときだけ:
 
-- the scenario is being accepted for the first time
-- an intentional product or architecture change shifts the expected steady-state performance envelope
-- a dependency, framework, build, or runtime upgrade intentionally changes the expected baseline
-- the measurement lane itself changes enough that older results are no longer comparable
+- そのシナリオを初めて受け入れる
+- 意図的なプロダクト / アーキテクチャ変更で期待定常性能の包絡が変わった
+- 依存・フレームワーク・ビルド・ランタイムの更新で期待ベースラインが意図的に変わった
+- 計測レーン自体が変わり、過去結果がもはや比較できない
 
-Do not replace an accepted baseline when the measurement shows an unexplained regression or when the team still expects to optimize further before adopting the new number.
+説明されないリグレッションが出ているとき、または採用前にさらなる最適化が見込まれるときは、ベースラインを差し替えない。
 
-When a PR replaces an accepted baseline, that same PR must include:
+PR が受け入れベースラインを差し替える場合、その PR は以下を含める:
 
-- the regenerated baseline JSON for the affected scenario
-- a short note explaining why the new result is being adopted
-- an explicit statement that the change is intentional, accepted, or required by the new runtime lane
+- 該当シナリオの再生成ベースライン JSON
+- 新しい結果を採用する理由を述べた短いノート
+- その変更が意図的・受け入れ済み・新ランタイムレーンに必要であることの明示
 
-This keeps accepted baselines stable enough to be useful while still allowing intentional platform shifts to become the new comparison point.
+これにより、受け入れベースラインの安定性を保ちつつ、意図的なプラットフォームシフトを新しい比較点として認められる。
 
-## When to measure
+## いつ計測するか
 
-Do not require baseline measurement for every pull request. Measure only when a PR is likely to change the owned scenario in a way that can materially affect performance, or when a reviewer explicitly asks for a rerun.
+PR ごとにベースライン計測を要求しない。所有シナリオに有意な性能影響を与えうる PR か、レビュアが明示的に再実行を求めたときのみ計測する。
 
-Typical web PRs that should rerun the baseline include:
+Web で再実行が望ましい典型的な PR:
 
-- changes to the render path, data fetching, caching, prefetching, or navigation behavior used by the measured route
-- dependency or framework updates that can affect bundle size, hydration, routing, or browser runtime behavior
-- changes to assets, styling, fonts, scripts, or layout on the measured route that can affect paint, layout shift, or interaction timing
-- changes to build configuration, chunking, or runtime flags that can affect the parity output
+- 計測対象ルートで使われる描画パス、データ取得、キャッシュ、プリフェッチ、ナビゲーション挙動の変更
+- バンドルサイズ、ハイドレーション、ルーティング、ブラウザランタイム挙動に影響しうる依存・フレームワーク更新
+- ペイント、レイアウトシフト、インタラクションタイミングに影響しうる計測対象ルートのアセット・スタイル・フォント・スクリプト・レイアウト変更
+- パリティ出力に影響しうるビルド設定、チャンキング、ランタイムフラグの変更
 
-Typical API PRs that should rerun the baseline include:
+API で再実行が望ましい典型的な PR:
 
-- changes to the `/health` path, Prisma boot path, database connectivity, or startup work that the health check exercises
-- dependency or runtime changes that can affect request latency or response size on the measured path
+- `/health` パス、Prisma の起動経路、データベース接続、起動処理に影響する変更
+- 計測対象パスの要求レイテンシや応答サイズに影響しうる依存・ランタイム更新
 
-PRs that usually do not need reruns include documentation-only changes, test-only changes, copy edits, and refactors that do not change shipped runtime behavior for the owned scenario.
+通常再実行が不要な PR: ドキュメントのみの変更、テストのみの変更、コピー編集、所有シナリオの実行挙動を変えないリファクタ。
 
-## Minimum threshold rules
+## 最低限の閾値ルール
 
-The first threshold policy is review-oriented, not CI-enforced.
+最初の閾値ポリシーはレビュー指向であり、CI で強制しない。
 
-Compare only runs that match both `scenarioId` and `runMode`. Threshold hits mean the baseline must be explained or intentionally replaced during review; they do not create a repository-wide hard merge gate yet.
+`scenarioId` と `runMode` の双方が一致するランのみを比較する。閾値抵触は「レビューで説明するか意図的に差し替える」ことを意味し、リポジトリ全体のハードマージゲートを作らない。
 
-### Web thresholds
+### Web の閾値
 
-Regression review is required when any of these happens:
+次のいずれかが真ならリグレッションレビューが必要:
 
-- any metric with a Web Vitals `rating` falls to `poor`
-- any millisecond-based metric regresses by more than `max(100ms, 20%)` from the accepted baseline median
-- `CLS` regresses by more than `0.02` from the accepted baseline median
-- the Lighthouse `performance` score falls by more than `0.05`
-- any selected explanatory audit regresses by more than `20%`
-- the first-load JavaScript size for `/` grows by more than `max(15360 bytes, 10%)` from the accepted baseline
+- いずれかの Web Vitals メトリクスの `rating` が `poor` に落ちた
+- いずれかのミリ秒系メトリクスが受け入れベースライン中央値から `max(100ms, 20%)` を超えて悪化した
+- `CLS` が受け入れベースライン中央値から `0.02` を超えて悪化した
+- Lighthouse `performance` スコアが `0.05` を超えて低下した
+- 選択した説明的 audit のいずれかが `20%` を超えて悪化した
+- `/` の初回ロード JavaScript サイズが受け入れベースラインから `max(15360 bytes, 10%)` を超えて増加した
 
-The first selected explanatory audits should include at least `first-contentful-paint`, `largest-contentful-paint`, `speed-index`, `total-blocking-time`, and `cumulative-layout-shift`.
+最初の説明的 audit には少なくとも以下を含める: `first-contentful-paint` / `largest-contentful-paint` / `speed-index` / `total-blocking-time` / `cumulative-layout-shift`。
 
-When the first interactive baseline records `FID` instead of `INP`, apply the same review rule to that recorded interaction metric until the runtime emits `INP` consistently.
+最初のインタラクションベースラインが `INP` ではなく `FID` を記録している場合は、ランタイムが `INP` を安定して出すまで、その記録された interaction メトリクスに同じレビュールールを適用する。
 
-### API thresholds
+### API の閾値
 
-Regression review is required when any of these happens:
+次のいずれかが真ならリグレッションレビューが必要:
 
-- any `/health` sample returns a non-`200` response
-- p95 latency regresses by more than `max(50ms, 20%)`
-- response size grows by more than `10%` without an intentional contract change note
+- いずれかの `/health` サンプルが `200` 以外を返した
+- p95 レイテンシが `max(50ms, 20%)` を超えて悪化した
+- 応答サイズが意図的な契約変更ノート無しに `10%` を超えて増加した
 
-## Minimal adoption roadmap
+## 最小導入ロードマップ
 
-The roadmap is intentionally small. Each step should improve detection speed or review clarity on its own.
+ロードマップは意図的に小さい。各ステップは単独で「検出速度」または「レビュー明瞭性」を改善するべきである。
 
-### Web roadmap: LHCI-centered
+### Web ロードマップ: LHCI 中心
 
-1. Keep local parity capture only as the bootstrap path for accepted baseline refresh.
-2. Add an on-demand CI workflow that starts parity, then runs LHCI for `web.home.initial-load`, then publishes a PR-visible summary.
-3. Use temporary-public-storage or CI artifacts first; do not require a self-hosted LHCI server before the first review lane is useful.
-4. Keep `web.home.details-navigation` on the narrow custom path until the repository decides on a better standard tool for route transitions.
-5. Add stronger assertions or long-lived LHCI history only after the initial lane proves repeatable enough to trust.
+1. ローカルパリティ取得は受け入れベースライン更新のブートストラップパスに留める
+2. parity を起動し、`web.home.initial-load` に対して LHCI を実行し、PR 可視サマリを公開するオンデマンド CI ワークフローを追加する
+3. 最初は temporary-public-storage / CI アーティファクトを使い、最初のレビューレーンを有用にする前に自前 LHCI サーバを要求しない
+4. ルート遷移向けの標準ツールをリポジトリが決めるまで、`web.home.details-navigation` は狭い独自パスに留める
+5. 初期レーンが信頼できる反復性に達した後で、より強いアサーションや長期 LHCI 履歴を追加する
 
-### API roadmap: k6-centered
+### API ロードマップ: k6 中心
 
-1. Add the first repository-owned k6 scenario for `api.health.get`, aligned with schema version 1 summary fields.
-2. Add an on-demand CI workflow that starts parity, then runs the k6 scenario, then posts latency and status results into PR review.
-3. Expand beyond `/health` only after the first lane is stable and useful in review.
-4. Add scheduled runs or longer-term history only after the PR-triggered lane has shown real debugging value.
+1. schema version 1 のサマリフィールドに揃えた、リポジトリ所有の最初の k6 シナリオ `api.health.get` を追加する
+2. parity を起動し、k6 シナリオを実行し、PR レビューにレイテンシ / ステータス結果を投稿するオンデマンド CI ワークフローを追加する
+3. 最初のレーンが安定し有用になった後でのみ `/health` を超えて拡張する
+4. PR トリガレーンが実際にデバッグ価値を示してから、定期実行や長期履歴を追加する
 
-This ordering keeps the first automation focused on review-time detection instead of jumping immediately to full monitoring infrastructure.
+この順序は、最初の自動化を「フル監視インフラへの飛躍」ではなく「レビュー時の検出」に集中させる。
 
-## Follow-up issue split
+## フォローアップ Issue の分割
 
-This document intentionally stops at policy. Implementation should restart from fresh follow-up issues instead of inheriting the older custom-measurement branch structure.
+本ドキュメントは意図的にポリシーで止まる。実装は、過去の独自計測ブランチ構造を継承せず、新しいフォローアップ Issue から再開する。
 
-### Scheduled monitoring follow-up issue
+### 定期監視のフォローアップ Issue
 
-- use issue #171 for the first scheduled baseline-performance lane and Slack notification flow
-- treat that lane as drift detection for the already-owned scenarios, separate from PR-review checks
-- keep detailed notification wording and presentation out of the initial implementation scope until the scheduled lane is running reliably
+- Issue #171 を、最初の定期ベースラインパフォーマンスレーンと Slack 通知フローに用いる
+- そのレーンは、PR レビュー検査とは別に、既存の所有シナリオに対するドリフト検出として扱う
+- 定期レーンが信頼できる動作を示すまで、通知文言や見せ方の詳細は初期実装スコープ外に置く
 
-### Web follow-up issue
+### Web のフォローアップ Issue
 
-- adopt LHCI as the default implementation path for `web.home.initial-load`
-- publish PR-visible summaries from an on-demand CI workflow before adding stronger gates
-- keep `web.home.details-navigation` separate from the initial-load lane and only retain custom capture if the route-transition scenario still needs it after LHCI adoption
+- `web.home.initial-load` の既定実装パスとして LHCI を採用する
+- ハードゲート追加前に、オンデマンド CI ワークフローから PR 可視サマリを公開する
+- `web.home.details-navigation` は初期ロードレーンと別建てにし、LHCI 採用後もルート遷移シナリオがまだ独自キャプチャを必要とする場合のみ独自取得を残す
 
-### API follow-up issue
+### API のフォローアップ Issue
 
-- add the first repository-owned k6 scenario for `api.health.get`
-- keep the saved JSON shape aligned with schema version 1 instead of inventing an API-only format
-- publish latency and status summaries from an on-demand CI workflow before adding stronger gates
-- expand beyond `/health` only after the first lane proves useful in review
+- `api.health.get` 向けにリポジトリ所有の最初の k6 シナリオを追加する
+- API 専用フォーマットを発明するのではなく、保存 JSON 形を schema version 1 に揃える
+- ハードゲート追加前に、オンデマンド CI ワークフローからレイテンシ / ステータスサマリを公開する
+- 最初のレーンがレビューで有用と示された後でのみ `/health` を超えて拡張する

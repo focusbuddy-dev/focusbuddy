@@ -1,116 +1,116 @@
-# Module Structure And File Size Policy
+# モジュール構造とファイルサイズのポリシー
 
-This document captures the output of issue #62.
+本ドキュメントは Issue #62 の成果物である。
 
-Its purpose is to define a repository default for splitting hand-written code by responsibility, using directory-shaped modules where that improves readability, and treating per-file line count as a soft review signal rather than a hard enforcement rule.
+目的は、手書きコードを責務単位で分割するためのリポジトリ既定値を定め、可読性が向上する箇所ではディレクトリ型モジュールを採用し、1 ファイルあたりの行数はハードな強制ルールではなくレビュー時のソフトシグナルとして扱う方針を示すことである。
 
-## Scope
+## スコープ
 
-This document defines:
+本ドキュメントが定めるもの:
 
-- the current default for splitting new hand-written code by responsibility
-- when a directory with `index.ts` or `index.tsx` should be preferred over one growing file
-- how the repository should treat per-file line count during implementation and review
-- what kinds of splits are considered good architectural separation versus noisy fragmentation
-- whether this guidance should become a hard lint or CI rule
+- 新規の手書きコードを責務単位で分割する現行の既定値
+- 1 ファイルが肥大化していくよりも `index.ts` / `index.tsx` を持つディレクトリ構造を優先すべき条件
+- 実装時およびレビュー時に 1 ファイルあたりの行数をどう扱うか
+- 良いアーキテクチャ分割と、雑音的な細分化との違い
+- このガイダンスを lint や CI のハードルールに昇格すべきかどうか
 
-This document does not define import-path aliases, function declaration style, module format strategy, or a mandatory refactor campaign for every existing large file.
+本ドキュメントが定めないもの: import パスエイリアス、関数宣言スタイル、モジュール形式戦略、既存の大きなファイル全てに対する一斉リファクタリングキャンペーン。
 
-## Decision summary
+## 決定サマリ
 
-- new hand-written code should prefer responsibility-oriented modules over large mixed-purpose files
-- when one feature naturally contains config parsing, runtime orchestration, summaries, types, or file IO as separate concerns, a directory module with an `index.ts` facade is the preferred default
-- per-file line count should be treated as a soft limit and review signal, not a hard cap
-- around 150 lines is a good default threshold for asking whether a file still represents one coherent concept
-- a file may exceed that threshold when the code is still cohesive and splitting it would create lower-signal wrappers
-- splits should be driven by responsibility boundaries, not by mechanical line-count shaving
-- the repository should stay documentation-first for this rule and should not add strict lint or CI enforcement for file length today
+- 新規の手書きコードは、用途が混在した大きなファイルよりも責務指向のモジュールを優先する
+- 設定パース・ランタイム制御・サマリ・型定義・ファイル I/O といった独立した関心が自然に同居する場合、`index.ts` をファサードとして持つディレクトリモジュールを既定とする
+- 1 ファイルあたりの行数はソフトリミット兼レビューシグナルとして扱い、ハードキャップにはしない
+- 「このファイルはまだ 1 つの整合した概念か」を問い直す既定の閾値として 150 行前後が目安
+- 一貫性が保たれており分割すると低シグナルなラッパが生まれるだけの場合、その閾値を超えていてもよい
+- 分割は責務境界に従って行うべきで、機械的な行数削減を目的にしない
+- 本ルールは当面ドキュメント先行で運用し、ファイル長に関する厳格な lint / CI 強制は導入しない
 
-## Default module-structure rule
+## 既定のモジュール構造ルール
 
-For new hand-written code, the repository should prefer small modules with clear responsibility boundaries.
+新規の手書きコードでは、責務境界が明確な小さなモジュールを優先する。
 
-In practice, that means:
+具体的には:
 
-- if one file starts owning multiple kinds of behavior, split by responsibility before it turns into a mixed-purpose grab bag
-- if a feature has a natural public entrypoint plus several internal concerns, prefer a feature directory with `index.ts` or `index.tsx` as the entrypoint
-- keep the entrypoint thin so a reader can understand the feature flow quickly, then drop into narrower files for details
-- name internal files after responsibilities such as `config`, `runtime`, `summary`, `types`, `io`, `schema`, or similarly concrete concepts
+- 1 ファイルが複数種の振る舞いを保有し始めたら、雑多なグラブバッグになる前に責務単位で分割する
+- 機能に明確な公開エントリポイントと複数の内部関心が含まれるなら、`index.ts` または `index.tsx` をエントリポイントとする feature ディレクトリを優先する
+- 読み手が機能の流れを素早く把握できるよう、エントリポイントは薄く保ち、詳細は粒度の細かいファイルに落とす
+- 内部ファイルは `config` / `runtime` / `summary` / `types` / `io` / `schema` のように責務を表す具体名で命名する
 
-This is the preferred pattern for feature-local modules, repository scripts that have grown beyond a single concern, and app-level logic that would otherwise keep accumulating unrelated helpers in one file.
+このパターンは、機能ローカルなモジュール、単一の関心を超えて成長したリポジトリスクリプト、そして放置すれば 1 ファイルに無関係なヘルパが溜まり続けるアプリケーションロジックに対する推奨形である。
 
-## Line-count guidance
+## 行数のガイダンス
 
-The repository treats per-file line count as a loose design signal.
+1 ファイルあたりの行数は、ゆるい設計シグナルとして扱う。
 
-The practical rule is:
+実務上のルール:
 
-- use roughly 150 lines as a soft limit for hand-written files
-- once a file moves materially past that range, review whether it still expresses one concept or has started mixing responsibilities
-- do not split a file only to satisfy a number when the existing file is still cohesive and easier to scan as one unit
-- do not defend a large file merely because it still compiles; if it now mixes orchestration, domain shaping, runtime execution, and serialization, it should probably be split
+- 手書きファイルのソフトリミットの目安として概ね 150 行を用いる
+- ファイルがその目安を有意に超えたら、それが依然として 1 つの概念を表現しているのか、責務が混ざり始めていないかを確認する
+- 既存ファイルがまだ整合的で 1 単位として読みやすいなら、数字合わせのためだけに分割しない
+- まだコンパイルが通るというだけの理由で大きなファイルを擁護しない。制御・ドメイン整形・ランタイム実行・シリアライズが混在しているなら、おそらく分割すべきである
 
-The goal is not numeric purity. The goal is keeping files readable enough that a reviewer can understand one concept at a time.
+目的は数値的な純度ではなく、レビュアが概念を 1 つずつ追える程度にファイルを読みやすく保つことである。
 
-## What counts as a good split
+## 良い分割の特徴
 
-A good split usually has these properties:
+良い分割には次の性質がある:
 
-- each file owns one main reason to change
-- the entrypoint mainly wires responsibilities together instead of containing all details itself
-- names describe the role of the file rather than the implementation accident that created it
-- moving between files reduces cognitive load instead of increasing it
+- 各ファイルが「変更理由」を 1 つだけ持つ
+- エントリポイントは責務同士の組み立てに集中し、詳細を抱え込まない
+- ファイル名は、できあがった経緯ではなくファイルが担う役割を表す
+- ファイル間を跨ぐと認知負荷が増えるのではなく減る
 
-Examples of good boundaries include:
+良い境界の例:
 
-- config parsing versus runtime execution
-- browser capture versus summary aggregation
-- schema or validation versus orchestration
-- public facade versus internal helpers
+- 設定パース vs ランタイム実行
+- ブラウザでのキャプチャ vs サマリ集計
+- スキーマ・バリデーション vs 制御
+- 公開ファサード vs 内部ヘルパ
 
-A split is usually too granular when:
+逆に、分割が細かすぎる兆候は次の通り:
 
-- multiple files exist only to forward one function each without adding a clearer boundary
-- the reader must jump through many tiny wrappers just to follow one simple flow
-- line-count reduction is the only reason the split happened
+- 関数を 1 つだけ転送するだけのファイルが複数並び、明確な境界を加えていない
+- 単純な流れを追うために多数の小さなラッパを跨ぎ続ける必要がある
+- 行数削減だけが分割の動機になっている
 
-## Directory-module preference
+## ディレクトリモジュール優先
 
-When a feature has one public entrypoint and multiple internal responsibilities, prefer a directory-shaped module.
+1 つの公開エントリポイントと複数の内部責務を持つ機能では、ディレクトリ型モジュールを優先する。
 
-The default shape is:
+既定の構造:
 
-- `index.ts` or `index.tsx` for the public entrypoint
-- responsibility-specific sibling files for the internal implementation
+- 公開エントリポイントとして `index.ts` または `index.tsx`
+- 内部実装として責務別の兄弟ファイル
 
-This pattern is preferred because it:
+この型を優先する理由:
 
-- makes the public surface obvious
-- keeps feature-local internals grouped together
-- scales more cleanly than adding `feature-name-*.ts` files at the parent directory root
-- gives follow-up changes an obvious place to land without turning one file into the permanent dumping ground
+- 公開面が明確になる
+- 機能ローカルな内部実装をひとまとめにできる
+- 親ディレクトリ直下に `feature-name-*.ts` を増やすやり方より素直にスケールする
+- 後続の変更で追加コードを置く明確な場所が用意でき、特定の 1 ファイルが恒常的なゴミ捨て場になるのを防げる
 
-The recent `measure-web-baseline` layout is an example of the intended direction: one feature directory with a thin `index.ts` and separate files for config, runtime, summary, and types.
+直近の `measure-web-baseline` レイアウトは目標とする方向の例である: 1 つの feature ディレクトリ、薄い `index.ts`、`config` / `runtime` / `summary` / `types` といった責務別ファイルで構成される。
 
-## Enforcement stance
+## 強制スタンス
 
-This repository should keep this rule documentation-first for now.
+本ルールは当面ドキュメント先行で運用する。
 
-That means:
+具体的には:
 
-- no hard maximum line-count rule in lint or CI
-- no mandatory broad refactor campaign for older files based only on size
-- reviewers may still ask for responsibility-based splitting when a file clearly exceeds the policy intent
-- teams should use judgment rather than forcing suppressions or exception-heavy tooling around a soft design rule
+- lint / CI で行数の厳格な上限は導入しない
+- 古いファイルに対してサイズだけを理由とした一斉リファクタリングを義務付けない
+- レビュアは、ファイルが明らかにポリシーの趣旨を逸脱している場合に、責務単位の分割を依頼してよい
+- ソフトな設計ルールに対しては、判断ベースで対応し、抑制コメントや例外指定を多用するツール拡張を避ける
 
-The repository already gets more value from boundary, runtime, and verification rules than it would from strict style-only file-length enforcement.
+このリポジトリは、境界・ランタイム・検証に関するルールから既に十分な価値を得ており、純粋なファイル長さの強制から得られる追加価値は限定的である。
 
-## Review triggers
+## 見直しのトリガ
 
-This document should be revisited when one of the following becomes true:
+次のいずれかが成立したら、本ドキュメントを見直す:
 
-- repeated review churn shows that documentation-only guidance is not strong enough
-- one workspace needs a narrower enforcement rule that can express useful boundaries without rewarding wrapper sprawl
-- the repository wants a codemod or generator pattern that standardizes feature-directory structure for a specific surface
+- レビューでの繰り返しの差し戻しが多発し、ドキュメント先行の運用では弱いと判明した場合
+- いずれかのワークスペースが、ラッパ濫造を促進せずに有用な境界を表現できる、より狭い強制ルールを必要とした場合
+- 特定の領域で feature ディレクトリ構造を標準化する codemod / generator パターンを導入したくなった場合
 
-Until then, the practical rule is simple: split by responsibility, prefer a thin directory entrypoint for multi-part features, and treat file length as a soft signal instead of a hard gate.
+それまでの実務ルールは単純である: 責務単位で分割し、複数構成の機能には薄いディレクトリエントリポイントを優先し、ファイル長はハードゲートではなくソフトシグナルとして扱う。

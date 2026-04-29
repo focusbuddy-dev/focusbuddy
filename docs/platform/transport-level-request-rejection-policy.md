@@ -1,193 +1,193 @@
-# Transport-Level Request Rejection Policy
+# トランスポート層リクエスト拒否ポリシー
 
-This document captures the output of issue #92.
+本ドキュメントは Issue #92 の成果物である。
 
-Its purpose is to define how FocusBuddy should reason about request failures that happen before normal app code can parse the request, attach the normal request ID, or return the shared JSON error contract.
+目的は、通常のアプリケーションコードがリクエストをパースし通常の request ID を付け共有 JSON エラー契約を返却する前段階で発生するリクエスト失敗を、FocusBuddy としてどう捉えるかを定めることである。
 
-This document builds on the web error handling policy, the web accident pattern inventory, [web-safety-control-responsibilities.md](web-safety-control-responsibilities.md), and the MVP API error model.
+本ドキュメントは Web エラーハンドリングポリシー、Web 事故パターンインベントリ、[web-safety-control-responsibilities.md](web-safety-control-responsibilities.md)、および MVP API エラーモデルの上に成り立つ。
 
-## Scope
+## スコープ
 
-This document defines:
+本ドキュメントが定めるもの:
 
-- the repository-level definition of transport-level request rejection
-- the boundary between pre-app transport rejection and app-level error handling
-- the first prevention policy for cookie, session, and header growth
-- the required response ownership when rejection happens before app code runs
-- the minimum observability and verification requirements for these failures
-- concrete follow-up work needed in docs, local tooling, and CI
+- リポジトリレベルでの「トランスポート層リクエスト拒否」の定義
+- アプリ前段でのトランスポート拒否と、アプリ層エラーハンドリングとの境界
+- Cookie・セッション・ヘッダ肥大に対する最初の予防方針
+- アプリコードが動作しないまま拒否が発生したときに必須となる応答責任
+- これらの失敗に対する最低限の可観測性および検証要件
+- ドキュメント・ローカルツール・CI で進めるべき具体的なフォローアップ
 
-This document does not define the final CDN or ingress product, final production infrastructure, or the final implementation details of auth/session helpers.
+本ドキュメントが定めないもの: 最終的な CDN / Ingress プロダクト、最終的な本番インフラ、認証・セッションヘルパの最終実装詳細。
 
-## Core distinction
+## 中心となる区分
 
-The repository should separate two failure classes.
+リポジトリは 2 つの失敗クラスを分離する。
 
-| Failure class                     | Reaches normal app code | Shared JSON error contract available | Normal app request ID available | Primary owner                                       |
-| --------------------------------- | ----------------------- | ------------------------------------ | ------------------------------- | --------------------------------------------------- |
-| app-level error                   | yes                     | yes                                  | yes                             | app error handling and web response policy          |
-| transport-level request rejection | not reliably            | not guaranteed                       | not guaranteed                  | edge, platform, transport policy, and observability |
+| 失敗クラス                       | 通常のアプリコードに到達するか | 共有 JSON エラー契約が利用可能か | 通常のアプリ request ID が利用可能か | 主な所有者                                             |
+| -------------------------------- | -------------------------------- | -------------------------------- | -------------------------------------- | ------------------------------------------------------ |
+| アプリ層エラー                   | する                             | する                             | する                                   | アプリのエラーハンドリングと Web 応答ポリシー         |
+| トランスポート層リクエスト拒否 | 確実には到達しない               | 保証されない                     | 保証されない                           | エッジ・プラットフォーム・トランスポートポリシー・可観測性 |
 
-The practical classification rule is:
+実務上の分類ルール:
 
-- if the failure can happen before the application can safely parse the request and attach its normal diagnostics, treat it as transport-level rejection
-- do not force these failures into the shared app error contract just because the UI would prefer a typed JSON response
-- app-level policy starts only after the request has crossed the application boundary
+- アプリケーションが安全にリクエストをパースし通常の診断情報を付与する前に発生し得るなら、それはトランスポート層拒否として扱う
+- UI 側が型付き JSON 応答を望むからといって、これらの失敗を共有アプリエラー契約に押し込めない
+- アプリ層ポリシーは、リクエストがアプリケーション境界を越えてからのみ始まる
 
-## First definition of transport-level rejection
+## トランスポート層拒否の最初の定義
 
-Transport-level request rejection means a request is rejected at the browser, CDN, proxy, load balancer, HTTP server, or framework boundary before the repository can rely on normal app middleware, route handlers, guards, or exception filters.
+トランスポート層リクエスト拒否とは、リクエストがブラウザ・CDN・プロキシ・ロードバランサ・HTTP サーバ・フレームワークの境界で拒否され、通常のアプリミドルウェア・ルートハンドラ・ガード・例外フィルタに依存できない状態を指す。
 
-Typical characteristics are:
+典型的な特徴:
 
-- the app may never receive a usable request object
-- the app may never attach the normal request ID
-- the app may never return the shared typed JSON error response from issue #73
-- the only durable signal may exist in browser, edge, proxy, or server logs
+- アプリが利用可能な request オブジェクトを受け取れない可能性がある
+- アプリが通常の request ID を付与できない可能性がある
+- Issue #73 で定めた共有の型付き JSON エラー応答を返せない可能性がある
+- 持続するシグナルがブラウザ・エッジ・プロキシ・サーバのログにしか残らない可能性がある
 
-## Primary example classes
+## 主要な事例クラス
 
-The repository should treat the following as first-class transport rejection examples.
+リポジトリは以下を一級のトランスポート拒否事例として扱う。
 
-| Example class                         | Typical trigger                                                                                          | Why it is transport-level                                                             | First prevention owner               |
-| ------------------------------------- | -------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- | ------------------------------------ |
-| oversized request headers             | cookie growth, duplicated cookies, forwarded-header growth, accidental custom-header bloat               | request may be rejected by browser, proxy, or HTTP server before the app runs         | auth/session transport plus platform |
-| cookie-bomb or cookie duplication     | repeated cookie appends, stale cookie names left in place, multiple session layers writing independently | the aggregate `Cookie` header can exceed a platform limit before any route logic runs | auth/session transport               |
-| malformed or invalid headers          | illegal header encoding, invalid header syntax, broken proxy forwarding                                  | request parsing may fail before middleware or route handlers run                      | platform and transport configuration |
-| protocol or server boundary rejection | request rejected by reverse proxy, ingress, or server parser due to boundary rules                       | no app-owned error mapping is available                                               | platform layer                       |
+| 事例クラス                             | 典型的なトリガ                                                                                              | なぜトランスポート層なのか                                                             | 最初の予防責任者                       |
+| -------------------------------------- | ----------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- | -------------------------------------- |
+| 巨大化したリクエストヘッダ             | Cookie 肥大、Cookie 重複、forwarded ヘッダ肥大、独自ヘッダの偶発的肥大                                      | アプリが動く前にブラウザ・プロキシ・HTTP サーバが拒否しうる                            | 認証・セッショントランスポート + プラットフォーム |
+| Cookie ボム / Cookie 重複              | Cookie 追記の繰り返し、廃止された Cookie 名の残存、独立に書き込む複数セッションレイヤ                       | 集約された `Cookie` ヘッダがプラットフォーム上限を超え、ルートロジック実行前に弾かれる | 認証・セッショントランスポート          |
+| 不正・無効なヘッダ                     | 不正なヘッダエンコーディング、ヘッダ構文不正、プロキシでの破壊的な転送                                     | リクエストパースがミドルウェアやハンドラに到達する前に失敗する                         | プラットフォーム / トランスポート設定   |
+| プロトコルおよびサーバ境界での拒否     | リバースプロキシ・Ingress・サーバパーサが境界ルールに従って拒否                                            | アプリ所有のエラーマッピングが存在しない                                              | プラットフォームレイヤ                  |
 
-These examples matter because they create a real failure class that app-level JSON error design cannot normalize after the fact.
+これらの事例は、アプリ層 JSON エラー設計では事後正規化できない実在の失敗クラスを生むという点で重要である。
 
-## Ownership split
+## 所有権の分割
 
-The first ownership split should stay explicit.
+最初の所有権境界は明示的に保つ。
 
-| Area                                  | Owns                                                                                               | Does not own                                                 |
-| ------------------------------------- | -------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
-| shared app error model from issue #73 | typed JSON errors for requests that reach the app boundary                                         | failures rejected before app code runs                       |
-| web error handling from issue #74     | how the web product reacts to app-level error codes and route failures                             | pretending early rejection always has a typed app error body |
-| auth and session transport            | cookie shape, serialization discipline, header-budget awareness, duplicate-cookie prevention       | generic proxy or ingress response generation                 |
-| platform and edge layer               | actual early rejection behavior, status code choice, server or proxy limits, raw rejection logging | redefining app-level public error codes                      |
-| observability                         | cross-layer visibility when app request IDs are missing                                            | assuming app logs are always present                         |
+| 領域                                     | 所有                                                                                                  | 所有しない                                            |
+| ---------------------------------------- | ----------------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| Issue #73 の共有アプリエラーモデル       | アプリ境界に到達するリクエストの型付き JSON エラー                                                    | アプリコードが動く前に拒否される失敗                  |
+| Issue #74 の Web エラーハンドリング      | Web プロダクトがアプリ層エラーコードやルート失敗にどう反応するか                                      | 早期拒否でも常に型付きアプリエラーが返ると仮定すること |
+| 認証・セッショントランスポート           | Cookie 形状、シリアライズ規律、ヘッダ予算意識、Cookie 重複防止                                        | 汎用プロキシ / Ingress の応答生成                     |
+| プラットフォーム / エッジレイヤ          | 実際の早期拒否挙動、ステータスコード選択、サーバ / プロキシ上限、生の拒否ログ                         | アプリ層公開エラーコードの再定義                      |
+| 可観測性                                 | アプリ request ID が無い状況での跨レイヤ可視性                                                        | アプリログが常に存在すると仮定すること                |
 
-The rule of thumb is:
+実務的なルール:
 
-- app error policy owns failures that reach app code
-- transport policy owns failures that do not reliably reach app code
-- auth and session work is not complete if it can still create unbounded cookie or header growth without measurement
+- アプリエラーポリシーはアプリコードに到達する失敗を所有する
+- トランスポートポリシーはアプリコードに確実には到達しない失敗を所有する
+- 認証・セッション作業は、Cookie やヘッダの無制限な肥大を計測なしに許容するなら未完了とみなす
 
-## Prevention policy
+## 予防ポリシー
 
-The first prevention policy should make transport drift explicit instead of treating it as an operational surprise.
+最初の予防ポリシーは、トランスポートのドリフトを運用上の不意打ちにせず明示化する。
 
-### Header and cookie budget policy
+### ヘッダおよび Cookie の予算ポリシー
 
-- request-header growth must be treated as a designed budget, not an incidental byproduct of auth or session implementation
-- auth and session code must keep an explicit budget for aggregate cookie footprint, per-cookie size, and cookie count
-- the repository must keep a documented soft budget for day-to-day development and a stricter hard budget that blocks merge once enforcement exists
-- exact byte limits may depend on the final edge stack, but the repository-owned budget must be conservative enough that platform selection does not become the first time a violation is discovered
-- auth/session implementation is incomplete until those budgets are written down, measurable, and checked in at least one automated path
+- リクエストヘッダの肥大は、認証やセッション実装の偶発副作用ではなく、設計された予算として扱う
+- 認証・セッションコードは、Cookie 全体のフットプリント、Cookie ごとのサイズ、Cookie 数について明示的な予算を持つ
+- リポジトリは日常開発のためのソフト予算と、強制が始まった段階でマージをブロックするより厳しいハード予算をドキュメント化する
+- 正確なバイト上限は最終的なエッジスタックに依存しうるが、リポジトリが採用する予算は十分保守的に設定し、プラットフォーム選定後に初めて違反が露見しないようにする
+- 認証・セッション実装は、これらの予算が文書化され計測可能で、少なくとも 1 つの自動化パスでチェックされるまで未完了である
 
-### Cookie writing discipline
+### Cookie 書き込みの規律
 
-- one logical concern should own each cookie name; independent layers must not append competing session cookies without coordination
-- replacing or clearing a cookie must be explicit so stale values do not silently accumulate
-- duplicate-cookie scenarios and accidental header multiplication must be treated as safety bugs, not as harmless local-dev quirks
-- browser-visible and server-only cookies should be reviewed together because aggregate request size is what matters at rejection time
+- 各 Cookie 名は 1 つの論理的関心が所有する。独立したレイヤが調整なしに競合するセッション Cookie を追記してはならない
+- Cookie の置換やクリアは明示的に行い、古い値が暗黙裏に積み重ならないようにする
+- Cookie 重複や偶発的なヘッダ多重化は、ローカル開発の小さな癖ではなく安全性バグとして扱う
+- ブラウザ可視 Cookie とサーバ専用 Cookie は併せてレビューする。拒否時に問題となるのは集約サイズだからである
 
-### Drift policy for local development
+### ローカル開発に関するドリフトポリシー
 
-- fast local development may use stubs or simplified auth flows, but it must not normalize unlimited cookie or header growth as acceptable
-- parity-oriented validation must include at least one runtime path where realistic header limits are enforced before app code runs
-- if local-fast mode cannot reproduce a transport rejection class, the repository must provide a parity check or CI gate that can reproduce or detect that rejection before app code runs
+- 高速なローカル開発でスタブや簡略化された認証フローを使うのは構わないが、無制限な Cookie / ヘッダ肥大を許容として正常化しない
+- パリティ志向の検証には、現実的なヘッダ上限がアプリコード前に強制される実行パスを少なくとも 1 つ含める
+- ローカル高速モードでトランスポート拒否クラスを再現できないなら、リポジトリはアプリコード前段でその拒否を再現または検出できるパリティチェックや CI ゲートを用意する
 
-## Response behavior policy
+## 応答挙動ポリシー
 
-Transport rejection should not be disguised as a normal app error.
+トランスポート拒否を通常のアプリエラーに偽装してはならない。
 
-The first response rules should be:
+最初の応答ルール:
 
-- when rejection happens before app code runs, the response owner is the edge, proxy, server, or platform layer that rejected the request
-- when possible, that layer should return the narrowest standard HTTP response available for the failure class, such as a `431`-style response for oversized request headers
-- the response body may be minimal, plain-text, or platform-generated; it does not need to match the app JSON error contract
-- the app must not claim ownership of diagnostics it could not have produced
-- web code should treat these failures as transport or network boundary failures, not as missing app error normalization
+- アプリコード前段で拒否された場合、応答の所有者は拒否を行ったエッジ・プロキシ・サーバ・プラットフォームのいずれかである
+- 可能なら、そのレイヤは失敗クラスに対して最も狭い標準 HTTP 応答を返す（例: 巨大ヘッダに対する `431` 系応答）
+- 応答ボディは最小限・プレーンテキスト・プラットフォーム生成で構わず、アプリの JSON エラー契約に一致させる必要は無い
+- アプリは生成し得なかった診断情報の所有を主張しない
+- Web コードはこれらの失敗を、アプリエラー正規化の欠如ではなく、トランスポート / ネットワーク境界の失敗として扱う
 
-This boundary is important because a user-visible failure may still need handling even when no typed JSON response exists.
+この境界が重要なのは、型付き JSON 応答が無くてもユーザに見える失敗の対処は依然として必要となるからである。
 
-## Observability policy
+## 可観測性ポリシー
 
-Transport rejection is primarily an observability problem when prevention fails.
+予防が外れたときのトランスポート拒否は、主に可観測性の問題となる。
 
-The first required signal set should be:
+最初に必要なシグナルセット:
 
-- a platform or edge correlation ID whenever the platform can provide one
-- rejection status code and coarse rejection reason
-- request target metadata that is safe to log, such as method, path pattern, or route family
-- request-header size or cookie-size indicators when available
-- a counter or metric family for early rejection by reason and route family
+- プラットフォームやエッジが提供できる場合の相関 ID
+- 拒否ステータスコードと粗い拒否理由
+- ログに残しても安全なリクエスト対象メタデータ（メソッド、パスパターン、ルートファミリ等）
+- 利用可能な場合のリクエストヘッダサイズや Cookie サイズ指標
+- 理由・ルートファミリ別の早期拒否カウンタ / メトリクス
 
-The first logging rules should be:
+最初のロギングルール:
 
-- do not rely on the app request ID for this class because it may never exist
-- keep raw cookie values and secrets out of logs; log sizes, counts, and reason categories instead
-- preserve enough cross-layer timing and correlation to connect browser reports, edge logs, and server logs when the request sometimes reaches the app and sometimes does not
+- このクラスではアプリ request ID に依存しない（存在しないことがある）
+- Cookie の生値や秘密値はログに残さない。サイズ・件数・理由カテゴリを残す
+- リクエストがアプリに届く場合と届かない場合があるため、ブラウザレポート・エッジログ・サーバログを後で繋げられる程度の跨レイヤなタイミング相関を残す
 
-## Minimum verification points
+## 最低限の検証ポイント
 
-The repository should verify this boundary in four places.
+リポジトリは本境界を 4 箇所で検証する。
 
-### 1. Design-time review
+### 1. 設計時レビュー
 
-- auth, session, and platform changes must document whether they affect cookie count, cookie size, or request-header growth
-- any new request metadata added by proxies, auth, or tracing should be reviewed for header-budget impact
+- 認証・セッション・プラットフォーム変更は、Cookie 数 / Cookie サイズ / リクエストヘッダ肥大への影響を文書化する
+- プロキシ・認証・トレーシングが追加するリクエストメタデータは、ヘッダ予算への影響をレビューする
 
-### 2. Fast local checks
+### 2. 高速ローカルチェック
 
-- lightweight checks should measure serialized cookie and header footprint before full-stack runtime tests are needed
-- helper tests should cover duplicate-cookie and uncontrolled-growth scenarios where practical
-- local tooling should make budget violations visible before a developer reaches deploy-time debugging
+- フルスタックランタイムテストの前に、Cookie やヘッダのシリアライズ後フットプリントを軽量チェックで計測する
+- 可能なら Cookie 重複や無制御な肥大シナリオをヘルパテストでカバーする
+- ローカルツールで予算違反を可視化し、デプロイ時のデバッグまで気づかないことを防ぐ
 
-### 3. Parity-oriented validation
+### 3. パリティ志向の検証
 
-- the repository should keep at least one validation path that exercises realistic header-limit enforcement before app code runs
-- this path should confirm that the failure appears as a transport rejection rather than a normal app JSON error
-- the path should be able to reproduce at least the oversized-header or cookie-bomb class because that is the most likely auth/session accident here
+- 現実的なヘッダ上限がアプリコード前に強制される検証パスを少なくとも 1 つ常設する
+- そのパスでは、失敗が通常のアプリ JSON エラーではなくトランスポート拒否として現れることを確認する
+- 認証・セッションでもっとも起こりやすい事故である巨大ヘッダや Cookie ボムを少なくとも再現できるようにする
 
-### 4. CI or merge-gate enforcement
+### 4. CI / マージゲートでの強制
 
-- once budget measurement helpers exist, CI should fail when hard budgets are exceeded
-- parity checks should run often enough that auth/session transport changes cannot ship without coverage
-- if full parity runtime is too expensive for every push, the repository should still run fast budget checks on every merge gate and reserve the heavier rejection scenario for a narrower but mandatory CI stage
+- 予算計測ヘルパが整い次第、ハード予算超過で CI を fail させる
+- 認証・セッショントランスポート変更がカバレッジ無しに出荷されないよう、パリティチェックを十分な頻度で走らせる
+- フルパリティランタイムが毎プッシュで重すぎる場合でも、マージゲートでは高速予算チェックを走らせ、より重い拒否シナリオは狭いが必須の CI ステージに残す
 
-## Relationship to issues #73, #74, #76, and #77
+## Issue #73 / #74 / #76 / #77 との関係
 
-Issue #73 owns the shared public app error vocabulary.
+Issue #73 は共有された公開アプリエラーの語彙を所有する。
 
-Issue #74 owns how the web product reacts when those app-level error codes are returned.
+Issue #74 は、これらのアプリ層エラーコードに対する Web プロダクトの応答方法を所有する。
 
-Issue #76 identifies accident patterns such as auth or session drift and over-broad fallback behavior that become harder to debug when transport rejection is left implicit.
+Issue #76 は、認証 / セッションのドリフトや過度に広いフォールバックなど、トランスポート拒否を暗黙にするとデバッグが難しくなる事故パターンを特定する。
 
-Issue #77 assigns responsibility across design, types, lint, runtime helpers, tests, and observability for the accident patterns that do reach application control paths.
+Issue #77 は、これらの事故パターンのうち、アプリ制御パスに到達するものに対する責任を、設計・型・lint・ランタイムヘルパ・テスト・可観測性の各レイヤに割り当てる。
 
-This document covers the earlier boundary where those systems may never run.
+本ドキュメントは、これらの仕組みが実行されない可能性のある一段手前の境界を扱う。
 
-## Follow-up issue seeds
+## フォローアップ Issue の種
 
-The first follow-up work should include:
+最初のフォローアップ作業に含むべきもの:
 
-- a concrete cookie and request-header budget note owned by auth and session transport work
-- local tooling or tests that measure serialized cookie and header growth
-- a parity-oriented rejection scenario in local infrastructure or CI that proves pre-app rejection behavior
-- platform logging and metric requirements for early request rejection
-- web-side fallback guidance for transport failures that never produce typed app errors
+- 認証・セッショントランスポート所有の具体的な Cookie / リクエストヘッダ予算メモ
+- Cookie / ヘッダのシリアライズ後肥大を計測するローカルツールやテスト
+- アプリ前段の拒否挙動を実証するパリティ志向の拒否シナリオ（ローカルインフラまたは CI）
+- 早期リクエスト拒否に関するプラットフォーム側のログ・メトリクス要件
+- 型付きアプリエラーが発生し得ないトランスポート失敗に対する Web 側のフォールバック指針
 
-## Done-state coverage
+## カバレッジの完了状態
 
-This policy now makes explicit:
+本ポリシーは以下を明示的にした:
 
-- the boundary between app-level errors and pre-app transport rejection
-- the primary transport failure classes that FocusBuddy must design for
-- the ownership split across app error design, auth/session transport, platform, and observability
-- the prevention rule that cookie and header growth must stay inside measured budgets
-- the minimum response, logging, and verification expectations for this failure class
+- アプリ層エラーとアプリ前段トランスポート拒否との境界
+- FocusBuddy が設計上想定すべき主要トランスポート失敗クラス
+- アプリエラー設計・認証/セッショントランスポート・プラットフォーム・可観測性に跨る所有権分割
+- Cookie / ヘッダ肥大は計測された予算内に収めるという予防ルール
+- 本失敗クラスに対する最低限の応答 / ログ / 検証要件

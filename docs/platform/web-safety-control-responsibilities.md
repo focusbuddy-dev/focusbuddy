@@ -1,282 +1,282 @@
-# Web Safety Control Responsibilities
+# Web 安全制御の責任配分
 
-This document captures the output of issue #77.
+本ドキュメントは Issue #77 の成果物である。
 
-Its purpose is to define the first layer-by-layer responsibility model for preventing, detecting, and recovering from the web safety concerns identified in the web accident inventory from issue #76 before feature implementation expands on top of issue #22.
+目的は、Issue #76 の事故インベントリで特定された Web 安全関心に対して、Issue #22 を起点とする機能実装が広がる前に、レイヤ別の予防・検出・復旧の責任モデルを最初に定めることである。
 
-It builds on [docs/platform/web-accident-pattern-inventory.md](web-accident-pattern-inventory.md), which defines the accident classes, control posture, and follow-up issue seeds that this responsibility model allocates across layers.
+[docs/platform/web-accident-pattern-inventory.md](web-accident-pattern-inventory.md) を前提とする。同インベントリは事故クラス、制御スタンス、フォローアップ Issue の種を定義し、本責任モデルがそれらをレイヤ間に配分する。
 
-## Scope
+## スコープ
 
-This document defines:
+本ドキュメントが定めるもの:
 
-- the control layers used for web safety in FocusBuddy
-- which layers own prevention, detection, and recovery for the primary accident classes
-- which controls should become mandatory entry points instead of team convention only
-- how route or navigation safety, mutation safety, and background-fetch safety should be separated
-- where current oxlint TypeScript promise-handling rules fit in the larger safety stack
-- how a later type-aware lint stage should support those helper boundaries if the repo adopts one
-- which follow-up implementation tracks should be split from this design
+- FocusBuddy の Web 安全に用いる制御レイヤ
+- 主要な事故クラスに対する予防・検出・復旧の所有者
+- チームの慣習だけではなく必須エントリポイントに昇格すべき制御
+- ルート / ナビゲーション安全、ミューテーション安全、バックグラウンド取得安全の分離方法
+- 現行の oxlint TypeScript Promise 取り扱いルールが、より大きな安全スタックの中でどこに位置するか
+- 後で型認識 lint ステージを採用した場合に、それがヘルパ境界をどう支えるか
+- 本設計から分離すべき後続実装トラック
 
-This document does not define final helper APIs, final lint configuration, or concrete app code.
+本ドキュメントが定めないもの: 最終的なヘルパ API、最終的な lint 設定、具体的なアプリコード。
 
-## Primary accident classes
+## 主要な事故クラス
 
-The primary focus stays on the shortlist from issue #76 because these are the cases most likely to create broad rework if they are handled ad hoc.
+主焦点は Issue #76 のショートリストに保つ。場当たり的な扱いになると後の手戻りが大きくなりやすいケースだからである。
 
-The primary accident classes are:
+主要な事故クラス:
 
-- async navigation race
-- double submit or rapid re-entry
-- concurrent fetch with stale response win
-- unsaved exit during multi-step flow
-- destructive mutation versus background refresh
-- auth expiry or permission drift mid-flow
-- over-broad fallback behavior
-- hidden failure due to missing instrumentation
+- 非同期ナビゲーション競合
+- 二重送信または素早い再入力
+- 並列フェッチと古い応答の勝利
+- 多段フロー中の未保存離脱
+- 破壊的ミューテーション vs バックグラウンド再取得
+- フロー中の認証期限切れ / 権限ドリフト
+- 過度に広いフォールバック挙動
+- 計装欠如による隠れた失敗
 
-Other patterns from issue #76 can be layered on later, but these eight should drive the first safety architecture.
+Issue #76 の他のパターンは後で重ねればよいが、最初の安全アーキテクチャはこの 8 件で駆動する。
 
-## Control layers
+## 制御レイヤ
 
-The first control model uses six layers.
+最初の制御モデルは 6 レイヤを使う。
 
-### 1. Product and interaction design
+### 1. プロダクトおよびインタラクション設計
 
-This layer owns the user-visible policy for dangerous states.
+危険なステートに対するユーザ可視のポリシーを所有する。
 
-It defines:
+定義するもの:
 
-- when a control must lock interaction instead of merely warning
-- when confirm-leave is mandatory
-- when recovery should stay inline versus forcing a route reset
-- when a background failure should remain quiet versus become visible
+- コントロールが警告だけでなくインタラクションをロックすべき条件
+- 確認離脱（confirm-leave）が必須となる条件
+- 復旧をインラインに留める条件と、ルートリセットを強いる条件
+- バックグラウンド失敗を静かにする条件と、可視化する条件
 
-### 2. Shared contract and type surface
+### 2. 共有契約と型サーフェス
 
-This layer makes unsafe flows harder to express.
+安全でないフローを表現しにくくする。
 
-It owns:
+所有するもの:
 
-- typed mutation state and result surfaces
-- typed error categories consumed from the shared contract work
-- explicit route or request context values when late results must be invalidated
-- idempotency and duplicate-intent semantics that should not remain implicit
+- 型付きミューテーションステートと結果サーフェス
+- 共有契約から消費する型付きエラーカテゴリ
+- 遅延結果を無効化する必要がある場合の明示的ルート / リクエスト文脈値
+- 暗黙のままにすべきでない冪等性 / 重複意図セマンティクス
 
-### 3. Lint and import constraints
+### 3. lint および import 制約
 
-This layer blocks obviously unsafe entry points once the approved primitives exist.
+承認されたプリミティブが整い次第、明らかに安全でないエントリポイントをブロックする。
 
-It owns:
+所有するもの:
 
-- import restrictions for approved async and mutation helpers
-- current oxlint TypeScript promise-handling rules after the approved helper boundaries exist
-- any later type-aware lint stage that the repo may choose to add for deeper async correctness checks
-- discouraging direct low-level router or fetch usage in unsafe contexts
-- preventing drift back to ad hoc feature-local safety logic
+- 承認された非同期 / ミューテーションヘルパに対する import 制約
+- 承認ヘルパ境界の整備後における、現行 oxlint TypeScript Promise 取り扱いルール
+- リポジトリが後で採用しうる、より深い非同期正しさチェック向けの型認識 lint ステージ
+- 安全でない文脈での低レベルルータや fetch の直接利用を抑制
+- 場当たり的な機能ローカル安全ロジックへの逆戻りを防止
 
-### 4. Runtime helpers and framework integration
+### 4. ランタイムヘルパとフレームワーク統合
 
-This layer owns behavior that only matters under real timing and state changes.
+実タイミング / ステート変化下でのみ意味を持つ挙動を所有する。
 
-It owns:
+所有するもの:
 
-- stale-result discard and route-context invalidation
-- mutation locking and duplicate-intent suppression
-- background refresh coordination with destructive actions
-- auth-expiry and permission-drift interruption handling
-- helper-level telemetry emission for suppressed or recovered paths
+- 古い結果の破棄とルート文脈の無効化
+- ミューテーションロックと重複意図の抑制
+- 破壊的アクションとバックグラウンド再取得の調整
+- 認証期限切れ / 権限ドリフト中断のハンドリング
+- 抑制 / 復旧パスからのヘルパレベルテレメトリ送出
 
-### 5. Tests and CI
+### 5. テストおよび CI
 
-This layer proves the guarantees stay intact as feature work expands.
+機能拡張に対しても保証が崩れないことを示す。
 
-It owns:
+所有するもの:
 
-- deterministic regression tests for race and duplicate-submission scenarios
-- lint and import-gate enforcement inside CI
-- route transition and destructive-action concurrency coverage
-- smoke coverage for telemetry-bearing helpers where practical
+- 競合 / 二重送信シナリオの決定論的なリグレッションテスト
+- CI 内での lint / import ゲート強制
+- ルート遷移と破壊的アクションの並行性カバレッジ
+- 実用的な範囲でのテレメトリ付きヘルパに対するスモークカバレッジ
 
-### 6. Observability
+### 6. 可観測性
 
-This layer makes safety failures visible when prevention is incomplete or intentionally soft.
+予防が不完全 / 意図的にゆるい場合に、安全失敗を可視化する。
 
-It owns:
+所有するもの:
 
-- structured event names and required fields
-- counters for suppressed duplicates, stale-result discards, forced re-auth, and fallback activation
-- request or route correlation for recovery failures
-- making silent recoveries visible enough to debug later
+- 構造化イベント名と必須フィールド
+- 抑制された重複・古い結果破棄・強制再認証・フォールバック発動のカウンタ
+- 復旧失敗に対するリクエスト / ルート相関
+- 静かな復旧をデバッグ可能にする可視化
 
-## Responsibility matrix
+## 責任マトリクス
 
-The matrix below names the primary owner for prevention, detection, and recovery. Secondary support is still allowed when needed.
+予防・検出・復旧の主所有者を示す。必要に応じて補助所有を許容する。
 
-| Accident class                                 | Prevention owner                                                     | Detection owner                              | Recovery owner                            | Notes                                                                                    |
-| ---------------------------------------------- | -------------------------------------------------------------------- | -------------------------------------------- | ----------------------------------------- | ---------------------------------------------------------------------------------------- |
-| async navigation race                          | runtime helpers plus approved route-aware entry points               | observability plus route race tests          | runtime helpers                           | route changes invalidate old work even when the underlying request technically succeeded |
-| double submit or rapid re-entry                | runtime helpers plus product lock-state design                       | observability plus duplicate-submit tests    | runtime helpers plus typed mutation state | prevention should be the default; backend idempotency is support, not the only defense   |
-| concurrent fetch with stale response win       | runtime helpers plus typed fetch context                             | observability plus race tests                | runtime helpers                           | stale-result discard policy must be centralized instead of screen-local                  |
-| unsaved exit during multi-step flow            | design plus runtime flow guards                                      | flow tests plus abandonment telemetry        | runtime helpers plus product recovery UX  | this is a mixed-control case; prevention alone is not enough                             |
-| destructive mutation versus background refresh | runtime helpers plus design lock policy                              | concurrency tests plus suppression telemetry | runtime helpers                           | destructive windows should pause or serialize conflicting refresh work                   |
-| auth expiry or permission drift mid-flow       | centralized auth-aware API path plus runtime capability invalidation | observability plus auth-interruption tests   | runtime helpers plus #74 web error policy | prevention is partial here; forced recovery paths are required                           |
-| over-broad fallback behavior                   | design plus typed error categories from #73 and #74                  | tests plus fallback telemetry                | runtime helpers plus app-level policy     | recoverable failures should not collapse into generic redirect or route reset            |
-| hidden failure due to missing instrumentation  | telemetry-bearing helper entry points                                | observability                                | runtime helpers plus CI spot checks       | this concern is primarily detection-first                                                |
+| 事故クラス                                       | 予防の所有                                                                  | 検出の所有                                            | 復旧の所有                                | 備考                                                                                |
+| ------------------------------------------------ | --------------------------------------------------------------------------- | ----------------------------------------------------- | ----------------------------------------- | ------------------------------------------------------------------------------------ |
+| 非同期ナビゲーション競合                         | ランタイムヘルパ + 承認ルート認識エントリポイント                            | 可観測性 + ルート競合テスト                            | ランタイムヘルパ                          | 内部リクエストが成功してもルート遷移は古い作業を無効化する                          |
+| 二重送信または素早い再入力                       | ランタイムヘルパ + プロダクトのロックステート設計                            | 可観測性 + 二重送信テスト                              | ランタイムヘルパ + 型付きミューテーション | 既定で予防する。バックエンド冪等性は唯一の防御ではなくサポートとして扱う           |
+| 並列フェッチと古い応答の勝利                     | ランタイムヘルパ + 型付き fetch 文脈                                         | 可観測性 + 競合テスト                                  | ランタイムヘルパ                          | 古い結果の破棄ポリシーは画面ローカルではなく集中化する                              |
+| 多段フロー中の未保存離脱                         | 設計 + ランタイムフローガード                                                | フローテスト + 放棄テレメトリ                          | ランタイムヘルパ + プロダクトの復旧 UX     | 混合制御。予防だけでは足りない                                                       |
+| 破壊的ミューテーション vs バックグラウンド再取得 | ランタイムヘルパ + 設計のロックポリシー                                      | 並行性テスト + 抑制テレメトリ                          | ランタイムヘルパ                          | 破壊的窓は競合再取得を一時停止または直列化する                                      |
+| フロー中の認証期限切れ / 権限ドリフト            | 集中化された認証認識 API パス + ランタイムの能力無効化                        | 可観測性 + 認証中断テスト                              | ランタイムヘルパ + Issue #74 のポリシー    | 予防は部分的。強制復旧パスが必要                                                     |
+| 過度に広いフォールバック挙動                     | 設計 + #73 / #74 由来の型付きエラーカテゴリ                                  | テスト + フォールバックテレメトリ                      | ランタイムヘルパ + アプリ層ポリシー        | 復帰可能失敗を汎用リダイレクト / リセットに潰さない                                  |
+| 計装欠如による隠れた失敗                         | テレメトリ付きヘルパエントリポイント                                         | 可観測性                                              | ランタイムヘルパ + CI のスポットチェック   | これは検出優先の関心事                                                              |
 
-## Layer-by-layer decisions
+## レイヤごとの判断
 
-### Design responsibilities
+### 設計の責任
 
-Design owns the user-facing rules for risky situations.
+設計はリスキーな状況に対するユーザ向けルールを所有する。
 
-The first design decisions should be:
+最初の設計判断:
 
-- mutation actions with durable side effects should expose a locked or clearly busy state rather than advisory messaging only
-- unsaved-exit warnings are required only for flows with meaningful draft loss or setup loss risk
-- auth interruption should preserve user context when possible instead of forcing an unconditional home redirect
-- recoverable stale-data or background-refresh failures should prefer inline recovery over destructive fallback
+- 永続副作用を持つミューテーションアクションは、注意喚起だけでなくロック / 明確な busy ステートを露出する
+- 未保存離脱の警告は、有意な下書き喪失 / セットアップ喪失リスクのあるフローでのみ必須にする
+- 認証中断後は、無条件のホームリダイレクトではなく、可能な限りユーザ文脈を保持する
+- 復帰可能な古いデータ / バックグラウンド再取得失敗は、破壊的フォールバックよりインライン復旧を優先する
 
-### Type and API boundary responsibilities
+### 型および API 境界の責任
 
-Types and contract surfaces should carry the state distinctions that runtime helpers depend on.
+型と契約サーフェスは、ランタイムヘルパが依拠するステート区分を担う。
 
-The first type-level decisions should be:
+最初の型レベル判断:
 
-- route-aware async work should have an explicit route or request context token when late results must be rejected
-- mutation helpers should expose first-class states such as idle, pending, succeeded, failed, and suppressed-duplicate
-- duplicate-intent and idempotent-success semantics should be represented explicitly rather than inferred from generic success or failure values
-- shared error categories come from issue #73, while issue #74 decides how web flows respond to those categories
+- ルート認識な非同期作業は、遅延結果を拒否すべき場合に明示的なルート / リクエスト文脈トークンを持つ
+- ミューテーションヘルパは idle / pending / succeeded / failed / suppressed-duplicate などの第一級ステートを露出する
+- 重複意図と冪等成功のセマンティクスは、汎用 success / failure 値からの推測ではなく明示的に表現する
+- 共有エラーカテゴリは Issue #73 が所有し、Web の応答方法は Issue #74 が決める
 
-### Lint and import responsibilities
+### lint および import の責任
 
-Lint should support the safety architecture, not pretend to replace it.
+lint は安全アーキテクチャを補助するもので、これを置き換えない。
 
-The first lint decisions should be:
+最初の lint 判断:
 
-- once approved helpers exist, feature code should not freely bypass them with direct low-level router or raw fetch usage in sensitive contexts
-- import restrictions should enforce centralized entry points for route-aware async work, mutation submission, auth-aware API access, and telemetry-bearing suppression paths
-- the repo's current oxlint TypeScript promise-handling rules should be treated as a second-line guard after the approved helper boundaries exist
-- if the repo later adopts a separate type-aware lint stage, that stage should stay in phase 2 and should deepen async correctness checks rather than redefine the safety architecture
-- promise-handling rules should focus on catching unsafe escapes such as dropped async work or misused async handlers, not on expressing all product safety policy by themselves
+- 承認ヘルパが整ったら、機能コードがセンシティブな文脈で低レベルルータや生 fetch を自由に使ってバイパスしないようにする
+- ルート認識な非同期作業、ミューテーション送信、認証認識 API アクセス、テレメトリ付き抑制パスへの import 制約で集中化を強制する
+- 現行の oxlint TypeScript Promise 取り扱いルールは、承認ヘルパ境界が整った後の二次防御として扱う
+- 後でリポジトリが別途型認識 lint ステージを採用する場合、それは phase 2 に留め、安全アーキテクチャの再定義ではなく非同期正しさチェックを深める方向に置く
+- Promise 取り扱いルールは、すべての安全ポリシーを単独で表現するためではなく、未処理の async 作業や誤用された async ハンドラのような不安全な漏出を捕える方向に集中させる
 
-The first current oxlint TypeScript candidate rules remain:
+最初の現行 oxlint TypeScript 候補ルール:
 
 - `typescript/no-floating-promises`
 - `typescript/no-misused-promises`
 - `typescript/promise-function-async`
 
-Rules like `typescript/require-await` should be treated as lower-priority hygiene rather than part of the first safety gate.
+`typescript/require-await` のようなルールは、最初の安全ゲートではなく低優先度の hygiene として扱う。
 
-### Runtime responsibilities
+### ランタイムの責任
 
-Runtime helpers own the actual timing-sensitive safety behavior.
+ランタイムヘルパは実際のタイミングセンシティブな安全挙動を所有する。
 
-The first runtime decisions should be:
+最初のランタイム判断:
 
-- route or navigation helpers own cancellation, ignore-late-result behavior, and route-context invalidation
-- mutation helpers own busy locking, duplicate suppression, and post-success reconciliation hooks
-- background refresh helpers own freshness updates but must not override destructive mutation windows
-- auth-aware API access owns session interruption detection and routes the result into the web recovery policy defined by issue #74
+- ルート / ナビゲーションヘルパが、キャンセル、遅延結果無視、ルート文脈無効化を所有する
+- ミューテーションヘルパが、busy ロック、重複抑制、成功後整合フックを所有する
+- バックグラウンド再取得ヘルパは鮮度更新を所有するが、破壊的ミューテーション窓を上書きしない
+- 認証認識 API アクセスは、セッション中断検出と、その結果を Issue #74 の Web 復旧ポリシーへ流す経路を所有する
 
-### CI and test responsibilities
+### CI / テストの責任
 
-Tests should concentrate on the small set of race and safety guarantees that are easy to regress.
+テストは、後で退行しやすい少数の競合 / 安全保証に集中する。
 
-The first required coverage areas should be:
+最初の必須カバレッジ:
 
-- route transition race suppression
-- duplicate submit prevention
-- stale response discard ordering
-- destructive mutation versus background refresh coordination
-- auth-expiry interruption and recovery routing
+- ルート遷移時の競合抑制
+- 二重送信防止
+- 古い応答破棄の順序
+- 破壊的ミューテーション vs バックグラウンド再取得の調整
+- 認証期限切れ中断と復旧ルーティング
 
-### Observability responsibilities
+### 可観測性の責任
 
-Observability should treat locally recovered or intentionally suppressed events as first-class signals when they reveal safety pressure.
+可観測性は、ローカルで復旧 / 抑制されたイベントも、安全圧を示すなら一級シグナルとして扱う。
 
-The first telemetry requirements should be:
+最初のテレメトリ要件:
 
-- count suppressed duplicate submissions
-- count stale-result discards
-- record forced re-auth or permission-drift interruptions
-- record fallback activation when a route reset or redirect is used instead of inline recovery
-- keep request or route correlation IDs available for failure investigation
+- 抑制された二重送信の件数
+- 古い結果破棄の件数
+- 強制再認証 / 権限ドリフト中断の記録
+- ルートリセット / リダイレクトを使った場合のフォールバック発動の記録
+- 失敗調査用にリクエスト / ルート相関 ID を保持
 
-## Mandatory entry points versus convention-only controls
+## 必須エントリポイント vs 慣習のみの制御
 
-The following controls should become mandatory entry points once implemented:
+以下の制御は、実装後に必須エントリポイントへ昇格させる:
 
-- navigation-aware async helpers for route-triggered work
-- approved mutation helpers that own busy state and duplicate-intent suppression
-- a centralized auth-aware API access path
-- telemetry-bearing error and suppression reporting helpers
+- ルート起点作業のためのナビゲーション認識な非同期ヘルパ
+- busy ステートと重複意図抑制を所有する承認ミューテーションヘルパ
+- 集中化された認証認識 API アクセスパス
+- テレメトリ付きエラー / 抑制レポートヘルパ
 
-The following controls can start as convention plus guidance, then tighten later if drift appears:
+以下は慣習 + ガイドで開始し、ドリフトが見えたら締める:
 
-- background refresh helpers for non-destructive screens
-- local flow guard helpers for unsaved-exit handling on flows that are not yet widely reused
+- 非破壊的画面のバックグラウンド再取得ヘルパ
+- 広く再利用されていないフローの未保存離脱ローカルガード
 
-The rule of thumb is simple: if bypassing a primitive can cause cross-screen state corruption or hidden safety regressions, that primitive should become mandatory rather than advisory.
+経験則は単純である: プリミティブの迂回が画面横断のステート破損や見えない安全退行を引き起こせるなら、そのプリミティブは助言ではなく必須にすべき。
 
-## Boundary decisions
+## 境界判断
 
-### Route and navigation control
+### ルート / ナビゲーション制御
 
-Route and navigation control owns:
+ルート / ナビゲーション制御の所有:
 
-- whether earlier work is still allowed to commit after the view context changed
-- how route-scoped cancellation or ignore-late-result policy works
-- when route reset is allowed as a recovery path
+- ビュー文脈変更後に古い作業のコミットを許すか
+- ルートスコープなキャンセル / 遅延結果無視ポリシーの仕様
+- ルートリセットを復旧パスとして許す条件
 
-This layer should not own generic mutation semantics.
+このレイヤは汎用ミューテーションセマンティクスは所有しない。
 
-### Mutation control
+### ミューテーション制御
 
-Mutation control owns:
+ミューテーション制御の所有:
 
-- duplicate-intent suppression
-- busy locking for durable actions
-- optimistic or reconciliation handoff after mutation completion
-- safe interaction between submission state and retry state
+- 重複意図の抑制
+- 永続アクションの busy ロック
+- ミューテーション完了後の楽観 / 整合の引き継ぎ
+- 送信ステートとリトライステートの安全な相互作用
 
-This layer should not own generic route invalidation rules except where a mutation helper must signal a navigation-aware boundary.
+このレイヤは、ミューテーションヘルパがナビゲーション認識境界をシグナルする必要があるケースを除き、汎用なルート無効化ルールは所有しない。
 
-### Background-fetch control
+### バックグラウンド取得制御
 
-Background-fetch control owns:
+バックグラウンド取得制御の所有:
 
-- freshness updates
-- stale-response discard
-- suppression or deferral when a destructive mutation window is active
+- 鮮度更新
+- 古い応答の破棄
+- 破壊的ミューテーション窓中の抑制 / 遅延
 
-This layer should not be allowed to re-enable dangerous actions or override a mutation control decision.
+このレイヤは危険アクションの再有効化やミューテーション制御の判断の上書きを許してはならない。
 
-## Relationship to issues #73 and #74
+## Issue #73 / #74 との関係
 
-Issue #73 owns the shared error vocabulary and typed error surfaces.
+Issue #73 は共有エラー語彙と型付きエラーサーフェスを所有する。
 
-Issue #74 owns the web-specific response policy, such as when to redirect, when to keep context, and when to show inline recovery.
+Issue #74 は Web 固有の応答ポリシー（リダイレクト・文脈保持・インライン復旧の判断）を所有する。
 
-That policy is captured in [docs/platform/web-error-handling-policy.md](web-error-handling-policy.md).
+そのポリシーは [docs/platform/web-error-handling-policy.md](web-error-handling-policy.md) に記述されている。
 
-This document sits between them by deciding which web safety controls depend on shared types, which depend on runtime policy, and which must be enforced by helper entry points or tests.
+本ドキュメントは両者の中間に位置し、Web 安全制御のうち何が共有型に依存し、何がランタイムポリシーに依存し、何がヘルパエントリポイントやテストで強制されるかを決める。
 
-## Follow-up issue seeds
+## フォローアップ Issue の種
 
-This design should split into focused implementation work under issue #22 and related tracks.
+本設計は Issue #22 と関連トラックの下で焦点を絞った実装作業に分割すべきである。
 
-The first follow-up candidates are:
+最初の候補:
 
-- route-aware async safety helpers and import restrictions
-- mutation submission guardrails and duplicate-intent suppression
-- background refresh coordination for destructive mutation windows
-- auth-aware API access and interruption handling
-- race-regression and duplicate-submit test coverage
-- observability requirements for suppressed or recovered failures
+- ルート認識な非同期安全ヘルパと import 制約
+- ミューテーション送信ガードレールと重複意図抑制
+- 破壊的ミューテーション窓向けのバックグラウンド再取得調整
+- 認証認識 API アクセスと中断ハンドリング
+- 競合リグレッションと二重送信のテストカバレッジ
+- 抑制 / 復旧された失敗向けの可観測性要件
 
-## Summary
+## まとめ
 
-FocusBuddy should not rely on one layer to provide all web safety.
+FocusBuddy は、1 つのレイヤだけにすべての Web 安全を頼らない。
 
-The first safety stack should use design for user-facing policy, shared types for explicit state boundaries, lint and import rules for safe entry points, runtime helpers for timing-sensitive behavior, tests for regression resistance, and observability for the cases that escape prevention.
+最初の安全スタックは、ユーザ向けポリシーを設計に、明示的ステート境界を共有型に、安全なエントリポイントを lint / import に、タイミングセンシティブな挙動をランタイムヘルパに、退行耐性をテストに、予防を逃れたケースの可視化を可観測性に置く。

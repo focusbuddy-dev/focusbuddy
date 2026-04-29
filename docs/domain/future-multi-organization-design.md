@@ -1,130 +1,130 @@
-# Future Multi-Organization Design
+# 将来の組織機能設計（マルチ組織）
 
-This document captures the planning direction for issue #79.
+本ドキュメントは Issue #79 の検討方向を記録したものである。
 
-Its purpose is to keep future organization-scoped design visible without forcing MVP authentication, MVP web setup, or MVP schema work to absorb multi-organization complexity too early.
+目的は、組織スコープに関する将来設計の見通しを残しつつ、MVP 段階の認証・Web セットアップ・スキーマ作業がマルチ組織の複雑さを早期に取り込まされないようにすることである。
 
-## Scope
+## スコープ
 
-This note focuses on:
+本ドキュメントが扱うもの:
 
-- the boundary between user identity and future organization membership
-- the ownership and authorization seams that MVP work should preserve
-- the future concepts that are likely to matter when organization support is introduced
-- the recommended timing for when to pick this work up
+- ユーザ identity と将来の組織メンバーシップとの境界
+- MVP 作業が温存しておくべき所有権・認可のシーム
+- 組織機能を導入する際に重要になる将来概念
+- この作業を着手する推奨タイミング
 
-This note does not define final Prisma models, final API contracts, or an implementation plan for organization features.
+本ドキュメントが扱わないもの: 最終的な Prisma モデル、最終的な API 契約、組織機能の実装計画。
 
-## Why this is separate from MVP auth
+## なぜ MVP 認証から分離するのか
 
-MVP auth and multi-subdomain support are primarily about:
+MVP 認証およびマルチサブドメインは主に以下を扱う:
 
-- the authentication identity source
-- shared session transport across browser surfaces
-- cookie and CSRF boundaries
-- logout, expiry, and auth failure handling
+- 認証 identity ソース
+- ブラウザ面を跨ぐセッショントランスポートの共有
+- Cookie および CSRF の境界
+- ログアウト・期限切れ・認証失敗のハンドリング
 
-Future multi-organization support is a different concern.
+将来のマルチ組織は別の関心事である。
 
-It changes:
+それは以下を変える:
 
-- who can act on a resource
-- which context a request is acting inside
-- how ownership and authorization are modeled
-- how audit data should be recorded
-- how the database may need to evolve
+- 誰がリソースを操作できるのか
+- リクエストがどのコンテキストで実行されているのか
+- 所有権と認可をどうモデル化するのか
+- 監査ログをどう記録するか
+- データベースをどう発展させるか
 
-Because of that, MVP auth work should not be blocked on organization design.
+そのため、MVP 認証作業は組織設計を待たずに進めるべきである。
 
-## Current MVP baseline
+## 現在の MVP ベースライン
 
-The current MVP direction should stay intentionally simple:
+現在の MVP は意図的にシンプルに保つ:
 
-- identity is user-scoped
-- the authenticated actor is a `User`
-- application data is modeled around the first single-user ownership rules
-- web and API work should not require organization context yet
+- identity はユーザスコープ
+- 認証されたアクタは `User`
+- アプリケーションデータは最初の単一ユーザ所有のルールで設計する
+- Web / API 作業は組織コンテキストを未だ要求しない
 
-This is compatible with future organization support as long as the current design avoids over-coupling identity and ownership.
+これは、現在の設計が identity と所有権を過度に結合しない限り、将来のマルチ組織と両立する。
 
-## Constraints to preserve now
+## 現時点で温存すべき制約
 
-The MVP should preserve these extension seams.
+MVP は以下の拡張シームを保ったままにする。
 
-### 1. Keep identity separate from ownership
+### 1. identity と所有権を分離する
 
-The signed-in user should represent who the actor is.
+サインイン中のユーザは「誰がアクタか」を表す。
 
-That does not mean every future resource rule must stay permanently equivalent to direct user ownership.
+それは、将来のあらゆるリソースルールが永久に直接ユーザ所有と等価でなければならない、という意味ではない。
 
-### 2. Do not bake active organization into the auth primitive
+### 2. アクティブ組織を認証プリミティブに埋め込まない
 
-Session identity should describe the authenticated user.
+セッション identity は認証されたユーザを表す。
 
-If organization context is needed later, it should be added as request or route context, not by changing the meaning of the base authentication identity.
+将来組織コンテキストが必要になった場合、それはリクエストやルートのコンテキストとして付加するべきであり、ベースとなる認証 identity の意味を変えてはならない。
 
-### 3. Avoid spreading direct owner checks through every boundary
+### 3. 直接所有チェックをすべての境界で散らばらせない
 
-It is fine for MVP rules to be user-owned.
+MVP のルールがユーザ所有であることは構わない。
 
-It is less safe to hard-code every service, policy, and API meaning around only `ownerUserId` assumptions in a way that cannot evolve into membership-based access later.
+ただし、すべてのサービス・ポリシー・API の意味付けを `ownerUserId` 前提のみで固定し、後でメンバーシップに基づくアクセスへ進化できなくしてしまうのは安全とは言えない。
 
-### 4. Leave room for future authorization context
+### 4. 将来の認可コンテキストの余地を残す
 
-API and web boundaries should be able to carry an explicit active organization context later.
+API および Web の境界は、将来的に明示的なアクティブ組織コンテキストを伝搬できるようにしておく。
 
-That context may eventually influence authorization, visibility, and audit behavior.
+そのコンテキストは、認可・可視性・監査の挙動に影響しうる。
 
-### 5. Leave room for future audit expansion
+### 5. 将来の監査拡張の余地を残す
 
-Audit and policy decisions should be able to include organization context later without rewriting the meaning of the current user identity.
+監査・ポリシーの判断は、現在のユーザ identity の意味を書き換えずに、将来組織コンテキストを含められるようにしておく。
 
-## Future concepts to expect
+## 想定される将来概念
 
-The future multi-organization design will likely need at least these concepts:
+将来のマルチ組織設計では、少なくとも以下の概念が必要になる見込みである:
 
-- `Organization`: a tenant or shared workspace boundary
-- `OrganizationMembership`: the link between a user and an organization
-- `Role` or permission set: the authorization level inside an organization
-- `ActiveOrganizationContext`: the organization the current request is acting inside
-- resource ownership mode: whether a resource stays user-owned or becomes organization-owned
+- `Organization`: テナントまたは共有ワークスペース境界
+- `OrganizationMembership`: ユーザと組織の関連
+- `Role` / 権限セット: 組織内での認可レベル
+- `ActiveOrganizationContext`: 当該リクエストが実行されている組織
+- リソース所有モード: リソースをユーザ所有のままにするか、組織所有にするか
 
-These concepts should stay future-facing only until there is an actual product requirement that needs them.
+これらの概念は、実際にプロダクト要件として必要になるまで、将来面のままに留める。
 
-## What should not happen yet
+## まだ行うべきでないこと
 
-The MVP should not do these things preemptively:
+MVP は以下を先回りして行わない:
 
-- add `organizationId` to every model before there is an organization-scoped requirement
-- require every API to carry organization context now
-- redesign all ownership rules around teams before there is collaborative product behavior
-- tie authentication session storage directly to a future organization model
+- 組織スコープな要件が無い段階で全モデルに `organizationId` を追加する
+- すべての API に組織コンテキストを伝搬させる
+- 共同作業のプロダクト挙動が無い段階で、所有権ルールをチーム前提で再設計する
+- 認証セッションのストレージを将来の組織モデルに直接結びつける
 
-Those moves would add cost before the product needs them.
+これらは、プロダクトが必要とする前にコストを増やす方向への動きである。
 
-## When to revisit this work
+## いつ着手するか
 
-This issue should not block MVP auth work in #30.
+本 Issue は、Issue #30 の MVP 認証作業をブロックしない。
 
-A practical sequence is:
+実務的な順序:
 
-1. finish MVP auth and subdomain session boundaries in #30
-2. continue the MVP single-user model through #35, #21, and #22
-3. revisit future organization design before the first feature that introduces shared workspaces, organization-level permissions, or organization-owned resources
-4. if that need appears before schema implementation fully stabilizes, split the required parts into focused follow-up issues
+1. Issue #30 で MVP 認証およびサブドメインのセッション境界を完了させる
+2. Issue #35 / #21 / #22 を経て MVP の単一ユーザモデルを進行させる
+3. 共有ワークスペース・組織レベル権限・組織所有リソースを導入する最初の機能の前に、本設計に立ち戻る
+4. もしスキーマ実装が安定し切る前にその必要が現れた場合、必要箇所を限定したフォローアップ Issue に分割する
 
-## Open questions for the future issue
+## 将来 Issue で答えるべき問い
 
-When organization support becomes concrete, the design should answer at least these questions:
+組織機能を具体化する段階では、少なくとも以下に答える:
 
-- which resources stay user-owned and which become organization-owned
-- whether active organization belongs in path, subdomain, header, or another request context
-- how membership and role rules affect authorization decisions
-- how public and private visibility behaves when ownership is organization-scoped
-- how audit logs, support tooling, and diagnostics represent organization context
+- どのリソースをユーザ所有のまま残し、どれを組織所有にするか
+- アクティブ組織は path / サブドメイン / ヘッダ / その他のどこに置くか
+- メンバーシップとロールが認可判断にどう影響するか
+- 公開・非公開の可視性は、所有が組織スコープになったときどう振る舞うか
+- 監査ログ・サポートツール・診断は組織コンテキストをどう表現するか
 
-## Summary
+## まとめ
 
-The MVP should stay user-scoped and simple.
+MVP はユーザスコープでシンプルに保つ。
 
-The main responsibility today is not to implement multi-organization support early, but to avoid closing the seams that would make future organization support expensive later.
+今日の主たる責任は将来のマルチ組織機能を早期実装することではなく、後でその機能を取り込む際に高くつくシームを閉じてしまわないことである。

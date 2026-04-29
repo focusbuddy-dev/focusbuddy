@@ -1,137 +1,137 @@
-# Repository ESM Strategy
+# リポジトリ ESM 戦略
 
-This document captures the repository module strategy after issue #57 and the package migration work from issue #120.
+本ドキュメントは Issue #57 とそれに続く Issue #120 のパッケージ移行作業を経たリポジトリのモジュール戦略を記録する。
 
-Its purpose is to define an ESM-first repository policy, the file-level CommonJS exceptions that still remain, and the package contract for workspace packages that move to explicit ESM after the focused logger-package change from issue #23.
+目的は、ESM 先行のリポジトリポリシー、現存するファイル単位の CommonJS 例外、および Issue #23 の logger パッケージ変更後に明示的 ESM へ移るワークスペースパッケージの契約を定義することである。
 
-## Scope
+## スコープ
 
-This document defines:
+本ドキュメントが定めるもの:
 
-- the repository default for hand-written JavaScript, TypeScript, and tool config files
-- which current files are allowed to remain CommonJS
-- which workspace packages are candidates for explicit ESM conversion
-- the package contract required before a package can declare `type: module`
-- when CommonJS compatibility may remain in place for packages or config files that still need it
-- an ordered follow-up plan for package-by-package migration work
+- 手書きの JavaScript / TypeScript / ツール config ファイルにおけるリポジトリ既定
+- 現状 CommonJS のまま残してよいファイル
+- 明示的 ESM 化の候補となるワークスペースパッケージ
+- パッケージが `type: module` を宣言できるようになる前に必要な契約
+- 現状ニーズがあるパッケージ / config ファイルで CommonJS 互換性を残してよい条件
+- パッケージごとの移行作業の順序付きプラン
 
-This document does not define a repository-wide app runtime conversion to pure ESM.
+本ドキュメントが定めないもの: リポジトリ全体のアプリランタイムを純 ESM へ転換すること。
 
-## Decision rules
+## 判断ルール
 
-- all hand-written JavaScript and TypeScript should be written in ESM form unless a documented exception still applies
-- tool config files should use ESM-compatible formats whenever the current toolchain supports them in a stable way
-- CommonJS is allowed only for a file whose current tool or invocation path is not yet verified as stable under ESM
-- CommonJS exceptions must be tracked file-by-file with both the current reason and the condition that would allow removal
-- new files must default to ESM and must not introduce new CommonJS entrypoints without a documented blocker
-- existing CommonJS files should be treated as temporary compatibility shims and removed once the blocker is verified gone
-- explicit ESM is opt-in per package; one package changing module mode does not authorize ad hoc conversion of unrelated packages
-- runtime packages that other workspaces import at runtime should prefer built artifact exports over raw source file exports before they become explicit ESM packages
-- runtime packages should default to explicit ESM-only exports and should add a CommonJS `require` path only when a verified current consumer or tool still blocks on it
-- config packages consumed directly by tools should not change module contracts until the consuming toolchain contract is documented and verified
-- a package or config file may keep CommonJS compatibility only while a verified current consumer or tool still relies on `require()` or a CommonJS-only loader path
-- no package may switch to explicit ESM without a documented export surface, build output contract, and verification plan
+- すべての手書き JavaScript / TypeScript は、文書化された例外がない限り ESM 形式で書く
+- ツール config ファイルは、現行のツールチェインが安定対応している場合に限り ESM 互換フォーマットを使う
+- CommonJS は、現行のツールや起動経路が ESM 下で安定と検証できていないファイルでのみ許容する
+- CommonJS の例外は、ファイル単位で「現状理由」と「除去できる条件」を併記して追跡する
+- 新規ファイルは ESM を既定とし、文書化されたブロッカ無しに新規 CommonJS エントリを増やさない
+- 既存の CommonJS ファイルは一時的な互換シムとして扱い、ブロッカが解消し次第除去する
+- 明示的 ESM 化はパッケージ単位のオプトインである。あるパッケージのモード変更が無関係なパッケージの場当たり変換を許可するわけではない
+- 他ワークスペースが実行時に import するランタイムパッケージは、明示的 ESM 化の前にビルド成果物の export を生ソースの export より優先する
+- ランタイムパッケージは既定で ESM 専用 export とし、検証済みの現行コンシューマやツールがブロックしている場合に限り CommonJS の `require` 経路を追加する
+- ツールが直接利用する config パッケージは、利用側のツールチェインの契約が文書化・検証されるまでモジュール契約を変更しない
+- 検証済みの現行コンシューマやツールが `require()` または CommonJS 専用ローダ経路に依存している間は、当該パッケージ / config ファイルに CommonJS 互換を残してよい
+- 公開 export 表面、ビルド出力契約、検証計画が文書化されていないパッケージは明示的 ESM へ移行しない
 
-## Current CommonJS exceptions
+## 現存する CommonJS 例外
 
-The repository currently has no documented file-level CommonJS exceptions.
+リポジトリには現状、文書化されたファイル単位の CommonJS 例外は存在しない。
 
-## Package inventory and migration stance
+## パッケージ一覧と移行スタンス
 
-| Workspace                    | Current state                                                                      | Migration stance                                            | Notes                                                                                                                                                                                       |
-| ---------------------------- | ---------------------------------------------------------------------------------- | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `packages/logger`            | explicit ESM runtime package                                                       | keep as the repository's simplest runtime-package reference | uses `type: module`, explicit ESM export entrypoints, and TypeScript-emitted build artifacts                                                                                                |
-| `packages/api-contract`      | explicit ESM runtime package with generated `.ts` source and built `.js` artifacts | continue tightening the build contract                      | should keep moving toward built-artifact-first consumption and now points generator formatting at the root ESM Prettier entry                                                               |
-| `packages/config-typescript` | exports shared JSON config files                                                   | keep current mode for now                                   | TypeScript config consumers do not benefit from package-level ESM and still depend on current tool loading behavior                                                                         |
-| `packages/config-jest`       | exports raw `.ts` config modules with a shared ESM-consumption helper              | coordinated migration only                                  | the shared baseline now owns `node_modules` allowlist rules for ESM package consumption, but the package itself still relies on TypeScript config loading and Jest-specific loader behavior |
-| `packages/config-oxlint`     | exports raw `.ts` config modules                                                   | coordinated migration only                                  | current consumers depend on tool execution of TypeScript config files                                                                                                                       |
-| `packages/config-prettier`   | explicit `.mjs` tool config package                                                | keep as the shared Prettier reference                       | the repository root and the API contract generator both consume the ESM entry                                                                                                               |
-| `apps/api`                   | NodeNext TypeScript app consumer                                                   | not a package-conversion target in this issue               | app runtime strategy remains separate from package migration strategy                                                                                                                       |
-| `apps/web`                   | bundler-managed app consumer                                                       | not a package-conversion target in this issue               | can consume ESM packages without forcing repository-wide package conversion                                                                                                                 |
-| `apps/mobile`                | placeholder workspace                                                              | no action now                                               | revisit when the workspace has real runtime code                                                                                                                                            |
+| ワークスペース                   | 現状                                                                                       | 移行スタンス                                                              | 補足                                                                                                                                                                                       |
+| -------------------------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `packages/logger`                | 明示的 ESM ランタイムパッケージ                                                            | リポジトリで最も単純なランタイムパッケージ参照として維持                  | `type: module`、明示的 ESM の export エントリ、TypeScript の emit によるビルド成果物                                                                                                       |
+| `packages/api-contract`          | 生成された `.ts` ソースとビルド済み `.js` 成果物を持つ明示的 ESM ランタイムパッケージ      | ビルド契約の引き締めを継続                                                | ビルド成果物先行の利用へ進める。生成系のフォーマット出力もルートの ESM Prettier エントリに揃った                                                                                            |
+| `packages/config-typescript`     | 共有 JSON config を export                                                                 | 当面は現行モードを維持                                                    | TypeScript の config 利用側はパッケージレベル ESM 化の利益が薄く、現行のツール読み込み挙動に依存している                                                                                    |
+| `packages/config-jest`           | 生 `.ts` config モジュールを export し、共有 ESM 利用ヘルパを提供                          | 連携移行のみ                                                              | 共有ベースラインは ESM パッケージ利用のための `node_modules` 許可ルールを所有する。ただしパッケージ自体は依然として TypeScript config 読み込みと Jest 固有のローダ挙動に依存している       |
+| `packages/config-oxlint`         | 生 `.ts` config モジュールを export                                                        | 連携移行のみ                                                              | 利用側は TypeScript 形式の config をツールが直接実行することに依存している                                                                                                                  |
+| `packages/config-prettier`       | 明示的 `.mjs` ツール config パッケージ                                                     | 共有 Prettier 参照として維持                                              | リポジトリルートと API contract ジェネレータの双方が ESM エントリを利用する                                                                                                                |
+| `apps/api`                       | NodeNext の TypeScript アプリ利用側                                                        | 本 Issue ではパッケージ転換対象外                                         | アプリランタイム戦略はパッケージ移行戦略と分離して扱う                                                                                                                                      |
+| `apps/web`                       | バンドラ管理のアプリ利用側                                                                 | 本 Issue ではパッケージ転換対象外                                         | リポジトリ全体のパッケージ転換を強制せずに ESM パッケージを利用できる                                                                                                                       |
+| `apps/mobile`                    | プレースホルダワークスペース                                                                | 当面は対応しない                                                          | 実ランタイムコードが入った段階で見直す                                                                                                                                                      |
 
-## Explicit ESM package contract
+## 明示的 ESM パッケージ契約
 
-Any workspace package that becomes an explicit ESM package must satisfy all of the following:
+明示的 ESM パッケージ化するワークスペースパッケージは、以下のすべてを満たす:
 
-1. declare `type: module` in its package manifest
-2. export only documented public entrypoints through `exports`
-3. publish built JavaScript artifacts instead of exposing raw `.ts` source files as the primary runtime contract
-4. provide `types` entries for every public subpath
-5. omit the CommonJS `require` condition by default and add it only when a verified current consumer or tool still needs CommonJS compatibility
-6. use NodeNext-compatible relative import specifiers in source where emitted JavaScript requires them
-7. include verification that the ESM import path resolves correctly and that any retained CommonJS path still resolves when one is intentionally kept
+1. パッケージマニフェストに `type: module` を宣言する
+2. `exports` を介して文書化された公開エントリポイントのみを公開する
+3. 主たるランタイム契約として生 `.ts` ソースではなくビルド済み JavaScript 成果物を公開する
+4. 各公開サブパスに `types` エントリを持つ
+5. 既定では CommonJS の `require` condition を含めず、検証済みの現行コンシューマやツールが CommonJS 互換を必要とする場合に限り追加する
+6. emit された JavaScript で必要となる箇所では NodeNext 互換の相対 import 識別子を使う
+7. ESM の import パスが解決すること、および意図的に残した CommonJS 経路がある場合はそれも解決することを検証する
 
-The logger package is the current repository reference for a runtime package that can move to explicit ESM without retaining a separate CommonJS artifact. Future package migrations should copy the contract shape that matches their actual consumers, not preserve CommonJS by default.
+logger パッケージは、別途 CommonJS 成果物を残さずに明示的 ESM へ移行できるランタイムパッケージのリポジトリ参照である。今後のパッケージ移行は、CommonJS を既定で温存するのではなく、実コンシューマに合致した契約形を踏襲する。
 
-## Tooling constraints and current breakpoints
+## ツーリング制約と現行ブレークポイント
 
-### Jest and TypeScript test loading
+### Jest と TypeScript テスト読み込み
 
-The shared Jest baseline now includes one repository-owned way to consume ESM packages from Jest configs: `withEsmPackageSupport` in `packages/config-jest`. The current web Jest setup already uses that helper to allowlist specific ESM packages under `node_modules`.
+共有 Jest ベースラインには、Jest config から ESM パッケージを利用する 1 つのリポジトリ所有手段が含まれる: `packages/config-jest` の `withEsmPackageSupport`。Web の Jest セットアップは既にこのヘルパを使い、`node_modules` 配下の特定 ESM パッケージを許可している。
 
-The API workspace still uses `ts-jest` with the local TypeScript config and does not enable Jest's ESM mode by default. That means the next ESM-only runtime package consumed by API tests should update the API Jest transform at the same time instead of forcing the package back to CommonJS compatibility.
+API ワークスペースは依然として `ts-jest` とローカル TypeScript config を用い、Jest の ESM モードを既定で有効化していない。よって、API テストが取り込む次の ESM 専用ランタイムパッケージは、API Jest トランスフォームを同時に更新する。CommonJS 互換へ巻き戻さない。
 
-For this repository, the current Jest rule is:
+このリポジトリにおける現行 Jest ルール:
 
-- use the shared Jest baseline to own `transformIgnorePatterns` allowlists for ESM packages under `node_modules`
-- add `extensionsToTreatAsEsm` through the shared helper only when the consuming app is actually opting into Jest ESM execution
-- pair `withEsmPackageSupport` with `ts-jest` `useESM: true` in the API workspace when the first ESM-only runtime package enters API test execution
-- verify `require` behavior only for packages that intentionally retain a CommonJS path
+- `node_modules` 配下の ESM パッケージに対する `transformIgnorePatterns` 許可は共有 Jest ベースラインが所有する
+- 利用側アプリが Jest ESM 実行に明示的にオプトインする場合に限り、共有ヘルパ経由で `extensionsToTreatAsEsm` を加える
+- 最初の ESM 専用ランタイムパッケージが API テスト実行に入った時点で、API ワークスペースで `withEsmPackageSupport` と `ts-jest` の `useESM: true` を組み合わせる
+- 意図的に CommonJS 経路を残すパッケージに限って `require` 挙動を検証する
 
-### Tool-owned config packages
+### ツールが所有する config パッケージ
 
-The shared config packages currently export raw `.ts`, `.json`, and `.mjs` files that are consumed directly by TypeScript, Jest, oxlint, and Prettier tooling entrypoints.
+共有 config パッケージは現状、TypeScript / Jest / oxlint / Prettier のツールエントリポイントが直接消費する `.ts` / `.json` / `.mjs` を export している。
 
-Those packages should not be converted package-by-package without a coordinated loader decision because their consumers are tools, not normal runtime imports. A repository-wide loader break in config packages would block routine lint, test, and typecheck flows.
+これらのパッケージは、利用側がツールであり通常のランタイム import ではないため、ローダ判断の連携無しにパッケージ単位で変換しない。config パッケージのリポジトリ全体のローダ破壊は、日常の lint / test / typecheck フローを止めうる。
 
-The repository default is still ESM-first for tool configs. The current rule is:
+ツール config 全般のリポジトリ既定は依然として ESM 先行である。現行ルール:
 
-- prefer `.ts`, `.mts`, `.mjs`, or other ESM-compatible config formats when the tool documents stable support
-- keep a CommonJS config only when the exact current invocation path is still unverified or unstable under ESM
-- document each remaining CommonJS file in the exception table above instead of treating config packages as blanket CommonJS-only areas
+- ツールが安定対応する場合は `.ts` / `.mts` / `.mjs` などの ESM 互換 config フォーマットを優先する
+- 現行の起動経路が ESM 下で未検証 / 不安定な場合に限り CommonJS config を残す
+- 残った CommonJS ファイルは、config パッケージを丸ごと CommonJS 領域として扱うのではなく、上の例外表に明記する
 
-### API runtime compatibility
+### API ランタイム互換
 
-The API workspace uses the NodeNext TypeScript baseline with NestJS-oriented compiler settings. That is compatible with consuming explicit ESM packages through a stable export contract, but it does not by itself justify converting the API app runtime to pure ESM.
+API ワークスペースは NodeNext の TypeScript ベースラインと NestJS 指向のコンパイラ設定を用いる。これは安定した export 契約を介した明示的 ESM パッケージ利用と互換性があるが、それ自体は API アプリランタイムを純 ESM 化する根拠にはならない。
 
-For this repository, package migration and app runtime migration remain separate decisions.
+このリポジトリでは、パッケージ移行とアプリランタイム移行は別の判断として分離する。
 
-### Build orchestration
+### ビルドオーケストレーション
 
-The repository build and test tasks rely on upstream workspace builds through Turborepo. Any package that moves to explicit ESM must define a stable output layout so downstream tasks do not depend on raw source layout assumptions.
+リポジトリのビルド / テストタスクは Turborepo を介して上流ワークスペースのビルドに依存する。明示的 ESM へ移行するパッケージは、下流タスクが生ソースのレイアウト前提に依存しないよう安定した出力レイアウトを定義する。
 
-## What can move package-by-package
+## パッケージ単位で動かしてよいもの
 
-- runtime libraries with a narrow public API and an explicit build output can migrate individually once they adopt the full package contract
-- packages whose current consumers are already ESM-compatible can follow the logger package's ESM-only pattern in separate implementation issues
-- root tool configs such as commitlint and stylelint should move to ESM-compatible file formats as soon as their current command paths are verified
+- 公開 API が狭く明示的なビルド出力を持つランタイムライブラリは、フルパッケージ契約を採用すれば個別に移行できる
+- 利用側が既に ESM 互換であるパッケージは、別の実装 Issue で logger パッケージの ESM 専用パターンに追従できる
+- commitlint や stylelint のようなルートツール config は、現行のコマンド経路が検証され次第、ESM 互換フォーマットへ移す
 
-## What must be coordinated across the repository
+## リポジトリ全体で連携が要るもの
 
-- any change to `packages/config-jest`, `packages/config-oxlint`, `packages/config-typescript`, or `packages/config-prettier`
-- any change that requires the shared Jest baseline to adopt repository-wide ESM handling rules
-- any change that removes CommonJS compatibility from a package or config file still consumed by existing Node or tool entrypoints
-- any change that couples package migration with an application runtime module-strategy change
+- `packages/config-jest` / `packages/config-oxlint` / `packages/config-typescript` / `packages/config-prettier` への変更
+- 共有 Jest ベースラインがリポジトリ全体の ESM 取り扱いルールを採用することを要する変更
+- 既存 Node やツールエントリポイントが利用するパッケージ / config ファイルから CommonJS 互換を外す変更
+- パッケージ移行をアプリケーションランタイムのモジュール戦略変更と結合する変更
 
-## Ordered follow-up plan
+## 順序付きフォローアッププラン
 
-1. keep `packages/logger` as the ESM-only runtime reference and `packages/config-jest` as the shared Jest ESM-consumption reference for future runtime packages
-2. define the build output and export contract for `packages/api-contract` so generated source stops being the primary runtime surface
-3. migrate `packages/api-contract` after its build and consumer contract are documented, keeping it ESM-only unless a verified blocker requires a CommonJS path
-4. keep converting root tool configs to ESM-compatible formats when their current invocations are verified, and keep the CommonJS exception list as small as possible
-5. decide whether config packages should remain direct source-export tool packages or move to a separate built-distribution model before attempting any coordinated config-package module-contract change
-6. revisit application runtime module strategy only after package-level migration rules are stable and proven in at least one additional runtime package
+1. `packages/logger` を ESM 専用ランタイム参照、`packages/config-jest` を将来のランタイムパッケージ向けの共有 Jest ESM 利用参照として維持する
+2. `packages/api-contract` のビルド出力と export 契約を定義し、生成ソースが主たるランタイム面で無くなるようにする
+3. `packages/api-contract` の利用 / ビルド契約が文書化された後で同パッケージを移行する。検証済みブロッカが無い限り ESM 専用とする
+4. ルートツール config の ESM 互換化を、現行起動が検証され次第続け、CommonJS 例外リストを最小に保つ
+5. config パッケージを引き続き直接ソース export 型とするか、ビルド配布型に移すかを、連携した config パッケージのモジュール契約変更を試みる前に判断する
+6. アプリランタイムのモジュール戦略は、パッケージレベル移行ルールが安定し、もう 1 つランタイムパッケージで実証されてから再検討する
 
-## Follow-up issue split
+## フォローアップ Issue の分割
 
-The next implementation work should be split into discrete repository tasks:
+次の実装作業は離散的なリポジトリタスクに分割する:
 
-- define the build artifact and export contract for `packages/api-contract`
-- migrate `packages/api-contract` as ESM-only unless an actual current consumer forces a retained CommonJS path
-- decide the long-term contract for config packages: direct source exports versus built distribution packages
-- audit API-side consumer compatibility before any package drops CommonJS support
+- `packages/api-contract` のビルド成果物と export 契約を定義する
+- 実コンシューマが CommonJS 経路を強制しない限り、`packages/api-contract` を ESM 専用で移行する
+- config パッケージの長期契約（直接ソース export か、ビルド配布パッケージか）を決定する
+- いずれかのパッケージが CommonJS サポートを外す前に、API 側の利用互換性を audit する
 
-## Review trigger
+## 見直しトリガ
 
-This strategy should be revisited whenever a new workspace package is proposed as an explicit ESM package, or when shared tooling changes reduce the repository's need for CommonJS compatibility.
+新規ワークスペースパッケージが明示的 ESM パッケージとして提案された場合、または共有ツーリングの変更でリポジトリの CommonJS 互換要件が縮減された場合に、本戦略を見直す。
