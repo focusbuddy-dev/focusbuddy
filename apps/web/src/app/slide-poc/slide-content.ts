@@ -9,7 +9,7 @@ export function splitSlides(markdown: string): string[] {
 }
 
 export function extractSlideTitle(slideMarkdown: string, fallback: string): string {
-  const headingMatch = slideMarkdown.match(/^#{1,6}\s+(.+?)\s*$/m);
+  const headingMatch = slideMarkdown.match(/^#{1,6}[ \t]+(.+)$/m);
   const headingText = headingMatch?.[1]?.trim();
   if (headingText && headingText.length > 0) {
     return headingText;
