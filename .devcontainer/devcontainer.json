@@ -10,7 +10,15 @@
     "ghcr.io/devcontainers/features/github-cli:1": {},
     "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {}
   },
-  "runArgs": ["--name", "${localWorkspaceFolderBasename}-dev", "--env-file", ".devcontainer/.devcontainer.env"],
+  "runArgs": [
+    "--name",
+    "${localWorkspaceFolderBasename}-dev",
+    "--network",
+    "focusbuddy-net",
+    "--env-file",
+    ".devcontainer/.devcontainer.env"
+  ],
+  "forwardPorts": [3000, 3001],
   "initializeCommand": "bash .devcontainer/initialize.sh",
   "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/focusbuddy,type=bind,consistency=cached",
   "workspaceFolder": "/workspaces/focusbuddy",

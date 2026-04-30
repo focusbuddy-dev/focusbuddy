@@ -5,13 +5,17 @@ set -euo pipefail
 # Runs on the VS Code host before the container starts.
 #
 # Responsibilities:
-# 1. Ensure .devcontainer/.devcontainer.env exists (inherits previous touch behavior).
-# 2. Read host's git user.name / user.email (from global git config).
-# 3. Upsert HOST_GIT_USER_NAME / HOST_GIT_USER_EMAIL into .devcontainer.env,
-#    preserving other lines (e.g. GH_TOKEN). Empty values remove the line.
-# 4. Never touch host's ~/.gitconfig (read-only wrt host).
+# 1. Ensure .devcontainer/.devcontainer.env exists.
+# 2. If git is available on the host, sync host's git user.name / user.email
+#    into HOST_GIT_USER_NAME / HOST_GIT_USER_EMAIL in .devcontainer.env
+#    (preserving other lines such as GH_TOKEN). Empty values remove the line.
+#    This step is skipped — not fatal — when git is missing, so that the
+#    docker network setup below still runs.
+# 3. Ensure the shared docker network `focusbuddy-net` exists, so the
+#    devcontainer can join it via runArgs --network and resolve compose
+#    service names (postgres, auth) by hostname.
 #
-# Atomicity: write via mktemp (same directory) + mv → rename within same FS.
+# Atomicity: env-file writes go through mktemp + mv → rename within same FS.
 # trap EXIT cleans up the temp file on error/interrupt.
 # Line match is anchored to start-of-line (^KEY=) to avoid substring collisions.
 
@@ -23,27 +27,7 @@ if [ ! -f "$ENV_FILE" ]; then
     touch "$ENV_FILE"
 fi
 
-# 2. git availability check
-if ! command -v git >/dev/null 2>&1; then
-    echo "[initialize] WARNING: git not found on host. Skipping git user sync." >&2
-    exit 0
-fi
-
-# 3. Read host values (unset -> empty string)
-HOST_NAME="$(git config --global user.name || true)"
-HOST_EMAIL="$(git config --global user.email || true)"
-
-# 4. Reject values containing newlines (would corrupt env-file format).
-if [[ "$HOST_NAME" == *$'\n'* ]]; then
-    echo "[initialize] WARNING: host git user.name contains newline; skipping." >&2
-    HOST_NAME=""
-fi
-if [[ "$HOST_EMAIL" == *$'\n'* ]]; then
-    echo "[initialize] WARNING: host git user.email contains newline; skipping." >&2
-    HOST_EMAIL=""
-fi
-
-# 5. upsert helper.
+# upsert helper.
 # If value is non-empty: replace existing ^KEY= line, or append if absent.
 # If value is empty: remove any existing ^KEY= line (no-op if absent).
 upsert_env() {
@@ -67,14 +51,32 @@ upsert_env() {
     trap - EXIT
 }
 
-upsert_env "HOST_GIT_USER_NAME" "$HOST_NAME" "$ENV_FILE"
-upsert_env "HOST_GIT_USER_EMAIL" "$HOST_EMAIL" "$ENV_FILE"
+# 2. git user sync (skipped — not fatal — if git is unavailable on host).
+if command -v git >/dev/null 2>&1; then
+    HOST_NAME="$(git config --global user.name || true)"
+    HOST_EMAIL="$(git config --global user.email || true)"
 
-if [ -z "$HOST_NAME" ] || [ -z "$HOST_EMAIL" ]; then
-    echo "[initialize] NOTE: host git user.name or user.email is unset. Container commits may require manual config." >&2
+    # Reject values containing newlines (would corrupt env-file format).
+    if [[ "$HOST_NAME" == *$'\n'* ]]; then
+        echo "[initialize] WARNING: host git user.name contains newline; skipping." >&2
+        HOST_NAME=""
+    fi
+    if [[ "$HOST_EMAIL" == *$'\n'* ]]; then
+        echo "[initialize] WARNING: host git user.email contains newline; skipping." >&2
+        HOST_EMAIL=""
+    fi
+
+    upsert_env "HOST_GIT_USER_NAME" "$HOST_NAME" "$ENV_FILE"
+    upsert_env "HOST_GIT_USER_EMAIL" "$HOST_EMAIL" "$ENV_FILE"
+
+    if [ -z "$HOST_NAME" ] || [ -z "$HOST_EMAIL" ]; then
+        echo "[initialize] NOTE: host git user.name or user.email is unset. Container commits may require manual config." >&2
+    fi
+else
+    echo "[initialize] WARNING: git not found on host. Skipping git user sync." >&2
 fi
 
-# 6. Ensure the shared docker network exists before the devcontainer joins it.
+# 3. Ensure the shared docker network exists before the devcontainer joins it.
 # The compose stack (postgres, auth) attaches as `external: true`, and the
 # devcontainer joins via runArgs --network. Created idempotently on the host.
 NETWORK_NAME="focusbuddy-net"
