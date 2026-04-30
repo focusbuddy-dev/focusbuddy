@@ -1,5 +1,7 @@
 const slideSeparator = /^---\s*$/m;
 
+export const maxSlidePayloadLength = 16384;
+
 export function splitSlides(markdown: string): string[] {
   const slides = markdown
     .split(slideSeparator)
@@ -9,7 +11,7 @@ export function splitSlides(markdown: string): string[] {
 }
 
 export function extractSlideTitle(slideMarkdown: string, fallback: string): string {
-  const headingMatch = slideMarkdown.match(/^#{1,6}[ \t]+(.+)$/m);
+  const headingMatch = slideMarkdown.match(/^#{1,6}[ \t]+(\S.*)$/m);
   const headingText = headingMatch?.[1]?.trim();
   if (headingText && headingText.length > 0) {
     return headingText;

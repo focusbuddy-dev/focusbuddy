@@ -5,6 +5,7 @@ import {
   decodeSlideContent,
   extractSlideExcerpt,
   extractSlideTitle,
+  maxSlidePayloadLength,
   splitSlides,
 } from '@/app/slide-poc/slide-content';
 
@@ -17,6 +18,9 @@ export function GET(request: NextRequest) {
   const raw = request.nextUrl.searchParams.get('d');
   if (!raw) {
     return new Response('missing slide content', { status: 400 });
+  }
+  if (raw.length > maxSlidePayloadLength) {
+    return new Response('slide content too large', { status: 400 });
   }
 
   let title = 'Markdown Slide';

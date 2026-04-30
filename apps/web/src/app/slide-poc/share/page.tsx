@@ -6,6 +6,7 @@ import {
   decodeSlideContent,
   extractSlideExcerpt,
   extractSlideTitle,
+  maxSlidePayloadLength,
   splitSlides,
 } from '@/app/slide-poc/slide-content';
 import styles from '@/app/slide-poc/styles.module.css';
@@ -99,6 +100,9 @@ async function readSharedSlides(
   const params = await searchParamsPromise;
   const raw = Array.isArray(params.d) ? params.d[0] : params.d;
   if (!raw) {
+    return undefined;
+  }
+  if (raw.length > maxSlidePayloadLength) {
     return undefined;
   }
   try {

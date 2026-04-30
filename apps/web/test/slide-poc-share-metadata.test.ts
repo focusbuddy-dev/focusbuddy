@@ -74,4 +74,17 @@ describe('slide-poc share page metadata', () => {
     expect(metadata.title).toBe('Markdown Slide PoC');
     expect(metadata.openGraph).toBeUndefined();
   });
+
+  it('returns a fallback metadata object when the d parameter exceeds the size cap', async () => {
+    const { generateMetadata } = await import('@/app/slide-poc/share/page');
+    const { maxSlidePayloadLength } = await import('@/app/slide-poc/slide-content');
+    const oversized = 'a'.repeat(maxSlidePayloadLength + 1);
+
+    const metadata = await generateMetadata({
+      searchParams: Promise.resolve({ d: oversized }),
+    });
+
+    expect(metadata.title).toBe('Markdown Slide PoC');
+    expect(metadata.openGraph).toBeUndefined();
+  });
 });

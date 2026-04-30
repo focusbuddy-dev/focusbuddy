@@ -53,4 +53,12 @@ describe('slide-poc og route', () => {
     const response = GET(buildRequest('?d=%25%25%25not-valid%25%25%25') as never);
     expect(response.status).toBe(400);
   });
+
+  it('returns 400 when the d parameter exceeds the size cap', async () => {
+    const { GET } = await import('@/app/slide-poc/og/route');
+    const { maxSlidePayloadLength } = await import('@/app/slide-poc/slide-content');
+    const oversized = 'a'.repeat(maxSlidePayloadLength + 1);
+    const response = GET(buildRequest(`?d=${oversized}`) as never);
+    expect(response.status).toBe(400);
+  });
 });
