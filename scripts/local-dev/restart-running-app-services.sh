@@ -28,7 +28,7 @@ restart_services=("$@")
 if [[ $# -eq 0 ]]; then
   running_services="$(docker compose -f "$compose_file" ps --status running --services 2>/dev/null || true)"
 
-  for service_name in auth api web; do
+  for service_name in auth; do
     if grep -qx "$service_name" <<<"$running_services"; then
       restart_services+=("$service_name")
     fi
